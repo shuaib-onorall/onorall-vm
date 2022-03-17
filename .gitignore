@@ -1,0 +1,9 @@
+#migraitons file
+/myapp/migrations*
+
+#virtual enviroment
+/venv
+
+#media file
+/media*
+/media
