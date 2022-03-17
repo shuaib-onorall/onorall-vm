@@ -304,4 +304,6 @@ REST_FRAMEWORK = {
 API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 
 #__________________________________________________________________________________________________________________________
-
+#for heroku purposes
+import django_on_heroku
+django_on_heroku.settings(locals())
