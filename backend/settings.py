@@ -165,8 +165,8 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATIC_ROOT=os.path.join(BASE_DIR,'static')
+#STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+#STATIC_ROOT=os.path.join(BASE_DIR,'static')
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -307,5 +307,3 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 
 #__________________________________________________________________________________________________________________________
 #for heroku purposes
-import django_on_heroku
-django_on_heroku.settings(locals())

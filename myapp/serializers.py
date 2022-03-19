@@ -192,7 +192,7 @@ class questionnaireserializer(serializers.ModelSerializer):
     class Meta:
         model=questionnaires
         fields=['ques_id','questionnaireid','userid','videoid','description','question_text','question_qna','question_mcq']
-       # depth=1
+        depth=1
     
 
 #_________________________________________________________________________________________________________________
