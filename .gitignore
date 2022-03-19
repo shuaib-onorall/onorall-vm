@@ -1,5 +1,5 @@
 #migraitons file
-/myapp/migrations*
+
 
 #virtual enviroment
 /venv
