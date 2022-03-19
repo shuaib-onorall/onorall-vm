@@ -247,13 +247,12 @@ class UserSerializer(serializers.ModelSerializer):
 #for the purpose of testing 
 #_______________________________________________________________________________________________________________
 #workbase(display,branding)
-
 class basic_display_serializer(serializers.ModelSerializer):
-    #file=FileSerializer(read_only=True)
     class Meta:
         model=basic_display
         fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
-        depth=7
+        depth=1
+    
     
 
 

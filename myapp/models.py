@@ -115,8 +115,8 @@ class doc_verification(models.Model):
     specialized=models.CharField(max_length=15,default='')
     skill_tags=models.CharField(max_length=500)
     year_of_experience=models.PositiveIntegerField()
-    document_upload=models.FileField(upload_to='document/',null=True,blank=True,verbose_name='document_upload')
-    upload_photo=models.ImageField(upload_to='photo/',null=True,blank=True,verbose_name='upload_photo')
+    #document_upload=models.FileField(upload_to='document/',null=True,blank=True,verbose_name='document_upload')
+    #upload_photo=models.ImageField(upload_to='photo/',null=True,blank=True,verbose_name='upload_photo')
 
 
     def __str__(self):
@@ -241,11 +241,11 @@ class Comment(models.Model):
 #this model for social handling
 class social_handling(models.Model):
     socialid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    social1=models.URLField(max_length=200)
-    social2=models.URLField(max_length=200)
-    social3=models.URLField(max_length=200)
-    social4=models.URLField(max_length=200)
-    social5=models.URLField(max_length=200)
+    social1=models.URLField(max_length=200,null=True,blank=True)
+    social2=models.URLField(max_length=200,null=True,blank=True)
+    social3=models.URLField(max_length=200,blank=True,null=True)
+    social4=models.URLField(max_length=200,blank=True,null=True)
+    social5=models.URLField(max_length=200,blank=True,null=True)
    
 #______________________________________________________________________________________________________________
 
@@ -309,11 +309,11 @@ class Notification(models.Model):
 #this model is used for the basic_dsiplay section
 class basic_display(models.Model):
     highlightid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    highlight1=models.PositiveIntegerField(null=True,blank=True)
-    highlight2=models.PositiveIntegerField(null=True,blank=True)
-    highlight3=models.PositiveIntegerField(null=True,blank=True)
-    highlight4=models.PositiveIntegerField(null=True,blank=True)
-    highlight5=models.PositiveIntegerField(null=True,blank=True)
+    highlight1=models.ForeignKey(detail,related_name='highlight1',null=True,blank=True,on_delete=models.CASCADE)
+    highlight2=models.ForeignKey(detail,null=True,related_name='highlight2',blank=True,on_delete=models.CASCADE)
+    highlight3=models.ForeignKey(detail,null=True,related_name='highlight3',blank=True,on_delete=models.CASCADE)
+    highlight4=models.ForeignKey(detail,null=True,related_name='highlight4',blank=True,on_delete=models.CASCADE)
+    highlight5=models.ForeignKey(detail,null=True,related_name='highlight5',blank=True,on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.highlight1)

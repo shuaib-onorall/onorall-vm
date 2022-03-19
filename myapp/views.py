@@ -1006,6 +1006,7 @@ class basic_displayAPiView(APIView):
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         else:
             return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+            
 
 class basic_brandingAPIView(APIView):
     parser=(MultiPartParser,FormParser)
