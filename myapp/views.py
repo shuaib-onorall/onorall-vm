@@ -1097,7 +1097,7 @@ def Automatic_generated_thumbnail(videoid=None):
     #print(command)
     subprocess.run(command, shell=True,stderr=subprocess.STDOUT)
     return Response({'video_thumbnail':video})
-
+a='1O7oaSB2C86m'
 #Automatic_generated_thumbnail(a)
 #_______________________________________________________________________________________________________________________
 def compressing_video(videoid=None):
@@ -1112,7 +1112,7 @@ def compressing_video(videoid=None):
     cmd=f'ffmpeg -i "{video}" -vcodec libx264 -crf 28 "{output}"' #crf is the most important thing (constant rate factor)
     print(cmd)
     subprocess.check_output(cmd, shell=True)
-videoid="WYQs9ANVeHUj"
+#videoid="1O7oaSB2C86m"
 #compressing_video(videoid)
 #_______________________________________________________________________________________________________________________
 import ffmpeg_streaming
