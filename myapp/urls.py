@@ -74,7 +74,7 @@ urlpatterns = [
     path('monetize/<int:id>',views.ShareMonetize.as_view()),
     path('suport',views.supportAPI.as_view()),
     path('suport/<int:id>',views.supportAPI.as_view()),
-    path('demo/',views.SearchFilterView.as_view()),
+    path('search/<str:title>',views.multitablesearch.as_view()),
     #path('follow_unfollow/',views.followUnfollow.as_view()),
    
 ]

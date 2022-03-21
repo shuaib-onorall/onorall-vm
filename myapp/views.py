@@ -1200,3 +1200,18 @@ class supportAPI(APIView):
         event=get_object_or_404(Support,id=id)
         event.delete()
         return Response({'item deleted'})
+
+class multitablesearch(APIView):
+    def get( self , request , title = None  , *args , **kwargs ):
+        combine_query = {}
+        if title is not None:
+            detail_obj = detail.objects.filter( title__icontains = title )
+            serializer = DetailSerializer( detail_obj  , many=True)
+            combine_query['detail result'] = serializer.data 
+
+            workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
+            serializer1 = workserializer( workbase_obj , many = True)
+            combine_query['workbase result'] = serializer1.data
+
+            return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
