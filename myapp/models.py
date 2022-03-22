@@ -100,8 +100,21 @@ class detail(models.Model):
         return self.likesvideo.all().count()
 
     def __str__(self) -> str:
-        return  str(self.file)
+        return  f"ID : {str(self.id)} || {str(self.title)}"
     
+
+#_______________________________________________
+class timelineModel(models.Model):
+    time = models.CharField(max_length=200)
+    user_id=models.ForeignKey(sign,null=True,blank=True,on_delete=models.CASCADE)
+    resourcesid = models.CharField(max_length=12, unique=True,   default=random_id_field)
+    resourcesfile=models.FileField(upload_to='resources/',null=True,blank=True)
+    connected_to = models.ForeignKey(detail , on_delete=models.CASCADE)
+    
+    def __str__(self) -> str:
+        return  str(self.id)
+
+
 #___________________________________________________________________________________________________________________________
 
 #this model is used for document verification   (integerated with frontend)
@@ -487,3 +500,108 @@ class sharemon(models.Model):
         super().save(*args,**kwargs)
 
 #_________________________________________________________________________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# # REPLY FOR COMMENT
+# class Reply(models.Model):
+#     #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
+#     created_time = models.DateTimeField( auto_now_add  = True )
+#     person_name = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name")
+#     for_reply =   models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="for_reply")
+#     reply_video = models.ForeignKey( detail , on_delete = models.CASCADE )
+#     reply_text = models.CharField( max_length = 2000  , default=" ")
+    
+    
+#     def __str__(self):
+#         return f"ID : {self.id} || Time : {self.created_time} || personName : {self.person_name}"
+
+
+# REPLY FOR COMMENT
+class Reply(models.Model):
+    #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
+    created_time = models.DateTimeField( auto_now_add  = True )
+    person_name = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name_1")
+    for_reply =   models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="for_reply_1")
+    reply_video = models.ForeignKey( detail , on_delete = models.CASCADE )
+
+    
+    reply_text = models.CharField( max_length = 2000  , default=" ")
+    
+    
+    def __str__(self):
+        return f"ID : {self.id} || Time : {self.created_time} || personName : {self.person_name}"
+
+# Comments Functionality  
+class Commentss(models.Model):
+    created_time = models.DateTimeField( auto_now_add = True )
+    comment_text = models.CharField(max_length = 2000 , default=" ")
+    user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
+    replies = models.ManyToManyField( Reply , blank=True   , related_name="replies" )
+    video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
+    
+    likes_on_comment  = models.ManyToManyField( sign  , related_name="likes_on_comment" )
+    dis_likes_on_comment = models.ManyToManyField( sign  )
+
+
+    @property
+    def total_likes_on_comment( self ):
+        return self.likes_on_comment.all().count() 
+
+    def total_dis_likes_on_comment( self ):
+        return self.dis_likes_on_comment.all().count()
+    
+
+    def __str__(self):
+        return f"ID : {self.id} || Time : {self.created_time} || personName : {self.user_id}"
+
+
+# signals for only like or dislike at same point of time.
+from django.db.models.signals import m2m_changed
+from django.dispatch import receiver
+@receiver(m2m_changed, sender=Commentss.likes_on_comment.through )
+def like_changed(sender, instance  , **kwargs):
+    try:
+        new_obj_of_sign=sign.objects.none()
+        if kwargs['action'] ==  "pre_add":
+            s = " ".join(kwargs['pk_set'])
+            try:
+                new_obj_of_sign = sign.objects.get(id = s)
+            except Exception as e:
+                pass
+        all_sign_dis_like = instance.dis_likes_on_comment.all()
+        if new_obj_of_sign in all_sign_dis_like:
+            # this line is not working but maximum work done in this
+            instance.dis_likes_on_comment.remove(new_obj_of_sign)
+    except Exception as e:
+        pass
+    
+
+
+
+# like models
+class LikeModel(models.Model):
+    id = models.AutoField(primary_key=True , unique=True)
+    video = models.OneToOneField( detail , on_delete=models.CASCADE )
+    all_likes = models.ManyToManyField( sign  , blank=False)
+
+    @property
+    def total_likes(self):
+        return self.all_likes.all().count()
+
+
+    def __str__(self):
+        return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
+
+

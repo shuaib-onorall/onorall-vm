@@ -76,5 +76,24 @@ urlpatterns = [
     path('suport/<int:id>',views.supportAPI.as_view()),
     path('demo/',views.SearchFilterView.as_view()),
     #path('follow_unfollow/',views.followUnfollow.as_view()),
+
+
+
+
+
+
+
+
+
+     #__________________________________________________________________________________:)
+    path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
+    path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
+    path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),
+    path('reply/<int:pk>/', views.ReplyApiView.as_view() , name='all-reply-api-view'),
+    path('likes/<int:pk>/', views.LikeApiView.as_view() , name='all-like-api-view-single'),
+    path('likes/', views.LikeApiView.as_view() , name='all-like-api-view'),
+
+    path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
+
    
 ]

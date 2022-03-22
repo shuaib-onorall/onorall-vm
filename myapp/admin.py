@@ -29,3 +29,14 @@ admin.site.register(basic_display)
 admin.site.register(MyModel)
 admin.site.register(sharemon)
 admin.site.register(Support)
+
+
+
+
+
+#__________________________________________________________:))
+
+admin.site.register(Reply)
+admin.site.register(timelineModel)
+admin.site.register(Commentss)
+admin.site.register(LikeModel)

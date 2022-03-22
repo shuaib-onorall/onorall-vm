@@ -251,9 +251,21 @@ class basic_display_serializer(serializers.ModelSerializer):
     class Meta:
         model=basic_display
         fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
-        depth=1
-    
-    
+        depth = 1
+    # def create(self, validated_data):
+    #     print('workinggggggggggggggggggggggggggggggg')
+    #     self.Meta.depth = 0
+    #     instance = self.Meta.model(**validated_data)
+    #     instance.save()
+    #     return instance
+    #     #super().create(validated_data)
+        
+     
+
+
+        
+           
+        
 
 
 class basic_branding_serializer(serializers.ModelSerializer):
@@ -274,3 +286,58 @@ class monitizeserializer(serializers.ModelSerializer):
         fields='__all__'
 
 #_____________________________________________________________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#__________________________________________________________
+
+
+
+class ReplySerializer(serializers.ModelSerializer):
+    class Meta:
+        model =  Reply
+        fields = "__all__"
+        
+        
+
+class CommentSerializer(serializers.ModelSerializer):
+    #creater=serializers.SerializerMethodField('video_owner_func')
+    
+    # def video_owner_func(self,obj):
+    #     obj=sign.objects.get(id = obj.video_id.user_id.id)
+    #     return obj.id
+
+
+    class Meta:
+        model = Commentss
+        fields = ['created_time' , "comment_text" , "user_id"  , "replies" , "video_id" , "likes_on_comment" , "dis_likes_on_comment"] #__all__"
+        depth = 1
+
+
+class timelineSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = timelineModel
+        fields = "__all__"
+
+
+class LikeModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LikeModel
+        fields = "__all__"
+
