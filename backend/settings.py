@@ -51,14 +51,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'channels',
     'rest_framework_simplejwt',
-
-    'ws4redis',
-
-
-    #seed
-    'django_seed',
-   
-    
+    'ws4redis',  
 ]
 
 SITE_ID=1

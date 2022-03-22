@@ -992,44 +992,7 @@ class basic_displayAPiView(APIView):
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
     
     def post(self,request):
-        # h1_data = detail.objects.get(id = int(request.data.get('highlight1')))
-        # h1_ser = DetailSerializer(h1_data).data
-        # request.data['highlight1'] = h1_ser
-        # del request.data['highlight1']['all_timeline']
-
-        # h2_data = detail.objects.get(id = int(request.data.get('highlight2')))
-        # h2_ser = DetailSerializer(h2_data).data
-        # request.data['highlight2'] = h2_ser
-        # del request.data['highlight2']['all_timeline']
-
-
-        # h3_data = detail.objects.get(id = int(request.data.get('highlight3')))
-        # h3_ser = DetailSerializer(h3_data).data
-        # request.data['highlight3'] = h3_ser
-        # del request.data['highlight3']['all_timeline']
-
-        # h4_data = detail.objects.get(id = int(request.data.get('highlight4')))
-        # h4_ser = DetailSerializer(h4_data).data
-        # request.data['highlight4'] = h4_ser
-        # del request.data['highlight4']['all_timeline']
-
-        # h5_data = detail.objects.get(id = int(request.data.get('highlight5')))
-        # h5_ser = DetailSerializer(h5_data).data
-        # request.data['highlight5'] = h5_ser
-        # del request.data['highlight5']['all_timeline']
-
-      
-
-
-        def get_serializer_class(self, *args, **kwargs):
-            if self.request.method == 'POST':
-                self.serializer_class.Meta.depth = 0
-                return basic_display_serializer
-            return basic_display_serializer
-
-
-
-        serializer=self.get_serializer_class(data=request.data)
+        serializer=basic_display_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
