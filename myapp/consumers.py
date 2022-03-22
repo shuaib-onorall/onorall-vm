@@ -18,12 +18,14 @@ class NewConsumer(AsyncJsonWebsocketConsumer):
 
 class Notifyconsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
+        self.group_name = 'gossip'
+        
+        await self.channel_layer.group_add(self.group_name ,self.channel_name)
         await self.accept()
-        await self.channel_layer.group_add("gossip",self.channel_name)
         print(f"Added{self.channel_name} channel to gossip")
 
     async def disconnect(self,*args,**kwargs):
-        await self.channel_layer.group_discard("gossip",self.channel_name)
+        await self.channel_layer.group_discard( self.group_name ,self.channel_name)
         print(f"Removed{self.channel_name} channel from gossip")
 
     async def new_notice(self,event):

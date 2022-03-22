@@ -982,6 +982,7 @@ class exampleAPIView(APIView):
 class basic_displayAPiView(APIView):
     parser=[JSONParser] #(MultiPartParser,FormParser)
     def get(self,request,id=None):
+        
         if id:
             event=basic_display.objects.get(id=id)
             serializer=display_serializer(event)
@@ -991,7 +992,44 @@ class basic_displayAPiView(APIView):
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
     
     def post(self,request):
-        serializer=basic_display_serializer(data=request.data)
+        # h1_data = detail.objects.get(id = int(request.data.get('highlight1')))
+        # h1_ser = DetailSerializer(h1_data).data
+        # request.data['highlight1'] = h1_ser
+        # del request.data['highlight1']['all_timeline']
+
+        # h2_data = detail.objects.get(id = int(request.data.get('highlight2')))
+        # h2_ser = DetailSerializer(h2_data).data
+        # request.data['highlight2'] = h2_ser
+        # del request.data['highlight2']['all_timeline']
+
+
+        # h3_data = detail.objects.get(id = int(request.data.get('highlight3')))
+        # h3_ser = DetailSerializer(h3_data).data
+        # request.data['highlight3'] = h3_ser
+        # del request.data['highlight3']['all_timeline']
+
+        # h4_data = detail.objects.get(id = int(request.data.get('highlight4')))
+        # h4_ser = DetailSerializer(h4_data).data
+        # request.data['highlight4'] = h4_ser
+        # del request.data['highlight4']['all_timeline']
+
+        # h5_data = detail.objects.get(id = int(request.data.get('highlight5')))
+        # h5_ser = DetailSerializer(h5_data).data
+        # request.data['highlight5'] = h5_ser
+        # del request.data['highlight5']['all_timeline']
+
+      
+
+
+        def get_serializer_class(self, *args, **kwargs):
+            if self.request.method == 'POST':
+                self.serializer_class.Meta.depth = 0
+                return basic_display_serializer
+            return basic_display_serializer
+
+
+
+        serializer=self.get_serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1201,17 +1239,224 @@ class supportAPI(APIView):
         event.delete()
         return Response({'item deleted'})
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#_________________________________________________
+
+
+# API's for Comments 
+class CommentApiView( APIView ):
+
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if  pk is not None:
+            comment_obj = get_object_or_404( Commentss , id = pk )
+            print('strartttttttttt')
+            serializer = CommentSerializer( comment_obj )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            
+        all_comments_obj =  Commentss.objects.all()
+        serializer = CommentSerializer( all_comments_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request, pk = None , *args, **kwargs):
+        serializer = CommentSerializer( data = request.data )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self,request, pk = None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  Commentss.objects.get(id = pk)
+            serializer= CommentSerializer( queryset , data=request.data , partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+    def delete(self,request, pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  Commentss.objects.get(id=pk)
+            if queryset.exists():
+                queryset.delete()
+            return Response({'status':'deleted' },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+class ReplyApiView( APIView ):
+
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if pk is not None:
+            reply_obj = get_object_or_404(Reply ,  id = pk )
+            serializer = ReplySerializer( reply_obj )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        all_reply_obj  = Reply.objects.all()
+        serializer = ReplySerializer( all_reply_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request, pk = None , *args, **kwargs):
+        serializer = ReplySerializer( data = request.data )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self,request,pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset = get_object_or_404(Reply  , id =pk)
+            serializer= ReplySerializer( queryset , data=request.data , partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+    def delete( self, request, pk = None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  Reply.objects.get( id=pk)
+            if queryset.exists():
+                queryset.delete()
+            return Response({'status':'deleted' },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+
+
+class LikeApiView( APIView ):
+
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if pk is not None:
+            like_obj = get_object_or_404(LikeModel ,  id = pk )
+            serializer = LikeModelSerializer( like_obj )
+            return Response({'status':'success','data':serializer.data , 'total likes' : like_obj.total_likes},status=status.HTTP_200_OK)
+        all_like_obj  = LikeModel.objects.all()
+        serializer = LikeModelSerializer( all_like_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request, pk = None , *args, **kwargs):
+
+        
+        serializer = LikeModelSerializer( data = request.data )
+        
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self,request,pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset = get_object_or_404(LikeModel ,  id = pk )
+            serializer= LikeModelSerializer( queryset , data=request.data , partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+    def delete( self, request, pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  LikeModel.objects.get(id=pk)
+            if queryset.exists():
+                queryset.delete()
+            return Response({'status':'deleted' },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+
 class multitablesearch(APIView):
     def get( self , request , title = None  , *args , **kwargs ):
         combine_query = {}
         if title is not None:
             detail_obj = detail.objects.filter( title__icontains = title )
             serializer = DetailSerializer( detail_obj  , many=True)
-            combine_query['detail result'] = serializer.data 
+            combine_query[' detail result '] = serializer.data 
 
             workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
             serializer1 = workserializer( workbase_obj , many = True)
-            combine_query['workbase result'] = serializer1.data
+            combine_query[' workbase result '] = serializer1.data
 
             return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+
+
+
+
+# from django.core.exceptions import ObjectDoesNotExist
+# class multitablesearch( APIView ):
+#     def get( self , request , title = None  , *args , **kwargs ):
+#         combine_query = {}
+#         if title is not None:     
+#             try:
+#                 test_condition = detail.objects.get( title__icontains = title )
+#                 detail_obj = detail.objects.filter( title__icontains = title )
+#                 serializer = DetailSerializer( detail_obj  , many=True)
+#                 combine_query['detail result'] = serializer.data 
+#             except MultipleObjectsReturned :
+#                 detail_obj = detail.objects.filter( title__icontains = title )
+#                 serializer = DetailSerializer( detail_obj  , many=True)
+#                 combine_query['detail result'] = serializer.data 
+#             except ObjectDoesNotExist:
+#                 try:
+#                     test_condition_1 = workbaseinfo.objects.get( workbasename__icontains = title )
+#                     workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
+#                     serializer1 = workserializer( workbase_obj , many = True)
+#                     combine_query['workbase result'] = serializer1.data
+#                     return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
+#                 except MultipleObjectsReturned:
+#                     workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
+#                     serializer1 = workserializer( workbase_obj , many = True)
+#                     combine_query['workbase result'] = serializer1.data
+#                     return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
+#                 except :
+#                     try:
+#                         test_condition_1 = workbaseinfo.objects.get( workbasename__icontains = title )
+#                         workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
+#                         serializer1 = workserializer( workbase_obj , many = True)
+#                         combine_query['workbase result'] = serializer1.data
+#                         return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
+#                     except MultipleObjectsReturned:
+#                         workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
+#                         serializer1 = workserializer( workbase_obj , many = True)
+#                         combine_query['workbase result'] = serializer1.data
+#                         return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)  
+#             except :       
+#                 return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
+#         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
+
+
