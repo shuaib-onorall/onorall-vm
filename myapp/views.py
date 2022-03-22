@@ -984,10 +984,10 @@ class basic_displayAPiView(APIView):
     def get(self,request,id=None):
         if id:
             event=basic_display.objects.get(id=id)
-            serializer=basic_display_serializer(event)
+            serializer=display_serializer(event)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         event=basic_display.objects.all()
-        serializer=basic_display_serializer(event,many=True)
+        serializer=display_serializer(event,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
     
     def post(self,request):

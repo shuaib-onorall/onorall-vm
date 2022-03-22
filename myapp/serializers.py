@@ -243,16 +243,25 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
     
-#for the purpose of testing 
+
 #_______________________________________________________________________________________________________________
 #workbase(display,branding)
 class basic_display_serializer(serializers.ModelSerializer):
-    #highlight1=DetailSerializer()
     class Meta:
         model=basic_display
         fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
-        #depth=1
+       
+
+class display_serializer(serializers.ModelSerializer):
+    class Meta:
+        model=basic_display
+        fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
+        depth=1
+       
     
+   
+    
+   
 class basic_branding_serializer(serializers.ModelSerializer):
     class Meta:
         model=basic_branding
