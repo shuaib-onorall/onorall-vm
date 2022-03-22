@@ -53,7 +53,7 @@ class doc_verificationSerializer(serializers.ModelSerializer):
     user_id=signserializers()
     class Meta():
         model=doc_verification
-        fields=['id','user_id','firstname','lastname','email','qualification','specialized','skill_tags','year_of_experience','document_upload','upload_photo','user_id']
+        fields=['id','user_id','firstname','lastname','email','qualification','specialized','skill_tags','year_of_experience','user_id']
         depth=5
 
     def update(self,instance,validated_data):
@@ -225,8 +225,7 @@ class UserSerializer(serializers.ModelSerializer):
          
          
         ]
-    
-    
+      
     def get_contact_id(self, post):
         return abc.contact_id.values_list('contact_id', flat=True)
 
@@ -248,6 +247,7 @@ class UserSerializer(serializers.ModelSerializer):
 #_______________________________________________________________________________________________________________
 #workbase(display,branding)
 class basic_display_serializer(serializers.ModelSerializer):
+    #highlight1=DetailSerializer()
     class Meta:
         model=basic_display
         fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']

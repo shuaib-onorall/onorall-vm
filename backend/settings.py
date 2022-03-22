@@ -51,7 +51,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'channels',
     'rest_framework_simplejwt',
-    
+
     'ws4redis',
 
 
