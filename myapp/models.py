@@ -58,7 +58,7 @@ def get_upload_to(instance, videoid):
 
 
 def create_url( videoid):
-    return 'http://192.168.1.85:8000/general/' +(videoid) #this is used of rsutom thumbnail 
+    return 'http://192.168.1.85:8000/general/' +(videoid) #this is used of custom url
 
 
 publish_choices=(  #this will used for choice in community.
@@ -179,9 +179,7 @@ class connect_comment(models.Model):
     class Meta:
         ordering=['-post_created_on']
 
-    def __str__(self):
-        return str(self.post_comment)
-
+    
     def get_absolute_url(self):
         return reverse('post-detail', kwargs={'pk': self.pk})
 
@@ -313,6 +311,12 @@ class group(models.Model):
 #Notification
 class Notification(models.Model):
     notice=models.CharField(max_length=30)
+    broadcast=models.DateTimeField()
+    sent=models.BooleanField(default=False)
+
+
+    class Meta:
+        ordering=['-broadcast']
 
     def __str__(self):
         return str(self.notice)

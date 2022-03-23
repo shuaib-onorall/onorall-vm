@@ -15,6 +15,7 @@ class NewConsumer(AsyncJsonWebsocketConsumer):
     
     async def disconnect(self,*args,**kwargs):
         print('disconnect')
+        
 
 class Notifyconsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -31,3 +32,21 @@ class Notifyconsumer(AsyncJsonWebsocketConsumer):
     async def new_notice(self,event):
         await self.send_json(event)
         print(f"Got message{event} at {self.channel_name}")
+
+class NotificationCosumer(AsyncJsonWebsocketConsumer):
+    async def connect(self):
+        self.room_name=self.scope['url']['kwargs']['room_name']
+        self.room_group_name='notification_%s'%self.room_name
+
+        await self.channel_layer.group_add(
+            self.room_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+    async def send_notification(self,event):
+        message=event['message']
+        await self.send(text_data=json.dumps({
+            'message':message
+        }))

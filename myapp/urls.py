@@ -75,6 +75,7 @@ urlpatterns = [
     path('suport',views.supportAPI.as_view()),
     path('suport/<int:id>',views.supportAPI.as_view()),
     path('search/<str:title>',views.multitablesearch.as_view()),
+    path('test',views.test,name='test'),
     #path('follow_unfollow/',views.followUnfollow.as_view()),
 
 
@@ -85,7 +86,7 @@ urlpatterns = [
 
 
 
-     #__________________________________________________________________________________:)
+     #_______________________________________________________________________________:)
     path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
     path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
     path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),

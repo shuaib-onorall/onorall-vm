@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ['192.168.1.95'] #['https://cretskill-backend.herokuapp.com/'] #
 # Application definition 
 
 INSTALLED_APPS = [
-    'myapp' ,
+    'myapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'channels',
     'rest_framework_simplejwt',
-    'ws4redis',  
+    'ws4redis',
+    #'django_celery_beat'
+    
 ]
 
 SITE_ID=1
@@ -94,12 +96,14 @@ ASGI_APPLICATION= 'backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-''''DATABASES = {
+''''
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}'''
+}
+'''
 
 DATABASES = {
     'default': {
@@ -302,3 +306,18 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 #for heroku purposes
 import django_on_heroku
 django_on_heroku.settings(locals())
+
+
+#___________________________________________________________________________________________________________________________________
+#celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_RESULT_BACKEND='django-db'
+
+#_______________________________________________________________________________________________________________________________________
+#celery beat
+#CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'

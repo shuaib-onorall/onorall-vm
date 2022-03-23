@@ -115,7 +115,6 @@ def update(self,instance,validated_data):
     super(groupserializer,serilaizer).update(instance.list,groupdata)
 
 #_______________________________________________________________________________________________________________________
-
 #comment serializer
 class CommentChildSerializer(serializers.ModelSerializer):
     parent_id = serializers.PrimaryKeyRelatedField(queryset=Comment.objects.all(),source='parent.id')
@@ -132,8 +131,8 @@ class CommentSerializer(serializers.ModelSerializer):
     replies = serializers.SerializerMethodField()
     class Meta:
         model = connect_comment
-        fields = ('id','post_comment','user','post', 'parent', 'reply_count', 'replies','likes')
-        # depth = 1
+        fields = ['id','post_comment','user','post', 'parent', 'reply_count', 'replies','likes']
+        depth = 1
 
     def get_reply_count(self, obj):
         if obj.is_parent:
@@ -258,8 +257,6 @@ class display_serializer(serializers.ModelSerializer):
         fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
         depth=1
        
-    
-   
     
    
 class basic_branding_serializer(serializers.ModelSerializer):

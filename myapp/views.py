@@ -1202,28 +1202,7 @@ class supportAPI(APIView):
         event.delete()
         return Response({'item deleted'})
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#_________________________________________________
+#_______________________________________________________________________________________________________________________________________
 
 
 # API's for Comments 
@@ -1374,52 +1353,22 @@ class multitablesearch(APIView):
             return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
 
+#______________________________________________________________________________________________________________________________________
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
 
+def test(request):
+    channel_layer=get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        "notification_broadcast",
+        {
+            'type':'send_notification',
+            'message':'Notification'
+        }
+    )
+    return HttpResponse("Done adharv")
+#Notifications
+#__________________________________________________________________________________________________________________________________
 
-
-
-
-
-# from django.core.exceptions import ObjectDoesNotExist
-# class multitablesearch( APIView ):
-#     def get( self , request , title = None  , *args , **kwargs ):
-#         combine_query = {}
-#         if title is not None:     
-#             try:
-#                 test_condition = detail.objects.get( title__icontains = title )
-#                 detail_obj = detail.objects.filter( title__icontains = title )
-#                 serializer = DetailSerializer( detail_obj  , many=True)
-#                 combine_query['detail result'] = serializer.data 
-#             except MultipleObjectsReturned :
-#                 detail_obj = detail.objects.filter( title__icontains = title )
-#                 serializer = DetailSerializer( detail_obj  , many=True)
-#                 combine_query['detail result'] = serializer.data 
-#             except ObjectDoesNotExist:
-#                 try:
-#                     test_condition_1 = workbaseinfo.objects.get( workbasename__icontains = title )
-#                     workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                     serializer1 = workserializer( workbase_obj , many = True)
-#                     combine_query['workbase result'] = serializer1.data
-#                     return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#                 except MultipleObjectsReturned:
-#                     workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                     serializer1 = workserializer( workbase_obj , many = True)
-#                     combine_query['workbase result'] = serializer1.data
-#                     return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#                 except :
-#                     try:
-#                         test_condition_1 = workbaseinfo.objects.get( workbasename__icontains = title )
-#                         workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                         serializer1 = workserializer( workbase_obj , many = True)
-#                         combine_query['workbase result'] = serializer1.data
-#                         return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#                     except MultipleObjectsReturned:
-#                         workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                         serializer1 = workserializer( workbase_obj , many = True)
-#                         combine_query['workbase result'] = serializer1.data
-#                         return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)  
-#             except :       
-#                 return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
 
 
