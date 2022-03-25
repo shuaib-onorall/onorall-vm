@@ -1417,47 +1417,83 @@ class multitablesearch(APIView):
 
 
 
+class RefferalView( APIView ):
 
-# from django.core.exceptions import ObjectDoesNotExist
-# class multitablesearch( APIView ):
-#     def get( self , request , title = None  , *args , **kwargs ):
-#         combine_query = {}
-#         if title is not None:     
-#             try:
-#                 test_condition = detail.objects.get( title__icontains = title )
-#                 detail_obj = detail.objects.filter( title__icontains = title )
-#                 serializer = DetailSerializer( detail_obj  , many=True)
-#                 combine_query['detail result'] = serializer.data 
-#             except MultipleObjectsReturned :
-#                 detail_obj = detail.objects.filter( title__icontains = title )
-#                 serializer = DetailSerializer( detail_obj  , many=True)
-#                 combine_query['detail result'] = serializer.data 
-#             except ObjectDoesNotExist:
-#                 try:
-#                     test_condition_1 = workbaseinfo.objects.get( workbasename__icontains = title )
-#                     workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                     serializer1 = workserializer( workbase_obj , many = True)
-#                     combine_query['workbase result'] = serializer1.data
-#                     return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#                 except MultipleObjectsReturned:
-#                     workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                     serializer1 = workserializer( workbase_obj , many = True)
-#                     combine_query['workbase result'] = serializer1.data
-#                     return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#                 except :
-#                     try:
-#                         test_condition_1 = workbaseinfo.objects.get( workbasename__icontains = title )
-#                         workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                         serializer1 = workserializer( workbase_obj , many = True)
-#                         combine_query['workbase result'] = serializer1.data
-#                         return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#                     except MultipleObjectsReturned:
-#                         workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-#                         serializer1 = workserializer( workbase_obj , many = True)
-#                         combine_query['workbase result'] = serializer1.data
-#                         return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)  
-#             except :       
-#                 return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-#         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if pk is not None:
+            refferal_obj = get_object_or_404(RefferalLink ,  id = pk )
+            serializer = RefferalLinkSerializer( refferal_obj )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        all_like_obj  = RefferalLink.objects.all()
+        serializer = RefferalLinkSerializer( all_like_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request, pk = None , *args, **kwargs):
+        serializer = RefferalLinkSerializer( data = request.data )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
 
+    def patch(self,request,pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset = get_object_or_404(RefferalLink ,  id = pk )
+            serializer= RefferalLinkSerializer( queryset , data=request.data , partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+    def delete( self, request, pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  RefferalLink.objects.get(id=pk)
+            if queryset.exists():
+                queryset.delete()
+            return Response({'status':'deleted' },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+
+
+
+
+
+
+
+# sockets testing
+
+from django.shortcuts import render, redirect
+
+def index_wb(request):
+    if request.method == "POST":
+        room_code = request.POST.get("room_code")
+        char_choice = request.POST.get("character_choice")
+        return redirect(
+            '/play/%s?&choice=%s' 
+            %(room_code, char_choice)
+        )
+    return render(request, "index_wb.html", {})
+
+
+## game/views.py
+from django.shortcuts import render, redirect
+from django.http import Http404
+
+def game(request, room_code):
+    async def c():
+        comment= Commentss.object.all()
+        return   comment
+    choice = request.GET.get("choice")
+    if choice not in ['X', 'O']:
+        raise Http404("Choice does not exists")
+    context = {
+        "char_choice": choice, 
+        "room_code": room_code , 
+        'comment':c
+    }
+    return render(request, "game.html", context)

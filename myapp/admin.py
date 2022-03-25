@@ -29,7 +29,7 @@ admin.site.register(basic_display)
 admin.site.register(MyModel)
 admin.site.register(sharemon)
 admin.site.register(Support)
-
+admin.site.register(RefferalLink)
 
 
 

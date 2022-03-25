@@ -55,8 +55,7 @@ INSTALLED_APPS = [
     'ws4redis',
 
 
-    #seed
-    'django_seed',
+    
    
     
 ]
@@ -122,11 +121,24 @@ DATABASES = {
 
 #configuration redis implementation for the channels .it is used for the notifications
 CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("localhost", 6379)],
-        },
+    'default': {
+        ### Method 1: Via redis lab
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [
+        #       'redis://h:<password>;@<redis Endpoint>:<port>' 
+        #     ],
+        # },
+
+        ### Method 2: Via local Redis
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #      "hosts": [('127.0.0.1', 6379)],
+        # },
+
+        ### Method 3: Via In-memory channel layer
+        ## Using this method.
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
     },
 }
 
@@ -302,10 +314,13 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend']
 }
 
-#aip key
+#api key
 API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 
 #__________________________________________________________________________________________________________________________
 #for heroku purposes
-import django_on_heroku
-django_on_heroku.settings(locals())
+# import django_on_heroku
+# django_on_heroku.settings(locals())
+
+
+

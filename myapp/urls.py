@@ -95,5 +95,19 @@ urlpatterns = [
 
     path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
 
+    #___________________________REFFERAL API
+    path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
+    path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),
+
+
+
+
+
+
+
+    # web sockets
+    path('wb' , views.index_wb , name="index_wb" ) , 
+    path('play/<room_code>', views.game , name='game'),
+
    
 ]

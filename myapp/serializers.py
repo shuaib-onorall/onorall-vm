@@ -317,17 +317,32 @@ class ReplySerializer(serializers.ModelSerializer):
         
 
 class CommentSerializer(serializers.ModelSerializer):
-    #creater=serializers.SerializerMethodField('video_owner_func')
+
+    user_name = serializers.SerializerMethodField('user_name_func')
+    is_creater  =  serializers.SerializerMethodField('is_creater_func')
+
+    # reply = serializers.SerializerMethodField('reply_func')
+    # def reply_func(self , obj):
+    #     all_obj = Commentss.objects.filter(parent = obj.id)
+    #     return CommentSerializer(all_obj , many=True ).data
     
-    # def video_owner_func(self,obj):
-    #     obj=sign.objects.get(id = obj.video_id.user_id.id)
-    #     return obj.id
+    def user_name_func(self,obj):
+        obj=sign.objects.get(id = obj.user_id.id)
+        return obj.name
+
+    def is_creater_func(self , obj):
+        creater_obj = sign.objects.get(id = obj.video_id.user_id.id)
+        comment_user_obj = sign.objects.get(id = obj.user_id)
+        if creater_obj.id == comment_user_obj.id:
+            return True
+        return False
+
 
 
     class Meta:
         model = Commentss
-        fields = ['created_time' , "comment_text" , "user_id"  , "replies" , "video_id" , "likes_on_comment" , "dis_likes_on_comment"] #__all__"
-        depth = 1
+        fields = ['id'  , "comment_text" , "user_id"  , "parent" , "video_id"   ,  "likes_on_comment" , "dis_likes_on_comment" ,  'created_time' , 'user_name'  , 'is_creater'] #__all__"
+        # depth = 1
 
 
 class timelineSerializer(serializers.ModelSerializer):
@@ -341,3 +356,8 @@ class LikeModelSerializer(serializers.ModelSerializer):
         model = LikeModel
         fields = "__all__"
 
+
+class RefferalLinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RefferalLink
+        fields = ['id' , 'time' , 'refferal_code' , 'refferal_by' , 'refferal_for' , 'refferal_plateform'  , 'is_clicked' , 'is_signup' , 'is_creater' , 'is_uploaded']

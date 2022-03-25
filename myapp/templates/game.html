@@ -1,0 +1,84 @@
+{% comment %} game.html {% endcomment %}
+{% load static %}
+
+{% block content %}
+<div class="wrapper">
+    <div class="head">
+
+{% comment %} 
+<h2>{% for i in comment %}</h2>
+<h3>{{i.id}} : at : {{i.created_time}}</h3>
+{% endfor %} {% endcomment %}
+
+        <h1> WEB SOCKETS </h1>
+        <h3>Welcome to room_{{room_code}}</h3>
+    </div>
+    <div id = "game_board" room_code = {{room_code}} char_choice = {{char_choice}}>
+        <div class="square" data-index = '0'></div>
+        <div class="square" data-index = '1'></div>
+        <div class="square" data-index = '2'></div>
+        <div class="square" data-index = '3'></div>
+        <div class="square" data-index = '4'></div>
+        <div class="square" data-index = '5'></div>
+        <div class="square" data-index = '6'></div>
+        <div class="square" data-index = '7'></div>
+        <div class="square" data-index = '8'></div>
+    </div>
+    <div id = "alert_move">Your turn. Place your move <strong>{{char_choice}}</strong></div>
+</div>
+{% endblock content %}
+
+
+
+
+
+{% block javascript %}
+
+<script>
+var roomCode = document.getElementById("game_board").getAttribute("room_code");
+var char_choice = document.getElementById("game_board").getAttribute("char_choice");
+
+var connectionString = 'ws://' + window.location.host + '/ws/play/' + roomCode + '/';
+var gameSocket = new WebSocket(connectionString);
+
+function connect() {
+    gameSocket.onopen = function open() {
+        console.log('WebSockets connection created.');
+        // on websocket open, send the START event.
+        gameSocket.send(JSON.stringify({
+            "event": "START",
+            "message": ""
+        }));
+    };
+
+    gameSocket.onclose = function (e) {
+        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e.reason);
+        setTimeout(function () {
+            connect();
+        }, 1000);
+    };
+    // Sending the info about the room
+    gameSocket.onmessage = function (e) {
+        // On getting the message from the server
+        // Do the appropriate steps on each event.
+        let data = JSON.parse(e.data);
+        data = data["payload"];
+        let message = data['message'];
+        let event = data["event"];
+        console.log( event )
+        console.log( data )
+        console.log( data['type'] )
+        console.log( event )
+        };
+   
+
+    if (gameSocket.readyState == WebSocket.OPEN) {
+        gameSocket.onopen();
+    }
+}
+
+//call the connect function at the start.
+connect();
+
+</script>
+{% endblock javascript %}

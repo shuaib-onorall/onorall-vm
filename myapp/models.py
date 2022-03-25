@@ -27,7 +27,7 @@ class sign(models.Model):
     iscreator=models.BooleanField(default=False)
    
     def __str__(self):
-        return str(self.name)
+        return str(self.id)
 
 #____________________________________________________________________________________________________________________
 
@@ -532,27 +532,28 @@ class sharemon(models.Model):
 class Reply(models.Model):
     #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
     created_time = models.DateTimeField( auto_now_add  = True )
-    person_name = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name_1")
+    person_id = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name_1")
     for_reply =   models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="for_reply_1")
     reply_video = models.ForeignKey( detail , on_delete = models.CASCADE )
 
-    
+    reply_of_reply = models.ManyToManyField("self" , blank = True )
     reply_text = models.CharField( max_length = 2000  , default=" ")
     
     
     def __str__(self):
-        return f"ID : {self.id} || Time : {self.created_time} || personName : {self.person_name}"
+        return f"ID : {self.id} || Time : {self.reply_text} || personName : {self.person_id}"
 
 # Comments Functionality  
 class Commentss(models.Model):
     created_time = models.DateTimeField( auto_now_add = True )
     comment_text = models.CharField(max_length = 2000 , default=" ")
     user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
-    replies = models.ManyToManyField( Reply , blank=True   , related_name="replies" )
+    parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
     video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
     
-    likes_on_comment  = models.ManyToManyField( sign  , related_name="likes_on_comment" )
-    dis_likes_on_comment = models.ManyToManyField( sign  )
+
+    likes_on_comment  = models.ManyToManyField( sign  , related_name="likes_on_comment"  , blank=True )
+    dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
 
 
     @property
@@ -564,30 +565,28 @@ class Commentss(models.Model):
     
 
     def __str__(self):
-        return f"ID : {self.id} || Time : {self.created_time} || personName : {self.user_id}"
+        return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id}"
 
 
 # signals for only like or dislike at same point of time.
-from django.db.models.signals import m2m_changed
-from django.dispatch import receiver
-@receiver(m2m_changed, sender=Commentss.likes_on_comment.through )
-def like_changed(sender, instance  , **kwargs):
-    try:
-        new_obj_of_sign=sign.objects.none()
-        if kwargs['action'] ==  "pre_add":
-            s = " ".join(kwargs['pk_set'])
-            try:
-                new_obj_of_sign = sign.objects.get(id = s)
-            except Exception as e:
-                pass
-        all_sign_dis_like = instance.dis_likes_on_comment.all()
-        if new_obj_of_sign in all_sign_dis_like:
-            # this line is not working but maximum work done in this
-            instance.dis_likes_on_comment.remove(new_obj_of_sign)
-    except Exception as e:
-        pass
-    
-
+# from django.db.models.signals import m2m_changed
+# from django.dispatch import receiver
+# @receiver(m2m_changed, sender=Commentss.likes_on_comment.through )
+# def like_changed(sender, instance  , **kwargs):
+#     try:
+#         new_obj_of_sign=sign.objects.none()
+#         if kwargs['action'] ==  "pre_add":
+#             s = " ".join(kwargs['pk_set'])
+#             try:
+#                 new_obj_of_sign = sign.objects.get(id = s)
+#             except Exception as e:
+#                 pass
+#         all_sign_dis_like = instance.dis_likes_on_comment.all()
+#         if new_obj_of_sign in all_sign_dis_like:
+#             # this line is not working but maximum work done in this
+#             instance.dis_likes_on_comment.remove(new_obj_of_sign)
+#     except Exception as e:
+#         pass
 
 
 # like models
@@ -605,3 +604,31 @@ class LikeModel(models.Model):
         return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
 
 
+
+
+# REFERRAL MODEL
+import uuid
+def generate_ref_code():
+    code = str(uuid.uuid4()).replace("-" , "")[:12]
+    return code
+
+class RefferalLink(models.Model):
+    refferal_code = models.CharField(max_length=12  , blank=True , default="")
+    refferal_by = models.ForeignKey(sign , on_delete=models.CASCADE , related_name='refferal_by')
+    email = models.EmailField( blank=True , null = True  , max_length = 122)
+    refferal_for = models.CharField(max_length=12  , blank=True , default="")
+    refferal_plateform = models.CharField(max_length=100 , blank=True)
+    is_clicked = models.BooleanField(default=False)
+    is_signup = models.BooleanField(default=False)
+    is_creater = models.BooleanField(default=False)
+    is_uploaded = models.BooleanField(default=False)
+    time = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'ID : {str(self.id)} || Refferal By : {str(self.refferal_by)}'
+
+    def save(self, *args , **kwargs ) :
+        if self.refferal_code == "":
+            self.refferal_code = generate_ref_code()
+
+        super().save(*args , **kwargs)
