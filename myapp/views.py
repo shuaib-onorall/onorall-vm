@@ -1337,8 +1337,6 @@ class ReplyApiView( APIView ):
             return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
         return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
 
-
-
     def delete( self, request, pk = None, *args , **kwargs ):
         if pk is not None:
             queryset =  Reply.objects.get( id=pk)
@@ -1363,11 +1361,7 @@ class LikeApiView( APIView ):
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
     def post(self,request, pk = None , *args, **kwargs):
-
-        
         serializer = LikeModelSerializer( data = request.data )
-        
-
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1384,8 +1378,6 @@ class LikeApiView( APIView ):
             return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
         return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
 
-
-
     def delete( self, request, pk= None, *args , **kwargs ):
         if pk is not None:
             queryset =  LikeModel.objects.get(id=pk)
@@ -1394,6 +1386,58 @@ class LikeApiView( APIView ):
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
 
+
+
+class LikeApiForCommentView( APIView ):
+
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if pk is not None:
+            like_obj = get_object_or_404( LikeModelForComments ,  id = pk )
+            serializer = LikeModelForCommentsSerializer( like_obj )
+            return Response({'status':'success','data':serializer.data , 'total likes' : like_obj.total_likes , 'total dislikes' : like_obj.total_dislikes},status=status.HTTP_200_OK)
+        all_like_obj  = LikeModelForComments.objects.all()
+        serializer = LikeModelForCommentsSerializer( all_like_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request, pk = None , *args, **kwargs):
+
+        
+        serializer = LikeModelForCommentsSerializer( data = request.data )
+        
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+    
+    def put(self, request, pk=None, format=None):
+        obj = LikeModelForComments.objects.get( id = int(pk))
+        serializer = LikeModelForCommentsSerializer(obj, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self,request,pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset = get_object_or_404(LikeModelForComments ,  id = pk )
+            serializer= LikeModelForCommentsSerializer( queryset , data=request.data , partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+    def delete( self, request, pk= None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  LikeModelForComments.objects.get(id=pk)
+            if queryset.exists():
+                queryset.delete()
+            return Response({'status':'deleted' },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
 
 
 
@@ -1458,17 +1502,7 @@ class RefferalView( APIView ):
 
 
 
-
-
-
-
-
-
-
-# sockets testing
-
-from django.shortcuts import render, redirect
-
+#__________________________________sockets testing
 def index_wb(request):
     if request.method == "POST":
         room_code = request.POST.get("room_code")

@@ -29,7 +29,6 @@ admin.site.register(basic_display)
 admin.site.register(MyModel)
 admin.site.register(sharemon)
 admin.site.register(Support)
-admin.site.register(RefferalLink)
 
 
 
@@ -40,3 +39,5 @@ admin.site.register(Reply)
 admin.site.register(timelineModel)
 admin.site.register(Commentss)
 admin.site.register(LikeModel)
+admin.site.register(RefferalLink)
+admin.site.register(LikeModelForComments)

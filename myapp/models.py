@@ -543,6 +543,23 @@ class Reply(models.Model):
     def __str__(self):
         return f"ID : {self.id} || Time : {self.reply_text} || personName : {self.person_id}"
 
+class LikeModelForComments(models.Model):
+    id = models.AutoField(primary_key=True , unique=True)
+    all_likes_on_comment = models.ManyToManyField( sign  , blank=False  , related_name="all_likes_on_comment" )
+    all_dislikes_on_comment =  models.ManyToManyField( sign  , blank=False ,   related_name="all_dislikes_on_comment" )
+
+    @property
+    def total_likes(self):
+        return self.all_likes_on_comment.all().count()
+
+    @property
+    def total_dislikes(self):
+        return self.all_dislikes_on_comment.all().count()
+
+
+    def __str__(self):
+        return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
+
 # Comments Functionality  
 class Commentss(models.Model):
     created_time = models.DateTimeField( auto_now_add = True )
@@ -550,10 +567,9 @@ class Commentss(models.Model):
     user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
     parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
     video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
-    
-
-    likes_on_comment  = models.ManyToManyField( sign  , related_name="likes_on_comment"  , blank=True )
-    dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
+    like = models.OneToOneField( LikeModelForComments , on_delete=models.CASCADE  , blank=True)
+    # likes_on_comment  = models.ManyToManyField( sign  , blank=True )
+    # dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
 
 
     @property
@@ -604,8 +620,6 @@ class LikeModel(models.Model):
         return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
 
 
-
-
 # REFERRAL MODEL
 import uuid
 def generate_ref_code():
@@ -622,7 +636,8 @@ class RefferalLink(models.Model):
     is_signup = models.BooleanField(default=False)
     is_creater = models.BooleanField(default=False)
     is_uploaded = models.BooleanField(default=False)
-    time = models.DateTimeField(auto_now_add=True)
+    created_time = models.DateTimeField(auto_now_add=True)
+    updated_time = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'ID : {str(self.id)} || Refferal By : {str(self.refferal_by)}'

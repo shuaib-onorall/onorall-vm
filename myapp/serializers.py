@@ -320,6 +320,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     user_name = serializers.SerializerMethodField('user_name_func')
     is_creater  =  serializers.SerializerMethodField('is_creater_func')
+    all_like = serializers.SerializerMethodField('all_like_func')
+    all_dislike = serializers.SerializerMethodField('all_dislike_func')
 
     # reply = serializers.SerializerMethodField('reply_func')
     # def reply_func(self , obj):
@@ -337,12 +339,38 @@ class CommentSerializer(serializers.ModelSerializer):
             return True
         return False
 
+    def all_dislike_func(self , obj ):
+        dislike_list = []
+        try:
+            dislikemodel_obj = LikeModelForComments.objects.get(id = int(obj.like.id))
+            if dislikemodel_obj :
+                all_dislike_obj = dislikemodel_obj.all_dislikes_on_comment.all()
+                if all_dislike_obj:
+                    for i in all_dislike_obj:
+                        dislike_list.append(i.id)
+            return dislike_list
+        except:
+            return dislike_list
+
+    def all_like_func( self , obj ):
+        likes_list = []
+        try: 
+            likemodel_obj = LikeModelForComments.objects.get( id = int(obj.like.id))
+            if likemodel_obj:
+                all_like_obj = likemodel_obj.all_likes_on_comment.all()
+                if all_like_obj :
+                    for i in all_like_obj:
+                        likes_list.append(i.id)
+                    return likes_list
+        except:
+            return likes_list
+                        
 
 
     class Meta:
         model = Commentss
-        fields = ['id'  , "comment_text" , "user_id"  , "parent" , "video_id"   ,  "likes_on_comment" , "dis_likes_on_comment" ,  'created_time' , 'user_name'  , 'is_creater'] #__all__"
-        # depth = 1
+        fields =['id' , "parent" ,  'is_creater' , "video_id" , "like" , "all_like" , "all_dislike" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name"  ] #__all__"
+        #depth = 1
 
 
 class timelineSerializer(serializers.ModelSerializer):
@@ -357,7 +385,14 @@ class LikeModelSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
+
+class LikeModelForCommentsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LikeModelForComments
+        fields = "__all__"
+
+
 class RefferalLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = RefferalLink
-        fields = ['id' , 'time' , 'refferal_code' , 'refferal_by' , 'refferal_for' , 'refferal_plateform'  , 'is_clicked' , 'is_signup' , 'is_creater' , 'is_uploaded']
+        fields = ['id' ,   'refferal_code' , 'refferal_by' , 'refferal_for' , 'email' , 'refferal_plateform'  , 'is_clicked' , 'is_signup' , 'is_creater' , 'is_uploaded' , 'created_time' , 'updated_time' ]
