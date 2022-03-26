@@ -33,7 +33,8 @@ class Notifyconsumer(AsyncJsonWebsocketConsumer):
         print(f"Got message{event} at {self.channel_name}")
 
 
-
+    async def send_notification(self , event):
+        print('func working           -----------')
 
 
 

@@ -96,9 +96,9 @@ urlpatterns = [
     path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
     path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),
     #___________________________comment like-dislike api
-    path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
-    path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
-    path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
+    # path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
+    # path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
+    # path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
 
     #__________________________web sockets
     path('wb' , views.index_wb , name="index_wb" ) , 

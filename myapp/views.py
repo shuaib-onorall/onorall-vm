@@ -1270,7 +1270,6 @@ class CommentApiView( APIView ):
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
             comment_obj = get_object_or_404( Commentss , id = pk )
-            print('strartttttttttt')
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
             
@@ -1296,9 +1295,64 @@ class CommentApiView( APIView ):
             return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
         return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
 
+    def put(self, request, pk=None , format=None):
+        if request.data['action'] == "add-like":
+            obj = Commentss.objects.get( id = pk)
+            new_ids = request.data['likes_on_comment']
+            try:
+                for i in new_ids:
+                    obj.likes_on_comment.add( get_object_or_404(sign , id=str(i) ) )
+                obj.save()
+                serializer = CommentSerializer(obj)
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            except Exception as e:
+                print(e)
+                return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST) 
 
 
-    def delete(self,request, pk= None, *args , **kwargs ):
+        elif request.data['action'] == "remove-like":
+            obj = Commentss.objects.get( id = pk)
+            new_ids = request.data['likes_on_comment']
+            try:
+                for i in new_ids:
+                    obj.likes_on_comment.remove(  get_object_or_404(sign , id=str(i) ) )
+                obj.save()
+                serializer = CommentSerializer(obj)
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            except Exception as e:
+                print(e)
+                return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST)
+
+
+        elif request.data['action'] == "remove-dislike":
+            obj = Commentss.objects.get( id = pk)
+            new_ids = request.data['dis_likes_on_comment']
+            try:
+                for i in new_ids:
+                    obj.dis_likes_on_comment.remove(  get_object_or_404(sign , id=str(i) ) )
+                obj.save()
+                serializer = CommentSerializer(obj)
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            except Exception as e:
+                print(e)
+                return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST) 
+
+        elif request.data['action'] == "add-dislike":
+            obj = Commentss.objects.get( id = pk)
+            new_ids = request.data['dis_likes_on_comment']
+            try:
+                for i in new_ids:
+                    obj.dis_likes_on_comment.add(  get_object_or_404(sign , id=str(i) ) )
+                obj.save()
+                serializer = CommentSerializer(obj)
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            except Exception as e:
+                print(e)
+                return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({"status":"provide action ( 'add-like' or 'remove-like' or 'add-dislike' or 'remove-dislike' ) "},status=status.HTTP_400_BAD_REQUEST) 
+
+
+    def delete( self , request , pk= None , *args , **kwargs ):
         if pk is not None:
             queryset =  Commentss.objects.get(id=pk)
             if queryset.exists():
@@ -1378,6 +1432,37 @@ class LikeApiView( APIView ):
             return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
         return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
 
+    
+    def put(self, request, pk=None , format=None):
+        if pk is not None :
+            if request.data['action'] == "add-like":
+                obj = LikeModel.objects.get( id = pk)
+                new_ids = request.data['all_likes']
+                try:
+                    for i in new_ids:
+                        obj.all_likes.add( sign.objects.get(id=str(i)))
+                    obj.save()
+                    serializer = LikeModelSerializer(obj)
+                    return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+                except:
+                    return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST) 
+
+            elif request.data['action'] == "remove-like":
+                obj = LikeModel.objects.get( id = pk)
+                new_ids = request.data['all_likes']
+                try:
+                    for i in new_ids:
+                        obj.all_likes.remove( sign.objects.get(id=str(i) ) )
+                    obj.save()
+                    serializer = LikeModelSerializer(obj)
+                    return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+                except:
+                    return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST)
+            return Response({"status":"provide action ( 'add-like' or 'remove-like' ) "},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':' provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+    
+    
     def delete( self, request, pk= None, *args , **kwargs ):
         if pk is not None:
             queryset =  LikeModel.objects.get(id=pk)
@@ -1385,60 +1470,6 @@ class LikeApiView( APIView ):
                 queryset.delete()
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-class LikeApiForCommentView( APIView ):
-
-    def get( self , request , pk = None  , *args , **kwargs ):
-        if pk is not None:
-            like_obj = get_object_or_404( LikeModelForComments ,  id = pk )
-            serializer = LikeModelForCommentsSerializer( like_obj )
-            return Response({'status':'success','data':serializer.data , 'total likes' : like_obj.total_likes , 'total dislikes' : like_obj.total_dislikes},status=status.HTTP_200_OK)
-        all_like_obj  = LikeModelForComments.objects.all()
-        serializer = LikeModelForCommentsSerializer( all_like_obj , many=True )
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-
-    def post(self,request, pk = None , *args, **kwargs):
-
-        
-        serializer = LikeModelForCommentsSerializer( data = request.data )
-        
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-
-    
-    def put(self, request, pk=None, format=None):
-        obj = LikeModelForComments.objects.get( id = int(pk))
-        serializer = LikeModelForCommentsSerializer(obj, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def patch(self,request,pk= None, *args , **kwargs ):
-        if pk is not None:
-            queryset = get_object_or_404(LikeModelForComments ,  id = pk )
-            serializer= LikeModelForCommentsSerializer( queryset , data=request.data , partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
-        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-    def delete( self, request, pk= None, *args , **kwargs ):
-        if pk is not None:
-            queryset =  LikeModelForComments.objects.get(id=pk)
-            if queryset.exists():
-                queryset.delete()
-            return Response({'status':'deleted' },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
 
 
 class multitablesearch(APIView):
@@ -1453,8 +1484,8 @@ class multitablesearch(APIView):
             serializer1 = workserializer( workbase_obj , many = True)
             combine_query[' workbase result '] = serializer1.data
 
-            return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
+            return Response({'status':'success','data': combine_query },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"provide query in url" },status=status.HTTP_400_BAD_REQUEST) 
 
 
 

@@ -112,7 +112,7 @@ class timelineModel(models.Model):
     connected_to = models.ForeignKey(detail , on_delete=models.CASCADE)
     
     def __str__(self) -> str:
-        return  str(self.id)
+        return  f"ID : {str(self.id)} || USER_ID : {str(self.user_id)}"
 
 
 #___________________________________________________________________________________________________________________________
@@ -543,22 +543,22 @@ class Reply(models.Model):
     def __str__(self):
         return f"ID : {self.id} || Time : {self.reply_text} || personName : {self.person_id}"
 
-class LikeModelForComments(models.Model):
-    id = models.AutoField(primary_key=True , unique=True)
-    all_likes_on_comment = models.ManyToManyField( sign  , blank=False  , related_name="all_likes_on_comment" )
-    all_dislikes_on_comment =  models.ManyToManyField( sign  , blank=False ,   related_name="all_dislikes_on_comment" )
+# class LikeModelForComments(models.Model):
+#     id = models.AutoField(primary_key=True , unique=True)
+#     all_likes_on_comment = models.ManyToManyField( sign  , blank=False  , related_name="all_likes_on_comment" )
+#     all_dislikes_on_comment =  models.ManyToManyField( sign  , blank=False ,   related_name="all_dislikes_on_comment" )
 
-    @property
-    def total_likes(self):
-        return self.all_likes_on_comment.all().count()
+#     @property
+#     def total_likes(self):
+#         return self.all_likes_on_comment.all().count()
 
-    @property
-    def total_dislikes(self):
-        return self.all_dislikes_on_comment.all().count()
+#     @property
+#     def total_dislikes(self):
+#         return self.all_dislikes_on_comment.all().count()
 
 
-    def __str__(self):
-        return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
+#     def __str__(self):
+#         return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
 
 # Comments Functionality  
 class Commentss(models.Model):
@@ -567,9 +567,9 @@ class Commentss(models.Model):
     user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
     parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
     video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
-    like = models.OneToOneField( LikeModelForComments , on_delete=models.CASCADE  , blank=True)
-    # likes_on_comment  = models.ManyToManyField( sign  , blank=True )
-    # dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
+    #like = models.OneToOneField( LikeModelForComments , on_delete=models.CASCADE  , blank=True)
+    likes_on_comment  = models.ManyToManyField( sign  , blank=True  , related_name="likes_on_comment")
+    dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
 
 
     @property
@@ -583,29 +583,6 @@ class Commentss(models.Model):
     def __str__(self):
         return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id}"
 
-
-# signals for only like or dislike at same point of time.
-# from django.db.models.signals import m2m_changed
-# from django.dispatch import receiver
-# @receiver(m2m_changed, sender=Commentss.likes_on_comment.through )
-# def like_changed(sender, instance  , **kwargs):
-#     try:
-#         new_obj_of_sign=sign.objects.none()
-#         if kwargs['action'] ==  "pre_add":
-#             s = " ".join(kwargs['pk_set'])
-#             try:
-#                 new_obj_of_sign = sign.objects.get(id = s)
-#             except Exception as e:
-#                 pass
-#         all_sign_dis_like = instance.dis_likes_on_comment.all()
-#         if new_obj_of_sign in all_sign_dis_like:
-#             # this line is not working but maximum work done in this
-#             instance.dis_likes_on_comment.remove(new_obj_of_sign)
-#     except Exception as e:
-#         pass
-
-
-# like models
 class LikeModel(models.Model):
     id = models.AutoField(primary_key=True , unique=True)
     video = models.OneToOneField( detail , on_delete=models.CASCADE )
@@ -617,7 +594,7 @@ class LikeModel(models.Model):
 
 
     def __str__(self):
-        return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
+        return f'ID : {str(self.id)} || VIDEO ID : {str(self.video)}'
 
 
 # REFERRAL MODEL
@@ -627,10 +604,10 @@ def generate_ref_code():
     return code
 
 class RefferalLink(models.Model):
-    refferal_code = models.CharField(max_length=12  , blank=True , default="")
+    refferal_code = models.CharField(max_length=12  , blank=True , default="" , unique = True )
     refferal_by = models.ForeignKey(sign , on_delete=models.CASCADE , related_name='refferal_by')
     email = models.EmailField( blank=True , null = True  , max_length = 122)
-    refferal_for = models.CharField(max_length=12  , blank=True , default="")
+    refferal_for = models.CharField(max_length=12  , blank=True , default="" )
     refferal_plateform = models.CharField(max_length=100 , blank=True)
     is_clicked = models.BooleanField(default=False)
     is_signup = models.BooleanField(default=False)
@@ -647,3 +624,38 @@ class RefferalLink(models.Model):
             self.refferal_code = generate_ref_code()
 
         super().save(*args , **kwargs)
+
+
+
+
+
+
+
+
+
+
+import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+    
+#Notification
+class Notification(models.Model):
+    notice=models.CharField(max_length=30)
+    sent=models.BooleanField(default=False)
+
+
+   
+    def __str__(self):
+        return str(self.notice)
+
+    def save(self,*args,**kwargs):
+        channel_layer=get_channel_layer()
+        notification_objs=Notification.objects.filter(sent=False).count()
+        data={'count':notification_objs,'current_notification':self.notice}
+        async_to_sync(channel_layer.group_send)(
+            'gossip',{
+                'type':'send_notification',
+                'value':json.dumps(data)
+            }
+        )
+        super(Notification,self).save(*args,**kwargs)

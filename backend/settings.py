@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.95'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+ALLOWED_HOSTS = ['192.168.1.95' , '127.0.0.1'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
@@ -54,8 +54,7 @@ INSTALLED_APPS = [
 
     'ws4redis',
 
-
-    
+  
    
     
 ]
@@ -64,6 +63,9 @@ SITE_ID=1
 
 #___________________________________________________________________
 MIDDLEWARE = [
+    
+
+
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -73,7 +75,10 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    
 ]
+
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -122,23 +127,16 @@ DATABASES = {
 #configuration redis implementation for the channels .it is used for the notifications
 CHANNEL_LAYERS = {
     'default': {
-        ### Method 1: Via redis lab
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {
-        #     "hosts": [
-        #       'redis://h:<password>;@<redis Endpoint>:<port>' 
-        #     ],
-        # },
-
-        ### Method 2: Via local Redis
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        # 'CONFIG': {
-        #      "hosts": [('127.0.0.1', 6379)],
-        # },
+     
+       
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+             "hosts": [('127.0.0.1', 6379)],
+        },
 
         ### Method 3: Via In-memory channel layer
         ## Using this method.
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
+      # "BACKEND": "channels.layers.InMemoryChannelLayer"
     },
 }
 
@@ -178,7 +176,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 #STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-#STATIC_ROOT=os.path.join(BASE_DIR,'static')
+STATIC_ROOT=os.path.join(BASE_DIR,'static')
 STATIC_URL = 'static/'
 
 # Default primary key field type
@@ -186,7 +184,7 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS=[
-    os.path.join(BASE_DIR,'static'),
+    os.path.join(BASE_DIR, 'frontend', 'build', 'static'),
     ]
 
 #this is for media configuration
@@ -324,3 +322,39 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 
 
 
+###  DJANGO DEBUG SETTING FOR DEVELOPMENT
+
+if DEBUG:
+    INTERNAL_IPS = ('127.0.0.1',)
+    MIDDLEWARE += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+
+    INSTALLED_APPS += (
+        'debug_toolbar',
+    )
+
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    ]
+
+    DEBUG_TOOLBAR_CONFIG = {
+        'INTERCEPT_REDIRECTS': False,
+    }
+
+def show_toolbar(request):
+    return True
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
+}
