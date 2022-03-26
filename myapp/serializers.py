@@ -333,38 +333,11 @@ class CommentSerializer(serializers.ModelSerializer):
         return obj.name
 
     def is_creater_func(self , obj):
-        creater_obj = sign.objects.get(id = obj.video_id.user_id.id)
-        comment_user_obj = sign.objects.get(id = obj.user_id)
+        creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
+        comment_user_obj = sign.objects.get( id = obj.user_id )
         if creater_obj.id == comment_user_obj.id:
             return True
         return False
-
-    # def all_dislike_func(self , obj ):
-    #     dislike_list = []
-    #     try:
-    #         dislikemodel_obj = LikeModelForComments.objects.get(id = int(obj.like.id))
-    #         if dislikemodel_obj :
-    #             all_dislike_obj = dislikemodel_obj.all_dislikes_on_comment.all()
-    #             if all_dislike_obj:
-    #                 for i in all_dislike_obj:
-    #                     dislike_list.append(i.id)
-    #         return dislike_list
-    #     except:
-    #         return dislike_list
-
-    # def all_like_func( self , obj ):
-    #     likes_list = []
-    #     try: 
-    #         likemodel_obj = LikeModelForComments.objects.get( id = int(obj.like.id))
-    #         if likemodel_obj:
-    #             all_like_obj = likemodel_obj.all_likes_on_comment.all()
-    #             if all_like_obj :
-    #                 for i in all_like_obj:
-    #                     likes_list.append(i.id)
-    #                 return likes_list
-    #     except:
-    #         return likes_list
-                        
 
 
     class Meta:
