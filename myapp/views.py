@@ -1301,7 +1301,9 @@ class CommentApiView( APIView ):
             new_ids = request.data['likes_on_comment']
             try:
                 for i in new_ids:
-                    obj.likes_on_comment.add( get_object_or_404(sign , id=str(i) ) )
+                    s=sign.objects.get( id=str(i) )
+                    if  s not in obj.likes_on_comment.all():
+                        obj.likes_on_comment.add( s )
                 obj.save()
                 serializer = CommentSerializer(obj)
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1315,7 +1317,9 @@ class CommentApiView( APIView ):
             new_ids = request.data['likes_on_comment']
             try:
                 for i in new_ids:
-                    obj.likes_on_comment.remove(  get_object_or_404(sign , id=str(i) ) )
+                    s=sign.objects.get( id=str(i) )
+                    if  s  in obj.likes_on_comment.all():
+                        obj.likes_on_comment.remove(  get_object_or_404(sign , id=str(i) ) )
                 obj.save()
                 serializer = CommentSerializer(obj)
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1329,7 +1333,9 @@ class CommentApiView( APIView ):
             new_ids = request.data['dis_likes_on_comment']
             try:
                 for i in new_ids:
-                    obj.dis_likes_on_comment.remove(  get_object_or_404(sign , id=str(i) ) )
+                    s=sign.objects.get( id=str(i) )
+                    if  s  in obj.likes_on_comment.all():
+                        obj.dis_likes_on_comment.remove(  get_object_or_404(sign , id=str(i) ) )
                 obj.save()
                 serializer = CommentSerializer(obj)
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1342,7 +1348,9 @@ class CommentApiView( APIView ):
             new_ids = request.data['dis_likes_on_comment']
             try:
                 for i in new_ids:
-                    obj.dis_likes_on_comment.add(  get_object_or_404(sign , id=str(i) ) )
+                    s=sign.objects.get( id=str(i) )
+                    if  s not in obj.likes_on_comment.all():
+                        obj.dis_likes_on_comment.add(  get_object_or_404(sign , id=str(i) ) )
                 obj.save()
                 serializer = CommentSerializer(obj)
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1350,6 +1358,7 @@ class CommentApiView( APIView ):
                 print(e)
                 return Response({'status':'something went wrong'},status=status.HTTP_400_BAD_REQUEST) 
         return Response({"status":"provide action ( 'add-like' or 'remove-like' or 'add-dislike' or 'remove-dislike' ) "},status=status.HTTP_400_BAD_REQUEST) 
+
 
 
     def delete( self , request , pk= None , *args , **kwargs ):
