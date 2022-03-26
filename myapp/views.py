@@ -9,7 +9,6 @@ from django.views.generic.edit import DeleteView
 from rest_framework import status
 from django.shortcuts import HttpResponse
 from django.http import Http404
-from myapp.forms import CommentForm
 from django import http
 from django.views.generic.base import View
 from datetime import datetime
@@ -37,212 +36,9 @@ from rest_framework.response import Response
 from rest_framework import authentication, permissions
 from rest_framework.parsers import JSONParser,FormParser,MultiPartParser
 from django.db.models import Q
-
-    
-#Add the comment likes and comment dislikes for video
-
-class Addcomment_likes(LoginRequiredMixin,View):
-    def video_comment(self,request, id,pk,*args,**kwargs): #id is vedio id ,pk is comment id
-        comment=Comment.objects.get(pk=pk)
-        is_dislike=False
-        for dislike in comment.dislikes.all():
-            if dislike == request.user:
-                is_dislike=True
-                break
-
-        if is_dislike:
-            comment.dislikes.remove(request.user)
-
-        is_like=False
-        for like in comment.like.all():
-            if like==request.user:
-                is_like=True
-                break
-
-        if not is_like:
-            comment.likes.add(request.user)
-
-        if is_like:
-            comment.likes.remove(request.user)
+import subprocess
 
 
-        next= request.POST.get('next','/')
-        return HttpResponseRedirect(next)
-
-
-#Add the function comment_dislikes
-class Add_dislikecomment(LoginRequiredMixin,View):
-    def video_comment(self,request,id,pk,*awargs,**kwargs):
-        comment=Comment.objects.get(pk=pk)
-
-        is_like=False
-        for like in comment.likes.all():
-            if like==request.user:
-                is_like=True
-                break
-
-        if is_like:
-            comment.likes.remove(request.user)
-
-        is_dislike=False
-
-        for dislike in comment.dislikes.all():
-            if dislike==request.user:
-                is_dislike=True
-                break
-
-        if not is_dislike:
-            comment.dislikes.add(request.user)
-
-        if is_dislike:
-            comment.dislikes.remove(request.user)
-
-        next = request.POST.get('next', '/')
-        return HttpResponseRedirect(next)
-
-# function which post the comment and replies comment
-def post_detail(request, videofile):
-    post = get_object_or_404(videos, slug=videofile)
-    comments = post.comments.filter(active=True, parent__isnull=True)
-    if request.method == 'POST':
-        comment_form = CommentForm(data=request.POST)
-        if comment_form.is_valid():
-            parent_obj = None
-            try:
-                parent_id = int(request.POST.get('parent_id'))
-            except:
-                parent_id = None
-            if parent_id:
-                parent_obj = Comment.objects.get(id=parent_id)
-                if parent_obj:
-                    reply_comment = comment_form.save(commit=False)
-                    reply_comment.parent = parent_obj
-            new_comment = comment_form.save(commit=False)
-            new_comment.post = post
-            new_comment.save()
-            return HttpResponseRedirect(post.get_absolute_url())
-    else:
-        comment_form = CommentForm()
-        context={'post': post,
-                   'comments': comments,
-                   'comment_form': comment_form}
-    return render(request,
-                  'templatename',context)
-
-#function for the follow,unfollow,pending request and delete request.
-#function for the follow ,unfollow and pending request and private account
-'''
-class followUnfollow(APIView):
-    permission_classes=[IsAuthenticated]
-
-    def current_profile(self,pk):
-        try:
-            return Support.objects.get(user=self.request.user)
-        except Support.DoesNotExist:
-            raise Http404
-    
-    def other_profile(self,pk,request):
-        pk=request.data.get('id')  #here pk is opposite user,s profile ID
-        req_type= request.data.get('type')
-        current_profile=self.current_profile()
-        other_profile=self.other_profile(pk)
-
-        if req_type=='follow':
-            if other_profile.private_account:
-                other_profile.pending_request.add(current_profile)
-                return Response({'Requested':'Follow request has been send !!'},status=status.HTTP_200_0k)
-
-            else:
-                if other_profile.blocked_user.filter(id=current_profile).exists():
-                    return Response({'Following Fail':"you cannot follow this profilebecuase your id blocked by this user "},status=status.HTTP_400_BAD_REQUEST)
-                current_profile.following.add(other_profile)
-                other_profile.followers.add(current_profile)
-                return Response({"Following":"Following success"},status=status.HTTP_200_0k)
-
-        elif req_type =='accept':
-            current_profile.followers.add(other_profile)
-            other_profile.following.add(current_profile)
-            current_profile.pending_request.remove(other_profile)
-            return Response({'Accepted':"Follow request accept successfully"},status=status.HTTP_200_0k)
-
-        elif req_type=='decline':
-            current_profile.pending_request.remove(other_profile)
-            return Response({'Decline':'follow request successfully declined !!'},status=status.HTTP_200_0k)
-
-        elif  req_type=='unfollow':
-            current_profile.following.remove(other_profile)
-            other_profile.followers.remove(current_profile)
-            return Response({'unfollow':"unfollow success"},status=status.HTTP_200_0k)
-
-        elif req_type=='remove':
-            current_profile.followers.remove(other_profile)
-            other_profile.following.remove(current_profile)
-            return Response({'Remove Success':'Successfully removed your follower'},status=status.HTTP_200_0k)
-
-#here we fetch the data followers,following detail and blocked user
-def patch(self,request,format=None):
-    req_type=request.data.get('type')
-
-    if req_type=="follow detail":
-        serializer=FollowerSerializer(self.current_profile())
-        return Response({'data':serializer.data},status=status.HTTP_200_0k)
-
-    elif req_type=='block_pending':
-        serializer=BlockPendingSerializer(self.current_profile())
-        pf=list(Support.objects.filter(pending_request=self.current_profile().id).values('id','user_username'))
-        return Response({'data':serializer.data,'sended Request':pf},status=status.HTTP_200_0k)
-
-
-#you can block and unblock
-def put(self,request,format=None):
-    pk=request.data.get('id')
-    req_type=request.data.get('type')
-
-    if req_type =='block':
-        self.current_profile().blocked_user.add(self.other_profile(pk))
-        return Response({'Blocked':'This user blocked successfully '},status=status.HTTP_200_0k)
-
-    elif req_type =='unblock':
-        self.current_profile().blocked_user.remove(self.other_profile(pk))
-        return Response({'unblocked':"this user unblocked successfully"},status=status.HTTP_200_0k)
-
-
-
-
-#this is useful and alternate for vedio  api
-
-class FileView(APIView):
-  parser_classes = (MultiPartParser, FormParser)
-
-  serializer_class=FileSerializer
-  
-  def get(self,request,id=None):
-      if id:
-          file=File.objects.get(id=id)
-          fileserializer=FileSerializer(file)
-          return Response({"status":"success","data":fileserializer.data},status=status.HTTP_200_OK)
-
-      allvideos=File.objects.all()
-      serializer=FileSerializer(allvideos,many=True)       #context request:request create the url>>> context={'request':request}
-      return Response({ "status":"success","data":serializer.data},status=status.HTTP_200_OK)
-
-  def post(self, request, *args, **kwargs):
-    file_serializer = FileSerializer(data=request.data)
-    video=request.data.get('file')
-    if file_serializer.is_valid():
-        cmd=f'ffmpeg -i "{video}" -vf fps=1/6 img%06d.jpg'  
-        subprocess.run(cmd, shell=True,stderr=subprocess.STDOUT)
-        file_serializer.save()
-        return Response({'data':file_serializer.data},status=status.HTTP_201_CREATED)
-    else:
-      return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-  def delete(self, request,  id=None):
-        event = get_object_or_404(File,id=id)
-        event.delete()
-        return Response({"status":"success","data":"item deleted"} )     
-
-'''
 #___________________________________________________________________________________________________________________________________________
 
 #Api for video detailing  
@@ -593,29 +389,7 @@ class WorkApiView(APIView):
 from itertools import chain
 from rest_framework import filters
 from rest_framework import generics
-class SearchAPIView(generics.ListCreateAPIView):
-   def get_queryset(self):
-        request = self.request
-        query = request.GET.get('q', None)
-        
-        if query is not None:
-            blog_results        = detail.objects.search(query)
-            lesson_results      = workbaseinfo.objects.search(query)
-           
-            
-            # combine querysets 
-            queryset_chain = chain(
-                    blog_results,
-                    lesson_results,
-                   
-            )        
-            qs = sorted(queryset_chain, 
-                        key=lambda instance: instance.pk, 
-                        reverse=True)
-            self.count = len(qs) # since qs is actually a list
-            return qs
-        return detail.objects.none() 
-#___________________________________________________________________________________________________
+#_______________________________________________________________
 class connectSearchAPIView(generics.ListCreateAPIView):
     search_fields = ['^title','^tags','user__name']
     filter_backends = (filters.SearchFilter,)
@@ -624,31 +398,6 @@ class connectSearchAPIView(generics.ListCreateAPIView):
 
 
 #_________________________________________________________________________________________________________________
-#comment system begin
-from rest_framework import authentication, permissions
-class commentApiView(APIView):
-    parser_classes= [JSONParser]
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-   
-    def get(self,request,post_id=None):
-        if post_id:
-            allinfo=connect_comment.objects.get(id=post_id)
-            serializer=CommentSerializer(allinfo)
-            return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
-        allbaseinfo=connect_comment.objects.all()
-        serializer=CommentSerializer(allbaseinfo,many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-
-    def post(self,request,post_id=None):
-        post=connect.objects.get(pk=post_id)
-        serializer=CommentSerializer(data=request.data)
-        if serializer.is_valid(post=post):
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'error','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-    
-
 #api for report 
 class reportApiview(APIView):
     parser=(MultiPartParser,FormParser)
@@ -717,67 +466,6 @@ class verifyotp(APIView):
         else:
             return Response({'not otp available'})
 
-#ffmpeg_______________________________________________________________________________________________________#
-import ffmpeg
-import subprocess
-#thumbnail 
-def query_set():
-    video = r"C:\ONORALL\media\file\spider_Dud1tKa.mp4"
-    #file=File.objects.get(id=154)
-    
-    cmd=f'ffmpeg -i "{video}" -vf fps=1/6 img%06d.jpg'  
-    print(cmd)
-    subprocess.run(cmd, shell=True,stderr=subprocess.STDOUT)
-    return Response({'video_thumbnail':video}) 
-#query_set()
-
-#compressing video
-def compressing_video():
-    input = r"C:\Users\user\Downloads\amit2.mp4"
-    output = r"C:\Users\user\Downloads\out.mp4"
-    #cmd=f'ffmpeg -i "{input}" "{output}"'
-    cmd=f'ffmpeg -i "{input}" -vcodec libx264 -crf 28 "{output}"'
-    print(cmd)
-    subprocess.check_output(cmd, shell=True)
-#comprressing_video()
-
-#________________________________________________________________________________________________________________#
-#likes view
-
-class LikeView(APIView):
-    """Toggle like"""
-
-    def get(self, request,like='', format=None, post_id=None):
-        post = connect.objects.get(id=post_id)
-        user = self.request.user
-        #like=True
-        if request.user.is_authenticated:
-            like=True
-            if user in post.likes.all():
-                like = False
-                post.likes.remove(user)
-            else:
-                like = True
-                post.likes.add(user)
-        return Response({'like':like})
-
-#________________________________________________________________________________________________________________________
-#for the video toggel like 
-class videolikeAPi(APIView):
-    def get(self,request,format=None,detid=None):
-        video=detail.objects.get(id=detid)
-        user=self.request.user
-        if request.user.is_authenticated:
-            if user in video.likesvideo.all():
-                like=False
-                video.likesvideo.remove(user)
-            else:
-                like=True
-                video.likesvideo.add(user)
-        data={
-            'like':like
-        }
-        return Response(data)
 #________________________________________________________________________________________________________________________________
 class addresourcesAPIView(APIView):
     parser=(MultiPartParser,FormParser)
@@ -1074,11 +762,8 @@ def findduration(videoid=None):
     metadata = subprocess.check_output(f"ffprobe -i {video} -v quiet -print_format json -show_format -hide_banner".split(" "))
     metadata = json.loads(metadata)
     data=f" {float(metadata['format']['duration'])}"
-   # print(data)
     converted_data=int(float(data))
     result=converted_data//4
-    #frameduration=print(result)
-    #print(type(result))
     return result
  
 #___________________________________________________________________________________________________________________________
@@ -1091,15 +776,9 @@ def Automatic_generated_thumbnail(videoid=None):
     frame=findduration(videoid)
     video=r"C:\ONORALL\media\\" + file_path
     output=r"C:\ONORALL\media\\" + file_path
-    #auto_thumbnail_path=str(output)
-    #data=auto_thumbnail_path[:-4]
-    #print(data)
     command=f'ffmpeg -i "{video}" -vf fps=1/{frame} {output}img%0d.jpg'  
-    #print(command)
     subprocess.run(command, shell=True,stderr=subprocess.STDOUT)
     return Response({'video_thumbnail':video})
-a='1O7oaSB2C86m'
-#Automatic_generated_thumbnail(a)
 #_______________________________________________________________________________________________________________________
 def compressing_video(videoid=None):
     file=detail.objects.get(videoid=videoid)
@@ -1109,12 +788,9 @@ def compressing_video(videoid=None):
     print(video)
     a='1'
     output = r"C:\ONORALL\media\upload\\" + videoid + '\\'+ videoid +'compress.mp4'
-    #data=output[:-4]
     cmd=f'ffmpeg -i "{video}" -vcodec libx264 -crf 28 "{output}"' #crf is the most important thing (constant rate factor)
     print(cmd)
     subprocess.check_output(cmd, shell=True)
-#videoid="1O7oaSB2C86m"
-#compressing_video(videoid)
 #_______________________________________________________________________________________________________________________
 import ffmpeg_streaming
 from ffmpeg_streaming import Formats, Bitrate, Representation, Size
@@ -1170,14 +846,6 @@ class ShareMonetize(APIView):
 #___________________________________________________________________________________________________________________________
 
 from drf_multiple_model.views import ObjectMultipleModelAPIView  
-class SearchFilterView(ObjectMultipleModelAPIView):
-    querylist = (
-            {'queryset': detail.objects.all(), 'serializer_class': DetailSerializer},
-            #{'queryset': workbaseinfo.objects.filter(workbasename='sumitkeen'), 'serializer_class': workserializer},
-        )
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ['title']
-#new coomit
 #________________________________________________________________________________________________________________________________
 class supportAPI(APIView):
     def get(self,request,id=None):
@@ -1203,141 +871,6 @@ class supportAPI(APIView):
         return Response({'item deleted'})
 
 #_______________________________________________________________________________________________________________________________________
-
-
-# API's for Comments 
-class CommentApiView( APIView ):
-
-    def get( self , request , pk = None  , *args , **kwargs ):
-        if  pk is not None:
-            comment_obj = get_object_or_404( Commentss , id = pk )
-            print('strartttttttttt')
-            serializer = CommentSerializer( comment_obj )
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-            
-        all_comments_obj =  Commentss.objects.all()
-        serializer = CommentSerializer( all_comments_obj , many=True )
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-
-    def post(self,request, pk = None , *args, **kwargs):
-        serializer = CommentSerializer( data = request.data )
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-
-
-    def patch(self,request, pk = None, *args , **kwargs ):
-        if pk is not None:
-            queryset =  Commentss.objects.get(id = pk)
-            serializer= CommentSerializer( queryset , data=request.data , partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
-        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-    def delete(self,request, pk= None, *args , **kwargs ):
-        if pk is not None:
-            queryset =  Commentss.objects.get(id=pk)
-            if queryset.exists():
-                queryset.delete()
-            return Response({'status':'deleted' },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-class ReplyApiView( APIView ):
-
-    def get( self , request , pk = None  , *args , **kwargs ):
-        if pk is not None:
-            reply_obj = get_object_or_404(Reply ,  id = pk )
-            serializer = ReplySerializer( reply_obj )
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        all_reply_obj  = Reply.objects.all()
-        serializer = ReplySerializer( all_reply_obj , many=True )
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-
-    def post(self,request, pk = None , *args, **kwargs):
-        serializer = ReplySerializer( data = request.data )
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-
-
-    def patch(self,request,pk= None, *args , **kwargs ):
-        if pk is not None:
-            queryset = get_object_or_404(Reply  , id =pk)
-            serializer= ReplySerializer( queryset , data=request.data , partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
-        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-    def delete( self, request, pk = None, *args , **kwargs ):
-        if pk is not None:
-            queryset =  Reply.objects.get( id=pk)
-            if queryset.exists():
-                queryset.delete()
-            return Response({'status':'deleted' },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-
-
-class LikeApiView( APIView ):
-
-    def get( self , request , pk = None  , *args , **kwargs ):
-        if pk is not None:
-            like_obj = get_object_or_404(LikeModel ,  id = pk )
-            serializer = LikeModelSerializer( like_obj )
-            return Response({'status':'success','data':serializer.data , 'total likes' : like_obj.total_likes},status=status.HTTP_200_OK)
-        all_like_obj  = LikeModel.objects.all()
-        serializer = LikeModelSerializer( all_like_obj , many=True )
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-
-    def post(self,request, pk = None , *args, **kwargs):
-
-        
-        serializer = LikeModelSerializer( data = request.data )
-        
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-
-
-    def patch(self,request,pk= None, *args , **kwargs ):
-        if pk is not None:
-            queryset = get_object_or_404(LikeModel ,  id = pk )
-            serializer= LikeModelSerializer( queryset , data=request.data , partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
-        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-    def delete( self, request, pk= None, *args , **kwargs ):
-        if pk is not None:
-            queryset =  LikeModel.objects.get(id=pk)
-            if queryset.exists():
-                queryset.delete()
-            return Response({'status':'deleted' },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
-
-
-
 class multitablesearch(APIView):
     def get( self , request , title = None  , *args , **kwargs ):
         combine_query = {}
@@ -1354,21 +887,5 @@ class multitablesearch(APIView):
         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
 
 #______________________________________________________________________________________________________________________________________
-from channels.layers import get_channel_layer
-from asgiref.sync import async_to_sync
-
-def test(request):
-    channel_layer=get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        "notification_broadcast",
-        {
-            'type':'send_notification',
-            'message':'Notification'
-        }
-    )
-    return HttpResponse("Done adharv")
-#Notifications
-#__________________________________________________________________________________________________________________________________
-
 
 

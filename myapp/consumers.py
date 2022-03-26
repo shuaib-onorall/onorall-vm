@@ -15,7 +15,7 @@ class NewConsumer(AsyncJsonWebsocketConsumer):
     
     async def disconnect(self,*args,**kwargs):
         print('disconnect')
-        
+
 
 class Notifyconsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -29,9 +29,10 @@ class Notifyconsumer(AsyncJsonWebsocketConsumer):
         await self.channel_layer.group_discard( self.group_name ,self.channel_name)
         print(f"Removed{self.channel_name} channel from gossip")
 
-    async def new_notice(self,event):
-        await self.send_json(event)
-        print(f"Got message{event} at {self.channel_name}")
+    async def send_notification(self,event):
+        print(event)
+        await self.send(text_data=json.dumps(event))
+       # print('working______________')
 
 class NotificationCosumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
@@ -42,7 +43,6 @@ class NotificationCosumer(AsyncJsonWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-
         await self.accept()
 
     async def send_notification(self,event):

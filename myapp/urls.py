@@ -41,15 +41,10 @@ urlpatterns = [
     path('thumbnail/<str:videoid>',views.thumbnailapiview.as_view()),
     path('workbase',views.WorkApiView.as_view()),
     path('workbase/<int:id>',views.WorkApiView.as_view()),
-    path('engine/',views.SearchAPIView.as_view()), #this  search for detail 
     path('searchengine/',views.connectSearchAPIView.as_view()), #in the search path we have to use / (slash) this one for connect 
-    path('comment',views.commentApiView.as_view()),
-    path('comment/<int:id>',views.commentApiView.as_view()),
     path('report',views.reportApiview.as_view()),
     path('otp',views.sendotp.as_view()),
     path('verify',csrf_exempt(views.verifyotp.as_view())),
-    path('like/<int:post_id>', views.LikeView.as_view(),name='like'), #for toggel post like 
-    path('videolike/<int:detid>',views.videolikeAPi.as_view(),name='videolike'), #for the toggel videolike
     path('resources',views.addresourcesAPIView.as_view()),
     path('resources/<int:id>',views.addresourcesAPIView.as_view()),
     path('question',views.questionnaireAPIView.as_view()),
@@ -75,26 +70,5 @@ urlpatterns = [
     path('suport',views.supportAPI.as_view()),
     path('suport/<int:id>',views.supportAPI.as_view()),
     path('search/<str:title>',views.multitablesearch.as_view()),
-    path('test',views.test,name='test'),
-    #path('follow_unfollow/',views.followUnfollow.as_view()),
-
-
-
-
-
-
-
-
-
-     #_______________________________________________________________________________:)
-    path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
-    path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
-    path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),
-    path('reply/<int:pk>/', views.ReplyApiView.as_view() , name='all-reply-api-view'),
-    path('likes/<int:pk>/', views.LikeApiView.as_view() , name='all-like-api-view-single'),
-    path('likes/', views.LikeApiView.as_view() , name='all-like-api-view'),
-
-    path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
-
    
 ]
