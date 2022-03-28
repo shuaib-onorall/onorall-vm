@@ -74,7 +74,7 @@ urlpatterns = [
     path('monetize/<int:id>',views.ShareMonetize.as_view()),
     path('suport',views.supportAPI.as_view()),
     path('suport/<int:id>',views.supportAPI.as_view()),
-    path('search/<str:title>',views.multitablesearch.as_view()),
+   
     #path('follow_unfollow/',views.followUnfollow.as_view()),
 
 
@@ -82,16 +82,18 @@ urlpatterns = [
 
 
 
-
-
-
      #__________________________________________________________________________________:)
+    path('search/<str:title>',views.multitablesearch.as_view()),
+
     path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
     path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
+
     path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),
     path('reply/<int:pk>/', views.ReplyApiView.as_view() , name='all-reply-api-view'),
+
     path('likes/<int:pk>/', views.LikeApiView.as_view() , name='all-like-api-view-single'),
     path('likes/', views.LikeApiView.as_view() , name='all-like-api-view'),
+
     #___________________________REFFERAL API
     path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
     path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),

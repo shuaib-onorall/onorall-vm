@@ -342,7 +342,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Commentss
-        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name"  ] #__all__"
+        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ] #__all__"
         #depth = 1
 
 

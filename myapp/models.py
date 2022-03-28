@@ -571,6 +571,10 @@ class Commentss(models.Model):
     likes_on_comment  = models.ManyToManyField( sign  , blank=True  , related_name="likes_on_comment")
     dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
 
+    like_active = models.CharField(max_length = 2000 , blank=True , default='null')
+    dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
+    
+
 
     @property
     def total_likes_on_comment( self ):
