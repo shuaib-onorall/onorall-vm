@@ -6,7 +6,6 @@ from django.urls.base import reverse_lazy
 from django.views.generic import DetailView ,ListView
 from django.urls import reverse
 from django.views.generic.edit import DeleteView
-from numpy import delete
 from rest_framework import status
 from django.shortcuts import HttpResponse
 from django.http import Http404
