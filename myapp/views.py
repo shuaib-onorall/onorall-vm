@@ -1298,13 +1298,12 @@ class CommentApiView( APIView ):
    
     def put(self, request, pk=None , format=None):
         if pk is not None:
-            obj = Commentss.objects.get( id = pk)                             # get the Comment-object from url id (pk)
+            obj = Commentss.objects.get( id = pk)
             if request.data['action'] == "like" :
                 new_ids = request.data.get('likes_on_comment')   
                 if new_ids != None:                  
-                    sign_obj = sign.objects.get(id=str(new_ids[0]))               # from dislike ids get the dislike person
-                    print(new_ids)
-                    if sign_obj not in obj.likes_on_comment.all() :               # if like-person NOT IN li likes
+                    sign_obj = sign.objects.get(id=str(new_ids[0]))               
+                    if sign_obj not in obj.likes_on_comment.all() :              
                         obj.likes_on_comment.add(sign_obj)
                         obj.like_active ='liked'
                         obj.save()
@@ -1349,6 +1348,7 @@ class CommentApiView( APIView ):
                         return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
                 serializer = CommentSerializer(obj)
                 return Response({'status':'removelike-success'},status=status.HTTP_200_OK)
+
                 
 
 
