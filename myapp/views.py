@@ -1322,8 +1322,7 @@ class CommentApiView( APIView ):
                         serializer = CommentSerializer(obj)
                         return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
                 serializer = CommentSerializer(obj)
-                return Response({'status':'removelike-success'},status=status.HTTP_200_OK)
-                
+                return Response({'status':'removelike-success'},status=status.HTTP_200_OK)    
             elif request.data['action'] == "dislike" :
                 new_ids = request.data.get('dis_likes_on_comment') 
                 if new_ids != None:                  
@@ -1347,7 +1346,7 @@ class CommentApiView( APIView ):
                         serializer = CommentSerializer(obj)
                         return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
                 serializer = CommentSerializer(obj)
-                return Response({'status':'removelike-success'},status=status.HTTP_200_OK)
+                return Response({'status':'removelike-success'},status = status.HTTP_200_OK)
 
                 
 
