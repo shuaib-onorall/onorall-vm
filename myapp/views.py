@@ -6,13 +6,13 @@ from django.urls.base import reverse_lazy
 from django.views.generic import DetailView ,ListView
 from django.urls import reverse
 from django.views.generic.edit import DeleteView
+from numpy import delete
 from rest_framework import status
 from django.shortcuts import HttpResponse
 from django.http import Http404
 from django import http
 from django.views.generic.base import View
 from datetime import datetime
-from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 import random
@@ -845,7 +845,7 @@ class ShareMonetize(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #___________________________________________________________________________________________________________________________
 
-from drf_multiple_model.views import ObjectMultipleModelAPIView  
+
 #________________________________________________________________________________________________________________________________
 class supportAPI(APIView):
     def get(self,request,id=None):
@@ -875,6 +875,7 @@ class multitablesearch(APIView):
     def get( self , request , title = None  , *args , **kwargs ):
         combine_query = {}
         if title is not None:
+            title=title.lower().strip()
             detail_obj = detail.objects.filter( title__icontains = title )
             serializer = DetailSerializer( detail_obj  , many=True)
             combine_query[' detail result '] = serializer.data 
@@ -887,5 +888,65 @@ class multitablesearch(APIView):
         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
 
 #______________________________________________________________________________________________________________________________________
+class connect_comment_Api(APIView):
+    def get(self,request,id=None):
+        if id:
+            comment=connect_comment.objects.get(id=id)
+            serializers=connect_comment_serializer(comment)
+            return Response({'data':serializers.data,'status':'success'},status=status.HTTP_200_OK)
+        comment_data=connect_comment.objects.all()
+        serializer=connect_comment_serializer(comment_data,many=True)
+        return  Response({'data':serializer.data,'status':'success'},status=status.HTTP_200_OK)
 
+    def post(self,request,*args,**kwargs):
+        serializer=connect_comment_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'data':serializer.data,'status':'success'},status=status.HTTP_200_OK)
+    
+    def put(self,request,id=None):
+        comment=connect_comment.objects.get(id=id)
+        new_id=request.data['likes_comment'] #we are taking the input in the list beacuse we are using many ot many relation thats why we takes 0 index 
+        sign_obj=sign.objects.get(id=str(new_id[0]))
+        if request.data['action']=='like':
+            if sign_obj not in comment.likes_comment.all():
+                if sign_obj in comment.comment_dislikes.all():
+                    comment.comment_dislikes.remove(sign_obj)
+                comment.likes_comment.add(sign_obj)
+                comment.save()
+                serializer = connect_comment_serializer(comment)
+                return Response({'status':'addlike-success','data':serializer.data},status=status.HTTP_200_OK)
+            else:
+                comment.likes_comment.remove( sign_obj )
+                comment.save()
+                serializer = connect_comment_serializer(comment)
+                return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+
+        elif  request.data['action'] == "dislike" :
+
+                new_ids = request.data['comment_dislikes']       # get the dislike id from frontend
+                sign_obj = sign.objects.get(id=str(new_ids[0]))       # from dislike ids get the dislikecommentects
+                
+                if sign_obj not in comment.comment_dislikes.all() :
+                    if  sign_obj  in comment.likes_on_comment.all() :
+                       comment.likes_on_comment.remove( sign_obj )
+                    comment.comment_dislikes.add( sign_obj )
+                    comment.save()
+                    serializer = connect_comment_serializer(comment)
+                    return Response({'status':'add-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
+                else:
+                   comment.comment_dislikes.remove( sign_obj )
+                   comment.save()
+                   serializer = connect_comment_serializer(comment)
+                   return Response({'status':'remove-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
+
+           
+
+
+    def delete(self,request,id=None):
+        event=get_object_or_404(connect_comment,id=id)
+        event.delete()
+        return Response({'status':'item deleted successfully'})
+
+#__________________________________________________________________________________________________________________________________________
 

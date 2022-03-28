@@ -62,9 +62,7 @@ class doc_verificationSerializer(serializers.ModelSerializer):
         super(self.__class__,self).update(instance,validated_data)
         super(signserializers,userserializer).update(instance.user_id,userdata)
         return instance
-
 #_____________________________________________________________________________________________________________________________
-
 #connect serializer
 class connectSerializer(serializers.ModelSerializer):
     class Meta():
@@ -74,6 +72,16 @@ class connectSerializer(serializers.ModelSerializer):
     def get_liked_by_req_user(self, obj):
         user = self.context['request'].user
         return user in obj.likes.all()
+
+class connect_comment_serializer(serializers.ModelSerializer):
+    reply=serializers.SerializerMethodField('child_comment')
+    def child_comment(self,obj):
+            all_obj=connect_comment.objects.filter(parent=obj.id)
+            return connect_comment_serializer(all_obj,many=True).data
+
+    class Meta():
+        model=connect_comment
+        fields=['id','commentid','user','post_comment','post_created_on','post','parent','likes_comment','comment_dislikes','reply']
 #______________________________________________________________________________________________________________________________
     
 

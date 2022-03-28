@@ -20,7 +20,6 @@ class NewConsumer(AsyncJsonWebsocketConsumer):
 class Notifyconsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.group_name = 'gossip'
-        
         await self.channel_layer.group_add(self.group_name ,self.channel_name)
         await self.accept()
         print(f"Added{self.channel_name} channel to gossip")
@@ -45,8 +44,8 @@ class NotificationCosumer(AsyncJsonWebsocketConsumer):
         )
         await self.accept()
 
-    async def send_notification(self,event):
-        message=event['message']
-        await self.send(text_data=json.dumps({
-            'message':message
-        }))
+    #async def send_notification(self,event):
+       # message=event['message']
+        #await self.send(text_data=json.dumps({
+        #    'message':message
+        #}))

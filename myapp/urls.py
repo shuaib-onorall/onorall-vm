@@ -70,5 +70,7 @@ urlpatterns = [
     path('suport',views.supportAPI.as_view()),
     path('suport/<int:id>',views.supportAPI.as_view()),
     path('search/<str:title>',views.multitablesearch.as_view()),
+    path('connect_comment',views.connect_comment_Api.as_view()),
+    path('connect_comment/<int:id>',views.connect_comment_Api.as_view()),
    
 ]

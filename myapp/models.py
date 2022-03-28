@@ -163,7 +163,8 @@ class connect(models.Model):
     def __str__(self):
         return str(self.title)
 #_________________________________________________________________________________________________________________________
-
+from django.dispatch import receiver
+from django.db.models.signals import post_save,pre_delete
 
 #community post comment
 class connect_comment(models.Model):
@@ -173,25 +174,15 @@ class connect_comment(models.Model):
     post_created_on=models.DateTimeField(auto_now=True)
     post=models.ForeignKey(connect,blank=True,on_delete=models.CASCADE)
     parent=models.ForeignKey('connect_comment',null=True,blank=True,related_name='replies',on_delete=models.CASCADE)
-    likes=models.ManyToManyField(User,blank=True ,related_name='Post_comment_likes')
-    comment_disllikes=models.ManyToManyField(sign,blank=True,related_name='Post_comment_dislkikes')
+    likes_comment=models.ManyToManyField(sign,blank=True ,related_name='Post_comment_likes')
+    comment_dislikes=models.ManyToManyField(sign,blank=True,related_name='Post_comment_dislkikes')
 
     class Meta:
         ordering=['-post_created_on']
-
-    
-    def get_absolute_url(self):
-        return reverse('post-detail', kwargs={'pk': self.pk})
-
-    def children(self):
-        return connect_comment.objects.filter(parent=self)
-
-    @property
-    def is_parent(self):
-        if self.parent is not None:
-            return False
-        return True
-
+   
+    def __str__(self) -> str:
+        return f'{self.user}||{self.parent}'
+       
 #____________________________________________________________________________________________________________________
 #this model for social handling
 class social_handling(models.Model):
@@ -258,22 +249,20 @@ from asgiref.sync import async_to_sync
 class Notification(models.Model):
     notice=models.TextField()
     sent=models.BooleanField(default=False)
-
-
    
     def __str__(self):
         return str(self.notice)
 
-    def save(self,*args,**kwargs):
-        channel_layer=get_channel_layer()
-        data={'current':self.notice}
-        async_to_sync(channel_layer.group_send)(
-            'gossip',{
-                'type':'send_notification',
-                'value':json.dumps(data)
-            }
-        )
-        super(Notification,self).save(*args,**kwargs)
+    #def save(self,*args,**kwargs):
+        #channel_layer=get_channel_layer()
+        #data={'current':self.notice} ------->>>>>>>> this is override the save method 
+        #async_to_sync(channel_layer.group_send)(
+            #'gossip',{
+                #'type':'send_notification',
+                #'value':json.dumps(data)
+            #}
+        #)
+        #super(Notification,self).save(*args,**kwargs)
 
 #____________________________________________________________________________________________________________________________
 
