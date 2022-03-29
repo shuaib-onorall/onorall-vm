@@ -27,7 +27,7 @@ class workserializer(serializers.ModelSerializer):
     class Meta:
         model=workbaseinfo
         fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location','supporters')
-        depth=2
+        depth=1
 
 #____________________________________________________________________________________________________________________
 #serializer for file detailing
@@ -43,7 +43,7 @@ class DetailSerializer(serializers.ModelSerializer):
    class Meta():
         model=detail
         fields=('videoid','id','title','file','description','customthumbnail','tags','skills','targetaudience','agerestriction',"isCommentsOn","isLikeCountOn","isAudioCommentOn","publish",  "published_on","user_id","likesvideo",'user_id','all_timeline')
-        depth=1
+        #depth=1
 
 #________________________________________________________________________________________________________________
 #model for videos 

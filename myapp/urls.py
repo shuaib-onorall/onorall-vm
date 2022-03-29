@@ -97,6 +97,13 @@ urlpatterns = [
     #___________________________REFFERAL API
     path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
     path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),
+    # referral using signup
+    path('profileRef/<str:code>/',views.profileRefferalAPIView.as_view()),
+    path('play' , views.play_time , name='play'),
+
+
+
+
     #___________________________comment like-dislike api
     # path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),

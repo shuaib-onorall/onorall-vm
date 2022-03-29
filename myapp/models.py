@@ -25,6 +25,7 @@ class sign(models.Model):
     phone=models.CharField(max_length=13,null=True,blank=True)
     gmail=models.EmailField(null=True,blank=True)
     iscreator=models.BooleanField(default=False)
+    signup_refferal_by = models.IntegerField( default=0)
    
     def __str__(self):
         return str(self.id)
