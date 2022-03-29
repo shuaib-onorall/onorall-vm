@@ -45,6 +45,12 @@ class DetailSerializer(serializers.ModelSerializer):
         fields=('videoid','id','title','file','description','customthumbnail','tags','skills','targetaudience','agerestriction',"isCommentsOn","isLikeCountOn","isAudioCommentOn","publish",  "published_on","user_id","likesvideo",'user_id','all_timeline')
         depth=1
 
+class video_view_serializer(serializers.ModelSerializer):
+    class Meta:
+        model=view
+        fields='__all__'
+        depth=1
+
 #________________________________________________________________________________________________________________
 #model for videos 
 
@@ -81,7 +87,7 @@ class connect_comment_serializer(serializers.ModelSerializer):
 
     class Meta():
         model=connect_comment
-        fields=['id','commentid','user','post_comment','post_created_on','post','parent','likes_comment','comment_dislikes','reply']
+        fields=['id','commentid','user','post_comment','post_created_on','post','parent','likes_comment','comment_dislikes','reply','like_active','dislike_active']
 #______________________________________________________________________________________________________________________________
     
 

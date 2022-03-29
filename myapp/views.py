@@ -179,6 +179,21 @@ class communityAPIView(APIView):
         else:
             return Response({'status':"error",'data':serializer.errors})
 
+    def put(self,request,id=None):
+        if id:
+            post=connect.objects.get(id=id)
+            new_id=request.data.get['likes'][0] #----->0 index because we take only first element of the array 
+            obj=sign.objects.get(id=str(new_id))
+            if obj in post.likes:
+                post.like.remove(new_id)
+            else:
+                post.like.add(new_id)
+            post.save()
+            serializer=connect_comment_serializer(post)
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail'},status=status.HTTP_400_BAD_REQUEST)
+
+
 
     def delete(self, request,  id=None):
         event = get_object_or_404(doc_verification,id=id)
@@ -902,50 +917,83 @@ class connect_comment_Api(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'data':serializer.data,'status':'success'},status=status.HTTP_200_OK)
-    
-    def put(self,request,id=None):
-        comment=connect_comment.objects.get(id=id)
-        new_id=request.data['likes_comment'] #we are taking the input in the list beacuse we are using many ot many relation thats why we takes 0 index 
-        sign_obj=sign.objects.get(id=str(new_id[0]))
-        if request.data['action']=='like':
-            if sign_obj not in comment.likes_comment.all():
-                if sign_obj in comment.comment_dislikes.all():
-                    comment.comment_dislikes.remove(sign_obj)
-                comment.likes_comment.add(sign_obj)
-                comment.save()
-                serializer = connect_comment_serializer(comment)
-                return Response({'status':'addlike-success','data':serializer.data},status=status.HTTP_200_OK)
-            else:
-                comment.likes_comment.remove( sign_obj )
-                comment.save()
-                serializer = connect_comment_serializer(comment)
-                return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
 
-        elif  request.data['action'] == "dislike" :
+    def patch(self,request,id=None):
+        comment_data=connect_comment.objects.get(id=id)
+        serializer=connect_comment_serializer(comment_data,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
-                new_ids = request.data['comment_dislikes']       # get the dislike id from frontend
-                sign_obj = sign.objects.get(id=str(new_ids[0]))       # from dislike ids get the dislikecommentects
-                
-                if sign_obj not in comment.comment_dislikes.all() :
-                    if  sign_obj  in comment.likes_on_comment.all() :
-                       comment.likes_on_comment.remove( sign_obj )
-                    comment.comment_dislikes.add( sign_obj )
-                    comment.save()
-                    serializer = connect_comment_serializer(comment)
-                    return Response({'status':'add-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
-                else:
-                   comment.comment_dislikes.remove( sign_obj )
-                   comment.save()
-                   serializer = connect_comment_serializer(comment)
-                   return Response({'status':'remove-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
-
-           
+    def put(self, request, pk=None , format=None):
+        if pk is not None:
+            obj = connect_comment.objects.get( id = pk)
+            if request.data['action'] == "like" :
+                new_ids = request.data.get('likes_comment')   
+                if new_ids != None:                  
+                    sign_obj = sign.objects.get(id=str(new_ids[0]))               
+                    if sign_obj not in obj.likes_comment.all() :              
+                        obj.likes_comment.add(sign_obj)
+                        obj.like_active ='liked'
+                        obj.save()
+                        if sign_obj in obj.comment_dislikes.all():
+                            obj.comment_dislikes.remove(sign_obj)
+                            obj.dislike_active ='null'
+                            obj.save()
+                            serializer = connect_comment_serializer(obj)
+                            return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                        serializer = connect_comment_serializer(obj)
+                        return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                    else:
+                        obj.likes_comment.remove(sign_obj)
+                        obj.like_active = 'null'
+                        obj.save()
+                        serializer = connect_comment_serializer(obj)
+                        return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                serializer = connect_comment_serializer(obj)
+                return Response({'status':'removelike-success'},status=status.HTTP_200_OK)    
+            elif request.data['action'] == "dislike" :
+                new_ids = request.data.get('comment_dislikes') 
+                if new_ids != None:                  
+                    sign_obj = sign.objects.get(id=str(new_ids[0]))
+                    if sign_obj in obj.comment_dislikes.all():
+                        obj.comment_dislikes.remove(sign_obj)
+                        obj.dislike_active = 'null'
+                        obj.save()
+                        serializer = connect_comment_serializer(obj)
+                        return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                    else:
+                        obj.comment_dislikes.add(sign_obj)
+                        obj.dislike_active ='disliked' 
+                        obj.save() 
+                        if sign_obj in obj.likes_comment.all():
+                            obj.likes_comment.remove(sign_obj)
+                            obj.like_active ='null'
+                            obj.save()
+                            serializer = connect_comment_serializer(obj)
+                            return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                        serializer = connect_comment_serializer(obj)
+                        return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                serializer = connect_comment_serializer(obj)
+                return Response({'status':'removelike-success'},status = status.HTTP_200_OK)
 
 
     def delete(self,request,id=None):
         event=get_object_or_404(connect_comment,id=id)
         event.delete()
         return Response({'status':'item deleted successfully'})
-
 #__________________________________________________________________________________________________________________________________________
-
+class videoviewApi(APIView):
+     def get(self,request,id=None):
+        if id:
+            video=view.objects.get(id=id)
+            video.view=video.view+1
+            video.save()
+            serializers=video_view_serializer(video)
+            return Response({'data':serializers.data,'status':'success'},status=status.HTTP_200_OK)
+#__________________________________________________________________________________________________________________________________________
+import socket   
+hostname = socket.gethostname()   #>>>>>>this is used to find the ip address
+IPAddr = socket.gethostbyname(hostname)   
+print("Your Computer Name is:" + hostname)   
+print("Your Computer IP Address is:" + IPAddr)   

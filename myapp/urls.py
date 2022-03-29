@@ -72,5 +72,7 @@ urlpatterns = [
     path('search/<str:title>',views.multitablesearch.as_view()),
     path('connect_comment',views.connect_comment_Api.as_view()),
     path('connect_comment/<int:id>',views.connect_comment_Api.as_view()),
+    path('views',views.videoviewApi.as_view()),
+    path('views/<int:id>',views.videoviewApi.as_view()),
    
 ]

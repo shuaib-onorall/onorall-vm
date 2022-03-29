@@ -1,5 +1,6 @@
 from distutils.command.upload import upload
 from enum import unique
+from ipaddress import ip_address
 from tabnanny import verbose
 from unittest.mock import DEFAULT
 from django.db import models
@@ -101,6 +102,15 @@ class detail(models.Model):
 
     def __str__(self) -> str:
         return  f"ID : {str(self.id)} || {str(self.title)}"
+
+class view(models.Model):
+    video=models.OneToOneField(detail,related_name='count',on_delete=models.CASCADE)
+    ip_address=models.CharField(max_length=50)
+    session=models.CharField(max_length=50)
+    view=models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'ip_address:{str(self.ip_address)} '
     
 
 #_______________________________________________
@@ -176,6 +186,8 @@ class connect_comment(models.Model):
     parent=models.ForeignKey('connect_comment',null=True,blank=True,related_name='replies',on_delete=models.CASCADE)
     likes_comment=models.ManyToManyField(sign,blank=True ,related_name='Post_comment_likes')
     comment_dislikes=models.ManyToManyField(sign,blank=True,related_name='Post_comment_dislkikes')
+    like_active=models.CharField(max_length=12,blank=True,null=True)
+    dislike_active=models.CharField(max_length=12,blank=True,null=True)
 
     class Meta:
         ordering=['-post_created_on']
