@@ -1426,9 +1426,8 @@ class DetailAPIview(APIView):
     def post(self,request):
         serializer=DetailSerializer(data=request.data)
         if serializer.is_valid():
-            sign_obj = str(request.data.userid.id)
+            sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
             sign_ref = sign_obj.signup_refferal_by
-            print(sign_ref)
             if sign_ref !=0:
                 referral_obj = RefferalLink.objects.get(id= int(sign_ref))
                 if referral_obj.is_uploaded == False:
@@ -1648,6 +1647,5 @@ def game(request, room_code):
 import time
 def play_time(request):
     current_time = time.time()
-
-
+    
     return render(request , 'video-duration.html')

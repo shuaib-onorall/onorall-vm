@@ -27,7 +27,7 @@ class workserializer(serializers.ModelSerializer):
     class Meta:
         model=workbaseinfo
         fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location','supporters')
-        depth=1
+        #depth=1
 
 #____________________________________________________________________________________________________________________
 #serializer for file detailing
