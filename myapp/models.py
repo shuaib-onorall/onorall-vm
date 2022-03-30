@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
-from django_clamd.validators import validate_file_infection  #-----------this is used to detect the malware detection
+#from django_clamd.validators import validate_file_infection  #-----------this is used to detect the malware detection
 
 import random, string
 
