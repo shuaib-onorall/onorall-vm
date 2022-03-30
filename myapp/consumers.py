@@ -1,9 +1,6 @@
 from channels.generic.websocket import AsyncJsonWebsocketConsumer  #web socket is used for full duplex communication between client and server
-from channels.generic.websocket import WebsocketConsumer  
 from asgiref.sync import async_to_sync                         #it will convert the asynchronous into synchronous
 import json
-
-
 class NewConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         await self.accept()

@@ -74,5 +74,8 @@ urlpatterns = [
     path('connect_comment/<int:id>',views.connect_comment_Api.as_view()),
     path('views',views.videoviewApi.as_view()),
     path('views/<int:id>',views.videoviewApi.as_view()),
+    path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
+    path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
+
    
 ]

@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+ALLOWED_HOSTS = ['https://cretskill-backend.herokuapp.com/'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'channels',
     'rest_framework_simplejwt',
     'ws4redis',
+    'django_clamd',
     #'django_celery_beat'
     
 ]
@@ -182,7 +183,7 @@ MEDIA_URL= "/media/"
 ENFORCE_SCHEMA=False #this can will be help  you to stop the migration after this you don,t have to migrate again and again.
 
 # this allow for the inetgeration for the server
-#CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_ALLOW_ALL = True
 
 #this authentication backend is used ofr google signup
 AUTHENTICATION_BACKENDS=[
@@ -319,5 +320,16 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_RESULT_BACKEND='django-db'
 
 #_______________________________________________________________________________________________________________________________________
+
 #celery beat
 #CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
+#______________________________________________________________________________________________________________________________________
+#it is used to detect the malware data
+CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
+CLAMD_USE_TCP = False
+CLAMD_TCP_SOCKET = 3310
+CLAMD_TCP_ADDR = '127.0.0.1'
+CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+CLAMD_ENABLED = False # here we can enable the detection
+#_______________________________________________________________________________________________________________________________________ 

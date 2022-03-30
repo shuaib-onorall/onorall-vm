@@ -5,11 +5,11 @@ from asgiref.sync import async_to_sync
 from .models import *
 from channels.layers import get_channel_layer
 
-@receiver(post_save, sender=Notification, dispatch_uid='update_job_status_listeners')
+@receiver(post_save, sender=Notification, dispatch_uid='connect_comment')
 def notification(sender, instance, **kwargs):
     group_name = 'gossip'
     message = {
-        'notice': instance.notice,   
+        'notice': instance.notice,   #inside the message we put the instancve that we want 
     }
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(

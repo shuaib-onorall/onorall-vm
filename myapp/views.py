@@ -996,4 +996,86 @@ import socket
 hostname = socket.gethostname()   #>>>>>>this is used to find the ip address
 IPAddr = socket.gethostbyname(hostname)   
 print("Your Computer Name is:" + hostname)   
-print("Your Computer IP Address is:" + IPAddr)   
+print("Your Computer IP Address is:" + IPAddr)  
+
+#_________________________________________________________________________________________________________________________________________
+# API's for Comments 
+class CommentApiView( APIView ):
+
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if  pk is not None:
+            comment_obj = get_object_or_404( Commentss , id = pk )
+            serializer = CommentSerializer( comment_obj )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            
+        all_comments_obj =  Commentss.objects.all()
+        serializer = CommentSerializer( all_comments_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request, pk = None , *args, **kwargs):
+        serializer = CommentSerializer( data = request.data )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self,request, pk = None, *args , **kwargs ):
+        if pk is not None:
+            queryset =  Commentss.objects.get(id = pk)
+            serializer= CommentSerializer( queryset , data=request.data , partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
+
+   
+    def put(self, request, pk=None , format=None):
+        if pk is not None:
+            obj = Commentss.objects.get( id = pk)
+            if request.data['action'] == "like" :
+                new_ids = request.data.get('likes_on_comment')              
+                sign_obj = sign.objects.get(id=str(new_ids[0]))               
+                if sign_obj not in obj.likes_on_comment.all() :              
+                    obj.likes_on_comment.add(sign_obj)
+                    obj.like_active ='liked'
+                    obj.save()
+                    if sign_obj in obj.dis_likes_on_comment.all():
+                        obj.dis_likes_on_comment.remove(sign_obj)
+                        obj.dislike_active ='null'
+                        obj.save()
+                        serializer = CommentSerializer(obj)
+                        return Response({'status':'remove-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
+                else:
+                    obj.likes_on_comment.remove(sign_obj)
+                    obj.like_active = 'null'
+                    obj.save()
+                    serializer = CommentSerializer(obj)
+                    return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                serializer = CommentSerializer(obj)
+                return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+
+            elif request.data['action'] == "dislike" :
+                new_ids = request.data.get('dis_likes_on_comment')         
+                sign_obj = sign.objects.get(id=str(new_ids[0]))
+                if sign_obj in obj.dis_likes_on_comment.all():
+                    obj.dis_likes_on_comment.remove(sign_obj)
+                    obj.dislike_active = 'null'
+                    obj.save()
+                    serializer = CommentSerializer(obj)
+                    return Response({'status':'remove-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
+                else:
+                    obj.dis_likes_on_comment.add(sign_obj)
+                    obj.dislike_active ='disliked' 
+                    obj.save() 
+                    if sign_obj in obj.likes_on_comment.all():
+                        obj.likes_on_comment.remove(sign_obj)
+                        obj.like_active ='null'
+                        obj.save()
+                        serializer = CommentSerializer(obj)
+                        return Response({'status':'removedis-like-success','data':serializer.data},status=status.HTTP_200_OK)
+                    serializer = CommentSerializer(obj)
+                    return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
+
+

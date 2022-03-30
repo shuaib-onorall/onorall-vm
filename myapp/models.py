@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django_clamd.validators import validate_file_infection  #-----------this is used to detect the malware detection
 
 import random, string
 
@@ -111,6 +112,32 @@ class view(models.Model):
 
     def __str__(self):
         return f'ip_address:{str(self.ip_address)} '
+
+class Commentss(models.Model):
+    created_time = models.DateTimeField( auto_now_add = True )
+    comment_text = models.CharField(max_length = 2000 , default=" ")
+    user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
+    parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
+    video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
+    #like = models.OneToOneField( LikeModelForComments , on_delete=models.CASCADE  , blank=True)
+    likes_on_comment  = models.ManyToManyField( sign  , blank=True  , related_name="likes_on_comment")
+    dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
+
+    like_active = models.CharField(max_length = 2000 , blank=True , default='null')
+    dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
+    
+
+
+    @property
+    def total_likes_on_comment( self ):
+        return self.likes_on_comment.all().count() 
+
+    def total_dis_likes_on_comment( self ):
+        return self.dis_likes_on_comment.all().count()
+    
+
+    def __str__(self):
+        return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id}"
     
 
 #_______________________________________________
