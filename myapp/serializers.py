@@ -53,24 +53,27 @@ class video_view_serializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
 
-    user_name = serializers.SerializerMethodField('user_name_func')
-    is_creater  =  serializers.SerializerMethodField('is_creater_func')
+    # user_name = serializers.SerializerMethodField('user_name_func')
+    # is_creater  =  serializers.SerializerMethodField('is_creater_func')
 
-    def user_name_func(self,obj):
-        obj=sign.objects.get(id = obj.user_id.id)
-        return obj.name
+    # def user_name_func(self,obj):
+    #     obj=sign.objects.get(id = obj.user_id.id)
+    #     return obj.name
 
-    def is_creater_func(self , obj):
-        creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
-        comment_user_obj = sign.objects.get( id = obj.user_id )
-        if creater_obj.id == comment_user_obj.id:
-            return True
-        return False
+    # def is_creater_func(self , obj):
+    #     creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
+    #     comment_user_obj = sign.objects.get( id = obj.user_id )
+    #     if creater_obj.id == comment_user_obj.id:
+    #         return True
+    #     return False
 
 
+    # class Meta:
+    #     model = Commentss
+    #     fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
     class Meta:
         model = Commentss
-        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
+        fields = '__all__' # ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
 
 #________________________________________________________________________________________________________________
 #model for videos 
