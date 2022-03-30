@@ -1303,6 +1303,9 @@ class CommentApiView( APIView ):
                     print('1306' , sign_obj.id)
                     serializer = CommentSerializer(obj)
                     return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+                serializer = CommentSerializer(obj)
+                return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
+
             elif request.data['action'] == "dislike" :
                 new_ids = request.data.get('dis_likes_on_comment')         
                 sign_obj = sign.objects.get(id=str(new_ids[0]))
@@ -1428,8 +1431,9 @@ class DetailAPIview(APIView):
             print(sign_ref)
             if sign_ref !=0:
                 referral_obj = RefferalLink.objects.get(id= int(sign_ref))
-                referral_obj.is_uploaded = True                 # fourth condtion of referralLink will be executed
-                referral_obj.save()
+                if referral_obj.is_uploaded == False:
+                    referral_obj.is_uploaded = True                 # fourth condtion of referralLink will be executed
+                    referral_obj.save()
             serializer.save()
             return Response(serializer.data,status=status.HTTP_200_OK)
         else:
@@ -1488,13 +1492,16 @@ class WorkApiView(APIView):
         if work:
             return Response({'status':'workbasename already exist'})
         if serializer.is_valid(raise_exception=True):
-            print(str(request.data.get('userid')['id']))
-            sign_obj = sign.objects.get(id = str(request.data.get('userid')['id']))
+            try: 
+                sign_obj = sign.objects.get(id = str(request.data['userid']))
+            except:
+                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))      
             if sign_obj.signup_refferal_by != 0:
                 referral_id = int(sign_obj.signup_refferal_by)
                 referral_obj = RefferalLink.objects.get(id = referral_id)
-                referral_obj.is_creater = True                               # third condition of referral will be execute
-                referral_obj.save()
+                if referral_obj.is_creater == False :
+                    referral_obj.is_creater = True                               # third condition of referral will be execute
+                    referral_obj.save()
                 serializer.save()
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
             else:
@@ -1524,13 +1531,13 @@ class WorkApiView(APIView):
 class profileRefferalAPIView(APIView):
     def get(self,request,code=None):
         if code:
-            allinfo=RefferalLink.objects.get(refferal_code=code)
             referral_code = str(code)
-            request.session['referral_code'] = referral_code   # store in session
             referral_obj = RefferalLink.objects.get(refferal_code = referral_code)
-            referral_obj.is_clicked = True                           # referral step - 1 
-            referral_obj.save()
-            serializer=RefferalLinkSerializer(allinfo)
+            if referral_obj.is_clicked == False:    
+                request.session['referral_code'] = referral_code   # store in session
+                referral_obj.is_clicked = True                           # referral step - 1 
+                referral_obj.save()
+            serializer=RefferalLinkSerializer(referral_obj)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         allbaseinfo=RefferalLink.objects.all()
         serializer=RefferalLinkSerializer(allbaseinfo,many=True)
@@ -1549,12 +1556,14 @@ class profileRefferalAPIView(APIView):
                 return Response({'status':403,'error':serializer.errors})
             if profile_mail:
                 return Response({'status':'gmail  already exist'})
+            
             serializer.validated_data['signup_refferal_by'] = int(referral_obj.id)
             serializer.save()
             if request.session.has_key('referral_code'):
-                referral_obj.is_signup = True                         # referral step - 2
-                referral_obj.save()
-                del request.session['referral_code']
+                if referral_obj.is_signup == False:
+                    referral_obj.is_signup = True                         # referral step - 2
+                    referral_obj.save()
+                    del request.session['referral_code']
             if phone:
                 user=sign.objects.get(phone=serializer.data['phone'])
                 refresh = RefreshToken.for_user(user)                  #this line important for jwt token
