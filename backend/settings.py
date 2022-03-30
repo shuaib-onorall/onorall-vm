@@ -52,7 +52,7 @@ INSTALLED_APPS = [
     'channels',
     'rest_framework_simplejwt',
     'ws4redis',
-    'django_clamd',
+    #'django_clamd',
     #'django_celery_beat'
     
 ]
@@ -326,10 +326,10 @@ CELERY_RESULT_BACKEND='django-db'
 
 #______________________________________________________________________________________________________________________________________
 #it is used to detect the malware data
-CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
-CLAMD_USE_TCP = False
-CLAMD_TCP_SOCKET = 3310
-CLAMD_TCP_ADDR = '127.0.0.1'
-CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
-CLAMD_ENABLED = False # here we can enable the detection
+#CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
+#CLAMD_USE_TCP = False
+#CLAMD_TCP_SOCKET = 3310
+#CLAMD_TCP_ADDR = '127.0.0.1'
+#CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+#CLAMD_ENABLED = False # here we can enable the detection
 #_______________________________________________________________________________________________________________________________________ 
