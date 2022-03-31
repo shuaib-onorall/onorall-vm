@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.85'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+ALLOWED_HOSTS = [] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
@@ -184,7 +184,7 @@ MEDIA_URL= "/media/"
 ENFORCE_SCHEMA=False #this can will be help  you to stop the migration after this you don,t have to migrate again and again.
 
 # this allow for the inetgeration for the server
-CORS_ORIGIN_ALLOW_ALL = True
+#CORS_ORIGIN_ALLOW_ALL = True
 
 #this authentication backend is used ofr google signup
 AUTHENTICATION_BACKENDS=[
