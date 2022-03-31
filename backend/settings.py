@@ -123,7 +123,8 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            #"hosts": [("localhost", 6379)],
+            'hosts': [os.environ.get('REDISCLOUD_URL', 'redis://localhost:6379')],
         },
     },
     'ROUTING': 'ws.routing.application',
