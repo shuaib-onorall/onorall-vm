@@ -126,6 +126,7 @@ CHANNEL_LAYERS = {
             "hosts": [("localhost", 6379)],
         },
     },
+    'ROUTING': 'ws.routing.application',
 }
 
 
