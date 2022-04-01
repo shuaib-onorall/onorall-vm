@@ -616,7 +616,7 @@ class RefferalLink(models.Model):
     refferal_plateform = models.CharField(max_length=100 , blank=True)
     is_clicked = models.BooleanField(default=False)
     is_signup = models.BooleanField(default=False)
-    is_creater = models.BooleanField(default=False)
+    is_creator = models.BooleanField(default=False)
     is_uploaded = models.BooleanField(default=False)
     created_time = models.DateTimeField(auto_now_add=True)
     updated_time = models.DateTimeField(auto_now=True)
@@ -648,8 +648,6 @@ class Notification(models.Model):
     notice=models.CharField(max_length=30)
     sent=models.BooleanField(default=False)
 
-
-   
     def __str__(self):
         return str(self.notice)
 
@@ -664,3 +662,16 @@ class Notification(models.Model):
             }
         )
         super(Notification,self).save(*args,**kwargs)
+
+
+
+# for embed videos
+from django.db import models
+from embed_video.fields import EmbedVideoField
+
+class EmbedVideoModel(models.Model):
+    video_url = EmbedVideoField()  #  just like URLField()
+
+    def __str__(self , *args , **kwargs):
+        return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
+        

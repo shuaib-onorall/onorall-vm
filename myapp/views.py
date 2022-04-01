@@ -1187,8 +1187,6 @@ class supportAPI(APIView):
 
 #_________________________________________________
 
-
-
 class LikeApiView( APIView ):
 
     def get( self , request , pk = None  , *args , **kwargs ):
@@ -1288,19 +1286,16 @@ class CommentApiView( APIView ):
                     obj.likes_on_comment.add(sign_obj)
                     obj.like_active ='liked'
                     obj.save()
-                    print('1391' , sign_obj.id)
                     if sign_obj in obj.dis_likes_on_comment.all():
                         obj.dis_likes_on_comment.remove(sign_obj)
                         obj.dislike_active ='null'
                         obj.save()
-                        print('1296' , sign_obj.id)
                         serializer = CommentSerializer(obj)
                         return Response({'status':'remove-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
                 else:
                     obj.likes_on_comment.remove(sign_obj)
                     obj.like_active = 'null'
                     obj.save()
-                    print('1306' , sign_obj.id)
                     serializer = CommentSerializer(obj)
                     return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
                 serializer = CommentSerializer(obj)
@@ -1313,19 +1308,16 @@ class CommentApiView( APIView ):
                     obj.dis_likes_on_comment.remove(sign_obj)
                     obj.dislike_active = 'null'
                     obj.save()
-                    print('1319' , sign_obj.id)
                     serializer = CommentSerializer(obj)
                     return Response({'status':'remove-dislike-success','data':serializer.data},status=status.HTTP_200_OK)
                 else:
                     obj.dis_likes_on_comment.add(sign_obj)
                     obj.dislike_active ='disliked' 
                     obj.save() 
-                    print('1319' , sign_obj.id)
                     if sign_obj in obj.likes_on_comment.all():
                         obj.likes_on_comment.remove(sign_obj)
                         obj.like_active ='null'
                         obj.save()
-                        print('1331' , sign_obj.id)
                         serializer = CommentSerializer(obj)
                         return Response({'status':'removedis-like-success','data':serializer.data},status=status.HTTP_200_OK)
                     serializer = CommentSerializer(obj)
@@ -1407,6 +1399,7 @@ class RefferalView( APIView ):
 
 
 
+
 class DetailAPIview(APIView):
     pareser_class=[JSONParser]
     #parser_classes = (MultiPartParser, FormParser)
@@ -1469,6 +1462,81 @@ class DetailAPIview(APIView):
         event=get_object_or_404(detail,id=id)   
         event.delete()
         return Response({'status':'success','data':'items deleted'}) 
+
+
+
+
+
+
+
+
+
+
+
+class DetailAPIview(APIView):
+    pareser_class=[JSONParser]
+    #parser_classes = (MultiPartParser, FormParser)
+    serializer=DetailSerializer
+
+    def get(self,request,videoid=None):
+        if videoid:
+            alldoc=detail.objects.get(videoid=videoid)
+            serializer=DetailSerializer(alldoc)
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        
+        alldocs=detail.objects.all()
+        
+        serializer=DetailSerializer(alldocs,many=True)
+        return Response({'list_of_detail':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request):
+        serializer = DetailSerializer( data = request.data )
+        if serializer.is_valid():
+            sign_obj = sign.objects.get( id = str(request.data['userid']['id'] ))
+            sign_ref = sign_obj.signup_refferal_by
+            if sign_ref != 0:
+                referral_obj = RefferalLink.objects.get(id = int(sign_ref))
+                if referral_obj.exists() :
+                    if referral_obj.is_uploaded == False:
+                        referral_obj.is_uploaded = True                 # fourth condtion of referralLink will be executed
+                        referral_obj.save()
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_200_OK)    
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+        
+    
+    def patch(self,request,videoid=None):
+        compress=request.data.get('compress')
+        file = detail.objects.get(videoid=videoid)
+        serializer=DetailSerializer(file,data=request.data,partial=True)
+        if serializer.is_valid():
+            if compress=='False':
+                compressing_video(videoid)
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':"error",'data':serializer.errors})
+
+    def put( self , request , videoid=None , format=None ):
+        if videoid is not None :
+            obj = detail.objects.get( videoid = videoid)                          
+            new_ids = request.data['likesvideo'][0]                  # get the userid who want to like    
+            sign_obj = sign.objects.get(id=str(new_ids))             # get the like-person from thw userid   
+            if sign_obj in obj.likesvideo.all():                     # if like-person already liked
+                obj.likesvideo.remove( sign_obj )                    # then remove the like-person in likesvideo
+            else:                                                    # else        
+                obj.likesvideo.add( sign_obj )                       # add  the like-person in likesvideo  
+            obj.save()                                               # save the object        
+            serializer = DetailSerializer(obj)                       # simple render the video data
+            return Response( { 'status' : 'success','data':serializer.data } , status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':' provide  videoid of generaAPI in url '},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def delete(self,request,id=None):
+        event=get_object_or_404(detail,id=id)   
+        event.delete()
+        return Response({'status':'success','data':'items deleted'}) 
 #
 
 
@@ -1498,8 +1566,8 @@ class WorkApiView(APIView):
             if sign_obj.signup_refferal_by != 0:
                 referral_id = int(sign_obj.signup_refferal_by)
                 referral_obj = RefferalLink.objects.get(id = referral_id)
-                if referral_obj.is_creater == False :
-                    referral_obj.is_creater = True                               # third condition of referral will be execute
+                if referral_obj.is_creator == False :
+                    referral_obj.is_creator = True                               # third condition of referral will be execute
                     referral_obj.save()
                 serializer.save()
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -1647,5 +1715,5 @@ def game(request, room_code):
 import time
 def play_time(request):
     current_time = time.time()
-    
+
     return render(request , 'video-duration.html')

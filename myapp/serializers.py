@@ -320,14 +320,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     user_name = serializers.SerializerMethodField('user_name_func')
     is_creater  =  serializers.SerializerMethodField('is_creater_func')
-    # all_like = serializers.SerializerMethodField('all_like_func')
-    # all_dislike = serializers.SerializerMethodField('all_dislike_func')
 
-    # reply = serializers.SerializerMethodField('reply_func')
-    # def reply_func(self , obj):
-    #     all_obj = Commentss.objects.filter(parent = obj.id)
-    #     return CommentSerializer(all_obj , many=True ).data
-    
     def user_name_func(self,obj):
         obj=sign.objects.get(id = obj.user_id.id)
         return obj.name
@@ -368,4 +361,4 @@ class LikeModelSerializer(serializers.ModelSerializer):
 class RefferalLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = RefferalLink
-        fields = ['id' ,   'refferal_code' , 'refferal_by' , 'refferal_for' , 'email' , 'refferal_plateform'  , 'is_clicked' , 'is_signup' , 'is_creater' , 'is_uploaded' , 'created_time' , 'updated_time' ]
+        fields = ['id' ,   'refferal_code' , 'refferal_by' , 'refferal_for' , 'email' , 'refferal_plateform'  , 'is_clicked' , 'is_signup' , 'is_creator' , 'is_uploaded' , 'created_time' , 'updated_time' ]

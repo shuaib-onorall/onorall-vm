@@ -53,6 +53,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
 
     'ws4redis',
+
+
+
+    'embed_video' , # for embed videos
     #'debug_toolbar' , 
 
   
@@ -98,6 +102,11 @@ TEMPLATES = [
         },
     },
 ]
+
+
+# for embed videos !pip install django-embed-video
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'django.core.context_processors.request',)
 
 #WSGI_APPLICATION = 'backend.wsgi.application'
 ASGI_APPLICATION= 'backend.asgi.application'
@@ -255,6 +264,7 @@ REST_FRAMEWORK = {
         
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     
 }
 
@@ -359,3 +369,5 @@ def show_toolbar(request):
 DEBUG_TOOLBAR_CONFIG = {
     "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
 }
+
+#______________________________________________________________________________________________________________________________________________________________________

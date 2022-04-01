@@ -41,3 +41,14 @@ admin.site.register(Commentss)
 admin.site.register(LikeModel)
 admin.site.register(RefferalLink)
 # admin.site.register(LikeModelForComments)
+
+
+from django.contrib import admin
+from embed_video.admin import AdminVideoMixin
+from .models import EmbedVideoModel
+
+# for embed videos
+class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
+    pass
+
+admin.site.register(EmbedVideoModel, EmbedVideoAdmin)
