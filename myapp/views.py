@@ -577,15 +577,23 @@ class commentApiView(APIView):
 class reportApiview(APIView):
     parser=(MultiPartParser,FormParser)
     serializer=reportserializer
-    def get(self,request,id=None):
-        if id:
-            reportinfo=report4.objects.get(id=id)
-            serializer_info=reportserializer(reportinfo)
-            return Response(serializer_info.data,status=status.HTTP_200_OK)
-
+    def get(self,request,reportid=None):
+        if reportid:
+            reportinfo=report4.objects.get(id=reportid)
+            if report_info.exists():
+                info = {}
+                try:
+                    count_video = report4.objects.filter(report_file = reportinfo.report_file ).count()
+                    info['total_report_of_this_file'] = count_video
+                except :
+                    count_post = report4.objects.filter(report_post = reportinfo.report_post ).count()
+                    info['total_report_of_this_post'] = count_post
+                serializer_info=reportserializer(reportinfo)
+                return Response({'status':'success','data':serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
+            return Response({'status':'fail','HINT': 'id does not exists '} ,status=status.HTTP_400_BAD_REQUEST)
         report_info=report4.objects.all()
         report_serializer=reportserializer(report_info,many=True)
-        return Response(report_serializer.data,status=status.HTTP_200_OK)
+        return Response({'status':'success','data':report_serializer.data} ,status=status.HTTP_200_OK)
 
     def post(self,request,*args,**kwargs):
         serializer=reportserializer(data=request.data)
@@ -1245,16 +1253,19 @@ class LikeApiView( APIView ):
 
 
 # API's for Comments 
-class CommentApiView( APIView ):
+from rest_framework.pagination import LimitOffsetPagination
+class CommentApiView( APIView  , LimitOffsetPagination):
 
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
             comment_obj = get_object_or_404( Commentss , id = pk )
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-            
+        
         all_comments_obj =  Commentss.objects.all()
-        serializer = CommentSerializer( all_comments_obj , many=True )
+        #______pagination___________
+        results = self.paginate_queryset(all_comments_obj, request, view=self)
+        serializer = CommentSerializer( results , many=True )
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
     def post(self,request, pk = None , *args, **kwargs):
@@ -1419,7 +1430,10 @@ class DetailAPIview(APIView):
     def post(self,request):
         serializer=DetailSerializer(data=request.data)
         if serializer.is_valid():
-            sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
+            try:
+                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
+            except :
+                sign_obj = sign.objects.get(id = str(request.data['userid']))        
             sign_ref = sign_obj.signup_refferal_by
             if sign_ref !=0:
                 referral_obj = RefferalLink.objects.get(id= int(sign_ref))

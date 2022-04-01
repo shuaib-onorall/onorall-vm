@@ -149,9 +149,10 @@ class CommentSerializer(serializers.ModelSerializer):
 
 #serializer for report
 class reportserializer(serializers.ModelSerializer):
+    
     class Meta:
         model=report4
-        fields='__all__'
+        fields=('id' , 'reportid' , 'report_user' , 'report_file' , 'report_post' , 'report_descript' , 'choice'  , 'created_at' ) #'__all__'
 #________________________________________________________________________________________________________________________
 class question1serializer(serializers.ModelSerializer):
     class Meta:

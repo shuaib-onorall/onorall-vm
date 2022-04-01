@@ -162,7 +162,7 @@ class connect(models.Model):
             return 0
 
     def __str__(self):
-        return str(self.title)
+        return str(self.connectid)
 #_________________________________________________________________________________________________________________________
 
 
@@ -360,14 +360,23 @@ report_choice=(
 
 class report4(models.Model):
     reportid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    report_user=models.ForeignKey(sign,blank=True,on_delete=models.CASCADE)
-    report_file=models.ForeignKey(detail,blank=True,on_delete=models.CASCADE)
-    report_post=models.ForeignKey(connect,blank=True,on_delete=models.CASCADE)
+    report_user=models.ForeignKey(sign,blank=True,on_delete=models.CASCADE  )
+    report_file=models.ForeignKey(detail,blank=True,on_delete=models.CASCADE , null=True)
+    report_post=models.ForeignKey(connect,blank=True,on_delete=models.CASCADE , null=True)
     report_descript=models.CharField(max_length=100)
     choice=models.CharField(max_length=100,choices=report_choice)
+    created_at = models.DateTimeField( auto_now = True )
+
+
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['report_user', 'report_file' ], name='report_user_file') ,     # This fields conbinations always will be unique
+            models.UniqueConstraint(fields=['report_user', 'report_post' ], name='report_user_post')
+        ]
 
     def __str__(self):
-        return str(self.choice)
+        return f"ID :{str(self.reportid)} || {str(self.choice)}"
 
 #____________________________________________________________________________________________________________________________
 class questionnaires(models.Model):

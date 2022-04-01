@@ -45,7 +45,6 @@ urlpatterns = [
     path('searchengine/',views.connectSearchAPIView.as_view()), #in the search path we have to use / (slash) this one for connect 
     path('comment',views.commentApiView.as_view()),
     path('comment/<int:id>',views.commentApiView.as_view()),
-    path('report',views.reportApiview.as_view()),
     path('otp',views.sendotp.as_view()),
     path('verify',csrf_exempt(views.verifyotp.as_view())),
     path('like/<int:post_id>', views.LikeView.as_view(),name='like'), #for toggel post like 
@@ -84,34 +83,33 @@ urlpatterns = [
 
      #__________________________________________________________________________________:)
     path('search/<str:title>',views.multitablesearch.as_view()),
-
     path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
     path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
-
     path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),
     path('reply/<int:pk>/', views.ReplyApiView.as_view() , name='all-reply-api-view'),
-
     path('likes/<int:pk>/', views.LikeApiView.as_view() , name='all-like-api-view-single'),
     path('likes/', views.LikeApiView.as_view() , name='all-like-api-view'),
+
 
     #___________________________REFFERAL API
     path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
     path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),
-    # referral using signup
-    path('profileRef/<str:code>/',views.profileRefferalAPIView.as_view()),
-    path('play' , views.play_time , name='play'),
-
-
+    path('profileRef/<str:code>/',views.profileRefferalAPIView.as_view()),  # referral signup API
+    
+    # REPORT API
+    path('report/',views.reportApiview.as_view()),
+    path('report/<int:reportid>/',views.reportApiview.as_view()),
 
 
     #___________________________comment like-dislike api
     # path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
-
     #__________________________web sockets
     path('wb' , views.index_wb , name="index_wb" ) , 
     path('play/<room_code>', views.game , name='game'),
+    path('play' , views.play_time , name='play'),
+
 
    
 ]
