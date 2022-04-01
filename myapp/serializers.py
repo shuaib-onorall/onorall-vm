@@ -45,6 +45,36 @@ class DetailSerializer(serializers.ModelSerializer):
         fields=('videoid','id','title','file','description','customthumbnail','tags','skills','targetaudience','agerestriction',"isCommentsOn","isLikeCountOn","isAudioCommentOn","publish",  "published_on","user_id","likesvideo",'user_id','all_timeline')
         depth=1
 
+class video_view_serializer(serializers.ModelSerializer):
+    class Meta:
+        model=view
+        fields='__all__'
+        depth=1
+
+class CommentSerializer(serializers.ModelSerializer):
+
+    # user_name = serializers.SerializerMethodField('user_name_func')
+    # is_creater  =  serializers.SerializerMethodField('is_creater_func')
+
+    # def user_name_func(self,obj):
+    #     obj=sign.objects.get(id = obj.user_id.id)
+    #     return obj.name
+
+    # def is_creater_func(self , obj):
+    #     creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
+    #     comment_user_obj = sign.objects.get( id = obj.user_id )
+    #     if creater_obj.id == comment_user_obj.id:
+    #         return True
+    #     return False
+
+
+    # class Meta:
+    #     model = Commentss
+    #     fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
+    class Meta:
+        model = Commentss
+        fields = '__all__' # ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
+
 #________________________________________________________________________________________________________________
 #model for videos 
 
@@ -62,9 +92,7 @@ class doc_verificationSerializer(serializers.ModelSerializer):
         super(self.__class__,self).update(instance,validated_data)
         super(signserializers,userserializer).update(instance.user_id,userdata)
         return instance
-
 #_____________________________________________________________________________________________________________________________
-
 #connect serializer
 class connectSerializer(serializers.ModelSerializer):
     class Meta():
@@ -74,6 +102,16 @@ class connectSerializer(serializers.ModelSerializer):
     def get_liked_by_req_user(self, obj):
         user = self.context['request'].user
         return user in obj.likes.all()
+
+class connect_comment_serializer(serializers.ModelSerializer):
+    reply=serializers.SerializerMethodField('child_comment')
+    def child_comment(self,obj):
+            all_obj=connect_comment.objects.filter(parent=obj.id)
+            return connect_comment_serializer(all_obj,many=True).data
+
+    class Meta():
+        model=connect_comment
+        fields=['id','commentid','user','post_comment','post_created_on','post','parent','likes_comment','comment_dislikes','reply','like_active','dislike_active']
 #______________________________________________________________________________________________________________________________
     
 
@@ -82,8 +120,6 @@ class tag(serializers.ModelSerializer):
     class Meta():
         model=section
         fields='__all__'
-
-
 #_________________________________________________________________________________________________________________________
 
 #for playlist serializer
@@ -114,37 +150,7 @@ def update(self,instance,validated_data):
     super(self.__class__,self).update(instance,validated_data)
     super(groupserializer,serilaizer).update(instance.list,groupdata)
 
-#_______________________________________________________________________________________________________________________
 
-#comment serializer
-class CommentChildSerializer(serializers.ModelSerializer):
-    parent_id = serializers.PrimaryKeyRelatedField(queryset=Comment.objects.all(),source='parent.id')
-    class Meta:
-        model = connect_comment
-        fields = ( 'post_comment', 'id','parent_id')
-
-
-    def create(self, validated_data):
-        subject = connect_comment.objects.create(parent=validated_data['parent']['id'], content=validated_data['postcomment'])
-
-class CommentSerializer(serializers.ModelSerializer):
-    reply_count = serializers.SerializerMethodField()
-    replies = serializers.SerializerMethodField()
-    class Meta:
-        model = connect_comment
-        fields = ('id','post_comment','user','post', 'parent', 'reply_count', 'replies','likes')
-        # depth = 1
-
-    def get_reply_count(self, obj):
-        if obj.is_parent:
-            return obj.children().count()
-        return 0
-
-
-    def get_replies(self, obj):
-        if obj.is_parent:
-            return CommentChildSerializer(obj.children(), many=True).data
-        return None
 #___________________________________________________________________________________________________________________________
 
 #serializer for report
@@ -243,31 +249,23 @@ class UserSerializer(serializers.ModelSerializer):
         return instance
 
     
-#for the purpose of testing 
+
 #_______________________________________________________________________________________________________________
 #workbase(display,branding)
 class basic_display_serializer(serializers.ModelSerializer):
-    #highlight1=DetailSerializer()
     class Meta:
         model=basic_display
         fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
-        depth = 1
-    # def create(self, validated_data):
-    #     print('workinggggggggggggggggggggggggggggggg')
-    #     self.Meta.depth = 0
-    #     instance = self.Meta.model(**validated_data)
-    #     instance.save()
-    #     return instance
-    #     #super().create(validated_data)
-        
-     
+       
 
-
-        
-           
-        
-
-
+class display_serializer(serializers.ModelSerializer):
+    class Meta:
+        model=basic_display
+        fields=['id','highlight1','highlight2','highlight3','highlight4','highlight5']
+        depth=1
+       
+    
+   
 class basic_branding_serializer(serializers.ModelSerializer):
     class Meta:
         model=basic_branding
@@ -309,10 +307,10 @@ class monitizeserializer(serializers.ModelSerializer):
 
 
 
-class ReplySerializer(serializers.ModelSerializer):
-    class Meta:
-        model =  Reply
-        fields = "__all__"
+# class ReplySerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model =  Reply
+#         fields = "__all__"
         
         
 
@@ -345,8 +343,6 @@ class timelineSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class LikeModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LikeModel
-        fields = "__all__"
-
+class noticeserializer(serializers.ModelSerializer):
+    model=Notification
+    fields='__all__'

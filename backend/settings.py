@@ -28,13 +28,13 @@ SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.95'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+ALLOWED_HOSTS = ['https://cretskill-backend.herokuapp.com/'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
 
 INSTALLED_APPS = [
-    'myapp' ,
+    'myapp',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,13 +51,9 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'channels',
     'rest_framework_simplejwt',
-
     'ws4redis',
-
-
-    #seed
-    'django_seed',
-   
+    #'django_clamd',
+    #'django_celery_beat'
     
 ]
 
@@ -101,12 +97,14 @@ ASGI_APPLICATION= 'backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-''''DATABASES = {
+''''
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}'''
+}
+'''
 
 DATABASES = {
     'default': {
@@ -125,9 +123,11 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("localhost", 6379)],
+            #"hosts": [("localhost", 6379)],
+            'hosts': [os.environ.get('REDISCLOUD_URL', 'redis://localhost:6379')],
         },
     },
+    'ROUTING': 'ws.routing.application',
 }
 
 
@@ -309,3 +309,29 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 #for heroku purposes
 import django_on_heroku
 django_on_heroku.settings(locals())
+
+
+#___________________________________________________________________________________________________________________________________
+#celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_RESULT_BACKEND='django-db'
+
+#_______________________________________________________________________________________________________________________________________
+
+#celery beat
+#CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
+#______________________________________________________________________________________________________________________________________
+#it is used to detect the malware data
+#CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
+#CLAMD_USE_TCP = False
+#CLAMD_TCP_SOCKET = 3310
+#CLAMD_TCP_ADDR = '127.0.0.1'
+#CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+#CLAMD_ENABLED = False # here we can enable the detection
+#_______________________________________________________________________________________________________________________________________ 

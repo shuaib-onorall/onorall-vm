@@ -1,5 +1,6 @@
 from distutils.command.upload import upload
 from enum import unique
+from ipaddress import ip_address
 from tabnanny import verbose
 from unittest.mock import DEFAULT
 from django.db import models
@@ -9,6 +10,7 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
+#from django_clamd.validators import validate_file_infection  #-----------this is used to detect the malware detection
 
 import random, string
 
@@ -58,7 +60,7 @@ def get_upload_to(instance, videoid):
 
 
 def create_url( videoid):
-    return 'http://192.168.1.85:8000/general/' +(videoid) #this is used of rsutom thumbnail 
+    return 'http://192.168.1.85:8000/general/' +(videoid) #this is used of custom url
 
 
 publish_choices=(  #this will used for choice in community.
@@ -101,6 +103,41 @@ class detail(models.Model):
 
     def __str__(self) -> str:
         return  f"ID : {str(self.id)} || {str(self.title)}"
+
+class view(models.Model):
+    video=models.OneToOneField(detail,related_name='count',on_delete=models.CASCADE)
+    ip_address=models.CharField(max_length=50)
+    session=models.CharField(max_length=50)
+    view=models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f'ip_address:{str(self.ip_address)} '
+
+class Commentss(models.Model):
+    created_time = models.DateTimeField( auto_now_add = True )
+    comment_text = models.CharField(max_length = 2000 , default=" ")
+    user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
+    parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
+    video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
+    #like = models.OneToOneField( LikeModelForComments , on_delete=models.CASCADE  , blank=True)
+    likes_on_comment  = models.ManyToManyField( sign  , blank=True  , related_name="likes_on_comment")
+    dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
+
+    like_active = models.CharField(max_length = 2000 , blank=True , default='null')
+    dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
+    
+
+
+    @property
+    def total_likes_on_comment( self ):
+        return self.likes_on_comment.all().count() 
+
+    def total_dis_likes_on_comment( self ):
+        return self.dis_likes_on_comment.all().count()
+    
+
+    def __str__(self):
+        return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id}"
     
 
 #_______________________________________________
@@ -163,7 +200,8 @@ class connect(models.Model):
     def __str__(self):
         return str(self.title)
 #_________________________________________________________________________________________________________________________
-
+from django.dispatch import receiver
+from django.db.models.signals import post_save,pre_delete
 
 #community post comment
 class connect_comment(models.Model):
@@ -173,83 +211,17 @@ class connect_comment(models.Model):
     post_created_on=models.DateTimeField(auto_now=True)
     post=models.ForeignKey(connect,blank=True,on_delete=models.CASCADE)
     parent=models.ForeignKey('connect_comment',null=True,blank=True,related_name='replies',on_delete=models.CASCADE)
-    likes=models.ManyToManyField(User,blank=True ,related_name='Post_comment_likes')
-    comment_disllikes=models.ManyToManyField(sign,blank=True,related_name='Post_comment_dislkikes')
+    likes_comment=models.ManyToManyField(sign,blank=True ,related_name='Post_comment_likes')
+    comment_dislikes=models.ManyToManyField(sign,blank=True,related_name='Post_comment_dislkikes')
+    like_active=models.CharField(max_length=12,blank=True,null=True)
+    dislike_active=models.CharField(max_length=12,blank=True,null=True)
 
     class Meta:
         ordering=['-post_created_on']
-
-    def __str__(self):
-        return str(self.post_comment)
-
-    def get_absolute_url(self):
-        return reverse('post-detail', kwargs={'pk': self.pk})
-
-    def children(self):
-        return connect_comment.objects.filter(parent=self)
-
-    @property
-    def is_parent(self):
-        if self.parent is not None:
-            return False
-        return True
-
-#______________________________________________________________________________________________________________________________
-
-class videos(models.Model):
-    #id=models.AutoField(primary_key=True)
-    id=models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    VideoTitle=models.CharField(max_length=50)
-    VideoFile= models.FileField(upload_to='videos/', null=True, verbose_name="video_upload")
-    published_date=models.DateTimeField(auto_now=True)
-    likes=models.ManyToManyField(User,related_name='videos')
-    Description=models.TextField(max_length=5000)
-    active_earn=models.PositiveIntegerField(default=0)
-    views=models.ManyToManyField(User,related_name='video_views')
-    Add_tags=models.CharField(max_length=300,default=0)
-    skillcategory=models.CharField(max_length=50,default=0)
-    skills=models.CharField(max_length=500,default=0)
-    groupskills=models.CharField(max_length=500,default=0)
-    Targeting_Audience=models.PositiveIntegerField(default=0)
-    Age_restiction=models.PositiveIntegerField(default=0)
-    supported=models.PositiveIntegerField(default=0)
-    code_mode=models.PositiveIntegerField(default=0)
-
-    @property
-    def total_likes(self):
-        return self.likes.all().count()
-
-    def total_views(self):
-        return self.views.all().count()
-
-    def get_absolute_url(self):
-        return reverse("detail",args=[self.id])
-
-
-    def __str__(self):
-        return self.VideoTitle+''+str(self.VideoFile) 
-#_________________________________________________________________________________________________________________________
-
-# comment section
-class Comment(models.Model):
-    #id=models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    vediofile=models.ForeignKey(videos, related_name='comment', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True)
-    comment=models.TextField()
-    parent=models.ForeignKey('self',null=True,blank=True,related_name='replies',on_delete=models.CASCADE)
-    audio_comment=models.FileField(upload_to='comment/',null=True,verbose_name='')
-    created_on=models.DateTimeField(auto_now=True)
-    comment_likes=models.ManyToManyField(User,blank=True,related_name='comment_likes')
-    comment_disllikes=models.ManyToManyField(User,blank=True,related_name='comment_dislkikes')
-
-
-    class Meta:
-        ordering=['-created_on']  #this will help you in ordering the component
-
-
-    def __str__(self):
-        return str(self.user) #+''+str(self.id)
-
+   
+    def __str__(self) -> str:
+        return f'{self.user}||{self.parent}'
+       
 #____________________________________________________________________________________________________________________
 #this model for social handling
 class social_handling(models.Model):
@@ -308,14 +280,28 @@ class group(models.Model):
 
     
 #________________________________________________________________________________________________________________________
-
+import json
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
     
 #Notification
 class Notification(models.Model):
-    notice=models.CharField(max_length=30)
-
+    notice=models.TextField()
+    sent=models.BooleanField(default=False)
+   
     def __str__(self):
         return str(self.notice)
+
+    #def save(self,*args,**kwargs):
+        #channel_layer=get_channel_layer()
+        #data={'current':self.notice} ------->>>>>>>> this is override the save method 
+        #async_to_sync(channel_layer.group_send)(
+            #'gossip',{
+                #'type':'send_notification',
+                #'value':json.dumps(data)
+            #}
+        #)
+        #super(Notification,self).save(*args,**kwargs)
 
 #____________________________________________________________________________________________________________________________
 
@@ -445,8 +431,6 @@ class Contact(models.Model):
     name = models.CharField(max_length=50, blank=True)
     status = models.BooleanField(default=False)
 
-
-
 class abc(models.Model):
     username = models.CharField(max_length=50, blank=True)
     password = models.CharField(max_length=50, blank=True)
@@ -500,108 +484,3 @@ class sharemon(models.Model):
         super().save(*args,**kwargs)
 
 #_________________________________________________________________________________________________________________________________
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # REPLY FOR COMMENT
-# class Reply(models.Model):
-#     #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
-#     created_time = models.DateTimeField( auto_now_add  = True )
-#     person_name = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name")
-#     for_reply =   models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="for_reply")
-#     reply_video = models.ForeignKey( detail , on_delete = models.CASCADE )
-#     reply_text = models.CharField( max_length = 2000  , default=" ")
-    
-    
-#     def __str__(self):
-#         return f"ID : {self.id} || Time : {self.created_time} || personName : {self.person_name}"
-
-
-# REPLY FOR COMMENT
-class Reply(models.Model):
-    #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
-    created_time = models.DateTimeField( auto_now_add  = True )
-    person_name = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name_1")
-    for_reply =   models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="for_reply_1")
-    reply_video = models.ForeignKey( detail , on_delete = models.CASCADE )
-
-    
-    reply_text = models.CharField( max_length = 2000  , default=" ")
-    
-    
-    def __str__(self):
-        return f"ID : {self.id} || Time : {self.created_time} || personName : {self.person_name}"
-
-# Comments Functionality  
-class Commentss(models.Model):
-    created_time = models.DateTimeField( auto_now_add = True )
-    comment_text = models.CharField(max_length = 2000 , default=" ")
-    user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
-    replies = models.ManyToManyField( Reply , blank=True   , related_name="replies" )
-    video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
-    
-    likes_on_comment  = models.ManyToManyField( sign  , related_name="likes_on_comment" )
-    dis_likes_on_comment = models.ManyToManyField( sign  )
-
-
-    @property
-    def total_likes_on_comment( self ):
-        return self.likes_on_comment.all().count() 
-
-    def total_dis_likes_on_comment( self ):
-        return self.dis_likes_on_comment.all().count()
-    
-
-    def __str__(self):
-        return f"ID : {self.id} || Time : {self.created_time} || personName : {self.user_id}"
-
-
-# signals for only like or dislike at same point of time.
-from django.db.models.signals import m2m_changed
-from django.dispatch import receiver
-@receiver(m2m_changed, sender=Commentss.likes_on_comment.through )
-def like_changed(sender, instance  , **kwargs):
-    try:
-        new_obj_of_sign=sign.objects.none()
-        if kwargs['action'] ==  "pre_add":
-            s = " ".join(kwargs['pk_set'])
-            try:
-                new_obj_of_sign = sign.objects.get(id = s)
-            except Exception as e:
-                pass
-        all_sign_dis_like = instance.dis_likes_on_comment.all()
-        if new_obj_of_sign in all_sign_dis_like:
-            # this line is not working but maximum work done in this
-            instance.dis_likes_on_comment.remove(new_obj_of_sign)
-    except Exception as e:
-        pass
-    
-
-
-
-# like models
-class LikeModel(models.Model):
-    id = models.AutoField(primary_key=True , unique=True)
-    video = models.OneToOneField( detail , on_delete=models.CASCADE )
-    all_likes = models.ManyToManyField( sign  , blank=False)
-
-    @property
-    def total_likes(self):
-        return self.all_likes.all().count()
-
-
-    def __str__(self):
-        return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
-
-

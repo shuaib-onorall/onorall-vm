@@ -3,7 +3,6 @@ from django.contrib import admin
 from .models import * #, design ,videos,Comment,phoneno,communitypost,doc_verification,About,basicinfo,social_handling,community_comment,Support
 
 # Register your models here.
-admin.site.register(Comment)
 admin.site.register(sign)
 admin.site.register(doc_verification)
 admin.site.register(social_handling)
@@ -29,14 +28,5 @@ admin.site.register(basic_display)
 admin.site.register(MyModel)
 admin.site.register(sharemon)
 admin.site.register(Support)
-
-
-
-
-
-#__________________________________________________________:))
-
-admin.site.register(Reply)
-admin.site.register(timelineModel)
+admin.site.register(view)
 admin.site.register(Commentss)
-admin.site.register(LikeModel)
