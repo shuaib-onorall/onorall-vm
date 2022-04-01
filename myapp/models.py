@@ -18,6 +18,14 @@ def random_id_field():
   rnd_id = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
   return rnd_id
 
+def random_profile():
+    random_list = ['profilePic\img2.png ' ,
+     'profilePic\img4.jpg' ,
+     'profilePic\img7.jpg' ]
+    random_path = random.choices(random_list)[0]
+    return random_path
+
+
 
 #_______________________________________________________________________________________________________________________
 #user model
@@ -27,9 +35,10 @@ class sign(models.Model):
     phone=models.CharField(max_length=13,null=True,blank=True)
     gmail=models.EmailField(null=True,blank=True)
     iscreator=models.BooleanField(default=False)
+    signup_referral_by=models.IntegerField(default=0)
    
     def __str__(self):
-        return str(self.name)
+        return str(self.id)
 
 #____________________________________________________________________________________________________________________
 
@@ -350,10 +359,16 @@ class report4(models.Model):
     report_post=models.ForeignKey(connect,blank=True,on_delete=models.CASCADE)
     report_descript=models.CharField(max_length=100)
     choice=models.CharField(max_length=100,choices=report_choice)
+    created_at=models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints=[models.UniqueConstraint(fields=['report_file','report_user'],name='report_user_file'),
+                    models.UniqueConstraint(fields=['report_post','report_user'],name='report_user_post')
+                    ]
 
     def __str__(self):
         return str(self.choice)
-
+   
 #____________________________________________________________________________________________________________________________
 class questionnaires(models.Model):
     ques_id=models.AutoField(primary_key=True,verbose_name='id')
@@ -484,3 +499,29 @@ class sharemon(models.Model):
         super().save(*args,**kwargs)
 
 #_________________________________________________________________________________________________________________________________
+# REFERRAL MODEL
+import uuid
+def generate_ref_code():
+    code = str(uuid.uuid4()).replace("-" , "").replace("/" , "-")[:12]
+    return code
+
+class RefferalLink(models.Model):
+    refferal_code = models.CharField(max_length=12  , blank=True , default="" , unique = True )
+    refferal_by = models.ForeignKey(sign , on_delete=models.CASCADE , related_name='refferal_by')
+    email = models.EmailField( blank=True , null = True  , max_length = 122)
+    refferal_for = models.CharField(max_length=12  , blank=True , default="" )
+    refferal_plateform = models.CharField(max_length=100 , blank=True)
+    is_clicked = models.BooleanField(default=False)
+    is_signup = models.BooleanField(default=False)
+    is_creator = models.BooleanField(default=False)
+    is_uploaded = models.BooleanField(default=False)
+    created_time = models.DateTimeField(auto_now_add=True)
+    updated_time = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'ID : {str(self.id)} || Refferal By : {str(self.refferal_by)}'
+
+    def save(self, *args , **kwargs ) :
+        if self.refferal_code == "":
+            self.refferal_code = generate_ref_code()
+        super().save(*args , **kwargs)

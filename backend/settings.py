@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://cretskill-backend.herokuapp.com/'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+ALLOWED_HOSTS = ['192.168.1.85'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
@@ -123,8 +123,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            #"hosts": [("localhost", 6379)],
-            'hosts': [os.environ.get('REDISCLOUD_URL', 'redis://localhost:6379')],
+            "hosts": [("localhost", 6379)],
         },
     },
     'ROUTING': 'ws.routing.application',

@@ -36,6 +36,7 @@ from rest_framework import authentication, permissions
 from rest_framework.parsers import JSONParser,FormParser,MultiPartParser
 from django.db.models import Q
 import subprocess
+from rest_framework.pagination import LimitOffsetPagination
 
 
 #___________________________________________________________________________________________________________________________________________
@@ -48,12 +49,15 @@ class DetailAPIview(APIView):
 
     def get(self,request,videoid=None):
         if videoid:
-            alldoc=detail.objects.get(videoid=videoid)
-            serializer=DetailSerializer(alldoc)
+            alldetail=detail.objects.get(videoid=videoid)
+            serializer=DetailSerializer(alldetail)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        
-        alldocs=detail.objects.all()
-        serializer=DetailSerializer(alldocs,many=True)
+        alldetail=detail.objects.all()
+        if request.GET.get('limit') != None and request.GET.get('offset') != None:
+            results = self.paginate_queryset(alldetail, request, view=self)
+            serializer = CommentSerializer( results , many=True )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        serializer=DetailSerializer(alldetail,many=True)
         return Response({'list_of_detail':serializer.data},status=status.HTTP_200_OK)
 
     def post(self,request):
@@ -800,11 +804,21 @@ def compressing_video(videoid=None):
     print(filepath)
     video=r"C:\ONORALL\media\\" + filepath
     print(video)
-    a='1'
     output = r"C:\ONORALL\media\upload\\" + videoid + '\\'+ videoid +'compress.mp4'
     cmd=f'ffmpeg -i "{video}" -vcodec libx264 -crf 28 "{output}"' #crf is the most important thing (constant rate factor)
     print(cmd)
     subprocess.check_output(cmd, shell=True)
+#_______________________________________________________________________________________________________________________
+def watermark_on_video(videoid):
+    file=detail.objects.get(videoid=videoid)
+    filepath=str(file)
+    video=r"C:\ONORALL\media\\" + filepath
+    print(video)
+    output = r"C:\ONORALL\media\upload\\" + videoid + '\\'+ videoid +'watermark'
+    cmd=f'ffmpeg -i {input} -ignore_loop 0 -i youtube-logo.gif -filter_complex overlay=shortest=1 {output}' #youtube-logo.gif ki jgha aap apne image ya gif ki location daal skte ho 
+    print(cmd)
+    subprocess.check_output(cmd, shell=True)
+
 #_______________________________________________________________________________________________________________________
 import ffmpeg_streaming
 from ffmpeg_streaming import Formats, Bitrate, Representation, Size
@@ -902,13 +916,17 @@ class multitablesearch(APIView):
         return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
 
 #______________________________________________________________________________________________________________________________________
-class connect_comment_Api(APIView):
+class connect_comment_Api(APIView,LimitOffsetPagination):
     def get(self,request,id=None):
         if id:
             comment=connect_comment.objects.get(id=id)
             serializers=connect_comment_serializer(comment)
             return Response({'data':serializers.data,'status':'success'},status=status.HTTP_200_OK)
         comment_data=connect_comment.objects.all()
+        if request.GET.get('limit') != None and request.GET.get('offset') != None:
+            results = self.paginate_queryset(comment_data, request, view=self)
+            serializer = connect_comment_serializer( results , many=True )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         serializer=connect_comment_serializer(comment_data,many=True)
         return  Response({'data':serializer.data,'status':'success'},status=status.HTTP_200_OK)
 
@@ -1000,7 +1018,7 @@ print("Your Computer IP Address is:" + IPAddr)
 
 #_________________________________________________________________________________________________________________________________________
 # API's for Comments 
-class CommentApiView( APIView ):
+class CommentApiView( APIView,LimitOffsetPagination ):
 
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
@@ -1009,8 +1027,15 @@ class CommentApiView( APIView ):
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
             
         all_comments_obj =  Commentss.objects.all()
-        serializer = CommentSerializer( all_comments_obj , many=True )
+
+        if request.GET.get('limit') != None and request.GET.get('offset') != None:
+            results = self.paginate_queryset(all_comments_obj, request, view=self)
+            serializer = CommentSerializer( results , many=True )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        serializer = CommentSerializer( all_comments_obj, many=True )
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+    
+    
 
     def post(self,request, pk = None , *args, **kwargs):
         serializer = CommentSerializer( data = request.data )
