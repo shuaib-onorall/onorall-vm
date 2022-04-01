@@ -29,7 +29,7 @@ class sign(models.Model):
     iscreator=models.BooleanField(default=False)
    
     def __str__(self):
-        return str(self.name)
+        return str(self.id)
 
 #____________________________________________________________________________________________________________________
 
