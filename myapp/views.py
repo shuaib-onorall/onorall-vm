@@ -574,32 +574,7 @@ class commentApiView(APIView):
     
 
 #api for report 
-class reportApiview(APIView):
-    parser=(MultiPartParser,FormParser)
-    serializer=reportserializer
-    def get(self,request,reportid=None):
-        if reportid:
-            reportinfo=report4.objects.get(id=reportid)
-            if report_info.exists():
-                info = {}
-                try:
-                    count_video = report4.objects.filter(report_file = reportinfo.report_file ).count()
-                    info['total_report_of_this_file'] = count_video
-                except :
-                    count_post = report4.objects.filter(report_post = reportinfo.report_post ).count()
-                    info['total_report_of_this_post'] = count_post
-                serializer_info=reportserializer(reportinfo)
-                return Response({'status':'success','data':serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
-            return Response({'status':'fail','HINT': 'id does not exists '} ,status=status.HTTP_400_BAD_REQUEST)
-        report_info=report4.objects.all()
-        report_serializer=reportserializer(report_info,many=True)
-        return Response({'status':'success','data':report_serializer.data} ,status=status.HTTP_200_OK)
 
-    def post(self,request,*args,**kwargs):
-        serializer=reportserializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_200_OK)
 
 #phone otp
 import ast
@@ -1261,12 +1236,16 @@ class CommentApiView( APIView  , LimitOffsetPagination):
             comment_obj = get_object_or_404( Commentss , id = pk )
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        
         all_comments_obj =  Commentss.objects.all()
-        #______pagination___________
-        results = self.paginate_queryset(all_comments_obj, request, view=self)
-        serializer = CommentSerializer( results , many=True )
+        #___________pagination-condition___________
+        if request.GET.get('limit') != None and request.GET.get('offset') != None:
+            results = self.paginate_queryset(all_comments_obj, request, view=self)
+            serializer = CommentSerializer( results , many=True )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        #___________WITHOUT-Pegination_____________
+        serializer = CommentSerializer( all_comments_obj , many=True )
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        
 
     def post(self,request, pk = None , *args, **kwargs):
         serializer = CommentSerializer( data = request.data )
@@ -1337,13 +1316,10 @@ class CommentApiView( APIView  , LimitOffsetPagination):
 
     def delete( self , request , pk= None , *args , **kwargs ):
         if pk is not None:
-            queryset =  Commentss.objects.get(id=pk)
-            if queryset.exists():
-                queryset.delete()
+            queryset =  Commentss.objects.get(id=pk)    
+            queryset.delete()
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
-
 
 
 
@@ -1362,9 +1338,6 @@ class multitablesearch(APIView):
 
             return Response({'status':'success','data': combine_query },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"provide query in url" },status=status.HTTP_400_BAD_REQUEST) 
-
-
-
 
 
 
@@ -1406,7 +1379,6 @@ class RefferalView( APIView ):
                 queryset.delete()
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
-
 
 
 
@@ -1479,81 +1451,6 @@ class DetailAPIview(APIView):
 
 
 
-
-
-
-
-
-
-
-
-class DetailAPIview(APIView):
-    pareser_class=[JSONParser]
-    #parser_classes = (MultiPartParser, FormParser)
-    serializer=DetailSerializer
-
-    def get(self,request,videoid=None):
-        if videoid:
-            alldoc=detail.objects.get(videoid=videoid)
-            serializer=DetailSerializer(alldoc)
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        
-        alldocs=detail.objects.all()
-        
-        serializer=DetailSerializer(alldocs,many=True)
-        return Response({'list_of_detail':serializer.data},status=status.HTTP_200_OK)
-
-    def post(self,request):
-        serializer = DetailSerializer( data = request.data )
-        if serializer.is_valid():
-            sign_obj = sign.objects.get( id = str(request.data['userid']['id'] ))
-            sign_ref = sign_obj.signup_refferal_by
-            if sign_ref != 0:
-                referral_obj = RefferalLink.objects.get(id = int(sign_ref))
-                if referral_obj.exists() :
-                    if referral_obj.is_uploaded == False:
-                        referral_obj.is_uploaded = True                 # fourth condtion of referralLink will be executed
-                        referral_obj.save()
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_200_OK)    
-        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
-
-        
-    
-    def patch(self,request,videoid=None):
-        compress=request.data.get('compress')
-        file = detail.objects.get(videoid=videoid)
-        serializer=DetailSerializer(file,data=request.data,partial=True)
-        if serializer.is_valid():
-            if compress=='False':
-                compressing_video(videoid)
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':"error",'data':serializer.errors})
-
-    def put( self , request , videoid=None , format=None ):
-        if videoid is not None :
-            obj = detail.objects.get( videoid = videoid)                          
-            new_ids = request.data['likesvideo'][0]                  # get the userid who want to like    
-            sign_obj = sign.objects.get(id=str(new_ids))             # get the like-person from thw userid   
-            if sign_obj in obj.likesvideo.all():                     # if like-person already liked
-                obj.likesvideo.remove( sign_obj )                    # then remove the like-person in likesvideo
-            else:                                                    # else        
-                obj.likesvideo.add( sign_obj )                       # add  the like-person in likesvideo  
-            obj.save()                                               # save the object        
-            serializer = DetailSerializer(obj)                       # simple render the video data
-            return Response( { 'status' : 'success','data':serializer.data } , status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':' provide  videoid of generaAPI in url '},status=status.HTTP_400_BAD_REQUEST)
-
-
-    def delete(self,request,id=None):
-        event=get_object_or_404(detail,id=id)   
-        event.delete()
-        return Response({'status':'success','data':'items deleted'}) 
-#
-
-
 import json
 class WorkApiView(APIView):
     parser_classes=  [JSONParser]
@@ -1576,7 +1473,9 @@ class WorkApiView(APIView):
             try: 
                 sign_obj = sign.objects.get(id = str(request.data['userid']))
             except:
-                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))      
+                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
+            sign_obj.iscreator = True                             #:)''' this is for iscreator true in sign models '''
+            sign_obj.save()                                                     
             if sign_obj.signup_refferal_by != 0:
                 referral_id = int(sign_obj.signup_refferal_by)
                 referral_obj = RefferalLink.objects.get(id = referral_id)
@@ -1606,9 +1505,6 @@ class WorkApiView(APIView):
         return Response({"status":"success","data":"item deleted"} ) 
 
 #_____________________________________________________________________________________________________________________
-
-
-
 class profileRefferalAPIView(APIView):
     def get(self,request,code=None):
         if code:
@@ -1652,8 +1548,34 @@ class profileRefferalAPIView(APIView):
             return Response({'status':200,'payload':serializer.data})
 
 
+#___________________--report api
+class reportApiview(APIView):
+    parser=(MultiPartParser,FormParser)
+    serializer=reportserializer
+    def get(self,request,reportid=None):
+        if reportid:
+            reportinfo=report4.objects.get(id=reportid)
+            
+            info = {}
+            try:                                                                                               # use try except because one condition always will be false and one true
+                count_video = report4.objects.filter(report_file = reportinfo.report_file ).count()            # get the total count of report of this video
+                info['total_report_of_this_file'] = count_video
+            except :                                                                             
+                count_post = report4.objects.filter(report_post = reportinfo.report_post ).count()             # get the total count of report of this video
+                info['total_report_of_this_post'] = count_post
+            serializer_info=reportserializer(reportinfo)
+            return Response({'status':'success','data':serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
+            
+        report_info=report4.objects.all()
+        report_serializer=reportserializer(report_info,many=True)
+        return Response({'status':'success','data':report_serializer.data} ,status=status.HTTP_200_OK)
 
-
+    def post(self,request,*args,**kwargs):
+        serializer=reportserializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_200_OK)
+            
 
 
 class ReplyApiView( APIView ):
@@ -1692,6 +1614,38 @@ class ReplyApiView( APIView ):
                 queryset.delete()
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
+#___________________--report api
+class reportApiview(APIView):
+    parser=(MultiPartParser,FormParser)
+    serializer=reportserializer
+    def get(self,request,reportid=None):
+        if reportid:
+            reportinfo=report4.objects.get(id=reportid)
+            
+            info = {}
+            try:                                                                                               # use try except because one condition always will be false and one true
+                count_video = report4.objects.filter(report_file = reportinfo.report_file ).count()            # get the total count of report of this video
+                info['total_report_of_this_file'] = count_video
+            except :                                                                                           # if report_file field is null the go to below
+                count_post = report4.objects.filter(report_post = reportinfo.report_post ).count()             # get the total count of report of this video
+                info['total_report_of_this_post'] = count_post
+            serializer_info=reportserializer(reportinfo)
+            return Response({'status':'success','data':serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
+            
+        report_info=report4.objects.all()
+        report_serializer=reportserializer(report_info,many=True)
+        return Response({'status':'success','data':report_serializer.data} ,status=status.HTTP_200_OK)
+
+    def post(self,request,*args,**kwargs):
+        serializer=reportserializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data,status=status.HTTP_200_OK)
+
+
 
 
 

@@ -17,10 +17,17 @@ def random_id_field():
   return rnd_id
 
 
-#_______________________________________________________________________________________________________________________
+def random_profile():
+    random_list = ['profilePic\img2.png ' ,
+     'profilePic\img4.jpg' ,
+     'profilePic\img7.jpg' ]
+    random_path = random.choices(random_list)[0]
+    return random_path
+#_______________________________________________________________________________________________________________________:)
 #user model
 class sign(models.Model):
     id = models.CharField(max_length=12, unique=True, primary_key=True,  default=random_id_field)
+    profilePic = models.ImageField(upload_to='profilePic/' , default = random_profile)
     name=models.CharField(max_length=30)
     phone=models.CharField(max_length=13,null=True,blank=True)
     gmail=models.EmailField(null=True,blank=True)
@@ -30,8 +37,7 @@ class sign(models.Model):
     def __str__(self):
         return str(self.id)
 
-#____________________________________________________________________________________________________________________
-
+#____________________________________________________________________________________________________________________:)
 #models for workbase
 workbase_choices=(
     ('show my skills','show my skills'),
@@ -368,10 +374,9 @@ class report4(models.Model):
     created_at = models.DateTimeField( auto_now = True )
 
 
-
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['report_user', 'report_file' ], name='report_user_file') ,     # This fields conbinations always will be unique
+            models.UniqueConstraint(fields=['report_user', 'report_file' ], name='report_user_file') ,     # This fields combinations always will be unique
             models.UniqueConstraint(fields=['report_user', 'report_post' ], name='report_user_post')
         ]
 
@@ -572,7 +577,7 @@ class Reply(models.Model):
 
 # Comments Functionality  
 class Commentss(models.Model):
-    created_time = models.DateTimeField( auto_now_add = True )
+    #created_time = models.DateTimeField( auto_now_add = True )
     comment_text = models.CharField(max_length = 2000 , default=" ")
     user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
     parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
@@ -584,7 +589,8 @@ class Commentss(models.Model):
     like_active = models.CharField(max_length = 2000 , blank=True , default='null')
     dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
     
-
+    created_at = models.DateTimeField(auto_now =True)
+    
 
     @property
     def total_likes_on_comment( self ):

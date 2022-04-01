@@ -149,7 +149,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 #serializer for report
 class reportserializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model=report4
         fields=('id' , 'reportid' , 'report_user' , 'report_file' , 'report_post' , 'report_descript' , 'choice'  , 'created_at' ) #'__all__'
@@ -320,23 +320,28 @@ class ReplySerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
 
     user_name = serializers.SerializerMethodField('user_name_func')
+    profile = serializers.SerializerMethodField('profile_func')
     is_creater  =  serializers.SerializerMethodField('is_creater_func')
+
+    def profile_func(self  , obj):
+        obj = sign.objects.get(id = obj.user_id.id)
+        return str(obj.profilePic)
 
     def user_name_func(self,obj):
         obj=sign.objects.get(id = obj.user_id.id)
         return obj.name
 
     def is_creater_func(self , obj):
-        creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
+        creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ))
         comment_user_obj = sign.objects.get( id = obj.user_id.id )
         if creater_obj.id == comment_user_obj.id:
             return True
         return False
 
-
     class Meta:
         model = Commentss
-        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ] #__all__"
+        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , 
+        "comment_text" ,   "user_id"  ,"user_name" , 'like_active' , 'dislike_active'  , 'created_at' , 'profile'  ] #__all__"
         #depth = 1
 
 
