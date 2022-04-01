@@ -325,7 +325,8 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def is_creater_func(self , obj):
         creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
-        comment_user_obj = sign.objects.get( id = obj.user_id )
+        print(obj.user_id)
+        comment_user_obj = sign.objects.get( id = str(obj.user_id) )
         if creater_obj.id == comment_user_obj.id:
             return True
         return False
