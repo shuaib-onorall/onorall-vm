@@ -409,7 +409,20 @@ class Addresources(models.Model):
     questionnaire=models.ForeignKey(questionnaires,related_name='questionnaire',null=True,blank=True,on_delete=models.CASCADE)
 
     def __str__(self) -> str:
-        return str(self.timeline)
+        return str(self.user_id)
+
+class supportTimeline(models.Model):
+    resources=models.ForeignKey(Addresources,null=True,blank=True,on_delete=models.CASCADE)
+    hours=models.PositiveIntegerField()
+    minutes=models.PositiveIntegerField()
+    seconds=models.PositiveIntegerField()
+    #toend=models.CharField(max_length=40)
+    videorefernce=models.ForeignKey(detail,null=True,blank=True,on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.resources)
+
+
 
 
 

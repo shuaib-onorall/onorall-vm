@@ -511,6 +511,25 @@ class addresourcesAPIView(APIView):
         event.delete()
         return Response({'status':'deleted','data':'item deleted'})
 
+class supporttimelineAPI(APIView):
+
+    def get(self,request,id=None):
+        if id:
+            support_data=supportTimeline.objects.get(id=id)
+            serializer=supportgetTimelineserializer(support_data)
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        support_data=supportTimeline.objects.all()
+        serializer=supportgetTimelineserializer(support_data,many=True)
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    def post(self,request,*args,**kwargs):
+        support_data=supportTimelineserializer(data=request.data)
+        if support_data.is_valid():
+            support_data.save()
+            return Response({'stauts':'success','data':support_data.data},status=status.HTTP_200_OK)
+        else:
+            return Response({'status':'success','error':support_data.errors},status=status.HTTP_400_BAD_REQUEST)
+
 #___________________________________________________________________________________________________________________
 class questionnaireAPIView(APIView):
     parser=(MultiPartParser,FormParser)
@@ -1104,8 +1123,9 @@ class CommentApiView( APIView,LimitOffsetPagination ):
                     serializer = CommentSerializer(obj)
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
 
-#ids=[]
-#sd=workbaseinfo.objects.select_related('userid').filter(workbasename='sumitkeen')
-#s=workbaseinfo.objects.all().filter(workbasename='sumitkeen').defer('location')
-#a=workbaseinfo.objects.only('location')
-#print(a)
+from django.db.models import Count
+ids=[]
+sd=workbaseinfo.objects.select_related('userid').filter(workbasename='sumitkeen')
+s=workbaseinfo.objects.all().filter(workbasename='sumitkeen').defer('location')
+a=workbaseinfo.objects.distinct()
+print(a)

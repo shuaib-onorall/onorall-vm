@@ -204,11 +204,33 @@ class questionnaireserializer(serializers.ModelSerializer):
 #_________________________________________________________________________________________________________________
 
 class addresourceserializer(serializers.ModelSerializer):
+    support=serializers.SerializerMethodField('supporttimeline')
+
+    def supporttimeline(self,obj):
+        all_obj=supportTimeline.objects.filter(resources=obj.id)
+        return supportTimelineserializer(all_obj,many=True).data
     class Meta:    
         model=Addresources
-        fields=['id','user_id','video_id','timeline','resourcesfile','questionnaire'] #here we have used other nested serializer method 
+        fields=['id','user_id','video_id','timeline','resourcesfile','questionnaire','support'] #here we have used other serializer method 
         read_only_fields=('questionnaire',)
-        depth=1   
+        depth=1
+           
+from django.forms.models import model_to_dict
+class supportTimelineserializer(serializers.ModelSerializer):
+    class Meta:
+        model=supportTimeline
+        fields=['id','hours','minutes','seconds','resources','videorefernce']
+              
+class supportgetTimelineserializer(serializers.ModelSerializer):
+    class Meta:
+        model=supportTimeline
+        fields=['id','hours','minutes','seconds','resources','videorefernce']
+        depth=1
+        
+    
+    
+   
+
 #___________________________________________________________________________________________________________________
 
 class ContactSerializerModel(serializers.ModelSerializer):

@@ -45,6 +45,7 @@ urlpatterns = [
     path('report',views.reportApiview.as_view()),
     path('otp',views.sendotp.as_view()),
     path('verify',csrf_exempt(views.verifyotp.as_view())),
+    path('supporttimeline/',views.supporttimelineAPI.as_view()),
     path('resources',views.addresourcesAPIView.as_view()),
     path('resources/<int:id>',views.addresourcesAPIView.as_view()),
     path('question',views.questionnaireAPIView.as_view()),
