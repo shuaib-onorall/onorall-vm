@@ -808,6 +808,7 @@ def compressing_video(videoid=None):
     cmd=f'ffmpeg -i "{video}" -vcodec libx264 -crf 28 "{output}"' #crf is the most important thing (constant rate factor)
     print(cmd)
     subprocess.check_output(cmd, shell=True)
+#compressing_video( "e6DsT9OZmPQV")
 #_______________________________________________________________________________________________________________________
 def watermark_on_video(videoid):
     file=detail.objects.get(videoid=videoid)
@@ -1103,4 +1104,8 @@ class CommentApiView( APIView,LimitOffsetPagination ):
                     serializer = CommentSerializer(obj)
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
 
-
+#ids=[]
+#sd=workbaseinfo.objects.select_related('userid').filter(workbasename='sumitkeen')
+#s=workbaseinfo.objects.all().filter(workbasename='sumitkeen').defer('location')
+#a=workbaseinfo.objects.only('location')
+#print(a)

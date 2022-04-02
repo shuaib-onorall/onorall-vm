@@ -38,7 +38,7 @@ class sign(models.Model):
     signup_referral_by=models.IntegerField(default=0)
    
     def __str__(self):
-        return str(self.id)
+        return str(self.name)
 
 #____________________________________________________________________________________________________________________
 
@@ -106,12 +106,14 @@ class detail(models.Model):
     published_on=models.DateField(auto_now=True)
 
     
+
+    def __str__(self) -> str:
+        return  str(self.file) 
+
     @property
     def total_likes(self):
         return self.likesvideo.all().count()
 
-    def __str__(self) -> str:
-        return  f"ID : {str(self.id)} || {str(self.title)}"
 
 class view(models.Model):
     video=models.OneToOneField(detail,related_name='count',on_delete=models.CASCADE)
