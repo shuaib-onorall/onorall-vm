@@ -58,7 +58,7 @@ INSTALLED_APPS = [
 
     'embed_video' , # for embed videos
     #'debug_toolbar' , 
-
+    #'locust',
   
    
     

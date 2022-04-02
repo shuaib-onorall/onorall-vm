@@ -315,28 +315,32 @@ class ReplySerializer(serializers.ModelSerializer):
         model =  Reply
         fields = "__all__"
         
-        
 
+        
 class CommentSerializer(serializers.ModelSerializer):
 
-    user_name = serializers.SerializerMethodField('user_name_func')
-    profile = serializers.SerializerMethodField('profile_func')
-    is_creater  =  serializers.SerializerMethodField('is_creater_func')
+    user_name = serializers.SerializerMethodField(source="get_user_name" ,  read_only=True)
+    is_creater  =  serializers.SerializerMethodField(source="get_is_creater" ,  read_only=True)
+    profile = serializers.SerializerMethodField(source="get_profile" ,  read_only=True)
+   
 
-    def profile_func(self  , obj):
-        obj = sign.objects.get(id = obj.user_id.id)
-        return str(obj.profilePic)
-
-    def user_name_func(self,obj):
+    
+    def get_user_name(self,obj):
         obj=sign.objects.get(id = obj.user_id.id)
         return obj.name
 
-    def is_creater_func(self , obj):
+    def get_is_creater(self , obj):
+        print(obj.video_id)
         creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ))
         comment_user_obj = sign.objects.get( id = obj.user_id.id )
+        
         if creater_obj.id == comment_user_obj.id:
             return True
         return False
+    
+    def get_profile(self  , obj):
+        obj = sign.objects.get(id = obj.user_id.id)
+        return str(obj.profilePic)
 
     class Meta:
         model = Commentss

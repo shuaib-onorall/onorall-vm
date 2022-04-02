@@ -1229,22 +1229,32 @@ class LikeApiView( APIView ):
 
 # API's for Comments 
 from rest_framework.pagination import LimitOffsetPagination
+from django.db import connection
+import time
 class CommentApiView( APIView  , LimitOffsetPagination):
+    
+
+    
+
 
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
             comment_obj = get_object_or_404( Commentss , id = pk )
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        all_comments_obj =  Commentss.objects.all()
-        #___________pagination-condition___________
+
+        all_comments_obj =  Commentss.objects.select_related('user_id').all()
+        
+        #_____________________________________________________pagination-condition________________________________________________________
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self)
             serializer = CommentSerializer( results , many=True )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        #___________WITHOUT-Pegination_____________
+
+        #_____________________________________________________WITHOUT-Pegination__________________________________________________________
         serializer = CommentSerializer( all_comments_obj , many=True )
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        # total-time 0.04986929893493652 with only all #  0.002991199493408203 with select_related
+        return Response({'status':'success','data':serializer.data  },status=status.HTTP_200_OK)
         
 
     def post(self,request, pk = None , *args, **kwargs):
@@ -1291,8 +1301,8 @@ class CommentApiView( APIView  , LimitOffsetPagination):
                 serializer = CommentSerializer(obj)
                 return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
 
-            elif request.data['action'] == "dislike" :
-                new_ids = request.data.get('dis_likes_on_comment')         
+            else :
+                new_ids = request.data.get('dis_likes_on_comment')        
                 sign_obj = sign.objects.get(id=str(new_ids[0]))
                 if sign_obj in obj.dis_likes_on_comment.all():
                     obj.dis_likes_on_comment.remove(sign_obj)
@@ -1312,7 +1322,8 @@ class CommentApiView( APIView  , LimitOffsetPagination):
                         return Response({'status':'removedis-like-success','data':serializer.data},status=status.HTTP_200_OK)
                     serializer = CommentSerializer(obj)
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
-
+            
+           
 
     def delete( self , request , pk= None , *args , **kwargs ):
         if pk is not None:
@@ -1555,16 +1566,15 @@ class reportApiview(APIView):
     def get(self,request,reportid=None):
         if reportid:
             reportinfo=report4.objects.get(id=reportid)
-            
             info = {}
             try:                                                                                               # use try except because one condition always will be false and one true
-                count_video = report4.objects.filter(report_file = reportinfo.report_file ).count()            # get the total count of report of this video
+                count_video = report4.objects.filter( report_file = reportinfo.report_file ).count()            # get the total count of report of this video
                 info['total_report_of_this_file'] = count_video
             except :                                                                             
-                count_post = report4.objects.filter(report_post = reportinfo.report_post ).count()             # get the total count of report of this video
+                count_post = report4.objects.filter( report_post = reportinfo.report_post ).count()             # get the total count of report of this video
                 info['total_report_of_this_post'] = count_post
             serializer_info=reportserializer(reportinfo)
-            return Response({'status':'success','data':serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
+            return Response({'status' : 'success','data' : serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
             
         report_info=report4.objects.all()
         report_serializer=reportserializer(report_info,many=True)
@@ -1615,35 +1625,6 @@ class ReplyApiView( APIView ):
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
 
-
-
-#___________________--report api
-class reportApiview(APIView):
-    parser=(MultiPartParser,FormParser)
-    serializer=reportserializer
-    def get(self,request,reportid=None):
-        if reportid:
-            reportinfo=report4.objects.get(id=reportid)
-            
-            info = {}
-            try:                                                                                               # use try except because one condition always will be false and one true
-                count_video = report4.objects.filter(report_file = reportinfo.report_file ).count()            # get the total count of report of this video
-                info['total_report_of_this_file'] = count_video
-            except :                                                                                           # if report_file field is null the go to below
-                count_post = report4.objects.filter(report_post = reportinfo.report_post ).count()             # get the total count of report of this video
-                info['total_report_of_this_post'] = count_post
-            serializer_info=reportserializer(reportinfo)
-            return Response({'status':'success','data':serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
-            
-        report_info=report4.objects.all()
-        report_serializer=reportserializer(report_info,many=True)
-        return Response({'status':'success','data':report_serializer.data} ,status=status.HTTP_200_OK)
-
-    def post(self,request,*args,**kwargs):
-        serializer=reportserializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data,status=status.HTTP_200_OK)
 
 
 

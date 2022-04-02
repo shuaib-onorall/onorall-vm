@@ -579,18 +579,23 @@ class Reply(models.Model):
 class Commentss(models.Model):
     #created_time = models.DateTimeField( auto_now_add = True )
     comment_text = models.CharField(max_length = 2000 , default=" ")
-    user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id") 
-    parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  )
-    video_id = models.ForeignKey( detail , on_delete = models.CASCADE , related_name="video_id" )
+    user_id = models.ForeignKey( sign  , on_delete = models.CASCADE  , related_name="user_id" ) 
+    parent = models.ForeignKey( "self" , on_delete = models.CASCADE  , blank=True  , null = True  , related_name="user"   )
+    video_id = models.ForeignKey( detail , on_delete = models.CASCADE   )
     #like = models.OneToOneField( LikeModelForComments , on_delete=models.CASCADE  , blank=True)
     likes_on_comment  = models.ManyToManyField( sign  , blank=True  , related_name="likes_on_comment")
     dis_likes_on_comment = models.ManyToManyField( sign  , blank=True  )
 
     like_active = models.CharField(max_length = 2000 , blank=True , default='null')
     dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
-    
     created_at = models.DateTimeField(auto_now =True)
-    
+
+
+    class Meta:
+        ordering = ['id']
+        indexes = [
+            models.Index(fields=['user_id' , 'video_id'])
+            ]
 
     @property
     def total_likes_on_comment( self ):
@@ -599,7 +604,6 @@ class Commentss(models.Model):
     def total_dis_likes_on_comment( self ):
         return self.dis_likes_on_comment.all().count()
     
-
     def __str__(self):
         return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id}"
 
@@ -615,7 +619,6 @@ class LikeModel(models.Model):
 
     def __str__(self):
         return f'ID : {str(self.id)} || VIDEO ID : {str(self.video)}'
-
 
 # REFERRAL MODEL
 import uuid
@@ -644,11 +647,6 @@ class RefferalLink(models.Model):
             self.refferal_code = generate_ref_code()
 
         super().save(*args , **kwargs)
-
-
-
-
-
 
 
 
