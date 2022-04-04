@@ -315,25 +315,28 @@ class ReplySerializer(serializers.ModelSerializer):
         model =  Reply
         fields = "__all__"
         
-
+class EagerLoadingMixin:
+    @classmethod
+    def setup_eager_loading(cls, queryset):
+        if hasattr(cls, "_SELECT_RELATED_FIELDS"):
+            queryset = queryset.select_related(*cls._SELECT_RELATED_FIELDS)
+        if hasattr(cls, "_PREFETCH_RELATED_FIELDS"):
+            queryset = queryset.prefetch_related(*cls._PREFETCH_RELATED_FIELDS)
+        return queryset 
         
-class CommentSerializer(serializers.ModelSerializer):
+class CommentSerializer(EagerLoadingMixin , serializers.ModelSerializer):
 
     user_name = serializers.SerializerMethodField(source="get_user_name" ,  read_only=True)
     is_creater  =  serializers.SerializerMethodField(source="get_is_creater" ,  read_only=True)
     profile = serializers.SerializerMethodField(source="get_profile" ,  read_only=True)
-   
-
     
     def get_user_name(self,obj):
         obj=sign.objects.get(id = obj.user_id.id)
         return obj.name
 
-    def get_is_creater(self , obj):
-        print(obj.video_id)
-        creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ))
-        comment_user_obj = sign.objects.get( id = obj.user_id.id )
-        
+    def get_is_creater(self , obj): 
+        creater_obj = sign.objects.select_related().get( id = str(obj.video_id.user_id.id ))
+        comment_user_obj = sign.objects.select_related().get( id = obj.user_id.id )
         if creater_obj.id == comment_user_obj.id:
             return True
         return False
@@ -345,9 +348,10 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Commentss
         fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , 
-        "comment_text" ,   "user_id"  ,"user_name" , 'like_active' , 'dislike_active'  , 'created_at' , 'profile'  ] #__all__"
-        #depth = 1
-
+        "comment_text" ,   "user_id"  ,"user_name" , 'like_active' , 'dislike_active'  , 'created_at' , 'profile'  ] 
+    
+    _SELECT_RELATED_FIELDS = ['user_id' , 'video_id__user_id']
+    _PREFETCH_RELATED_FIELDS = ['likes_on_comment' , 'dis_likes_on_comment']
 
 class timelineSerializer(serializers.ModelSerializer):
     class Meta:
@@ -361,14 +365,11 @@ class LikeModelSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
-# class LikeModelForCommentsSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = LikeModelForComments
-#         fields = "__all__"
-
-
 class RefferalLinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = RefferalLink
         fields = ['id' ,   'refferal_code' , 'refferal_by' , 'refferal_for' , 'email' , 'refferal_plateform'  , 'is_clicked' , 'is_signup' , 'is_creator' , 'is_uploaded' , 'created_time' , 'updated_time' ]
+
+
+
+

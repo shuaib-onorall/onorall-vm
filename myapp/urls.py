@@ -100,6 +100,9 @@ urlpatterns = [
     path('report/',views.reportApiview.as_view()),
     path('report/<int:reportid>/',views.reportApiview.as_view()),
 
+    # embed 
+    path('embed' , views.embed_testing , name='embed-test'),
+
 
     #___________________________comment like-dislike api
     # path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),

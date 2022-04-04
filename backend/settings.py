@@ -57,10 +57,8 @@ INSTALLED_APPS = [
 
 
     'embed_video' , # for embed videos
-    #'debug_toolbar' , 
-    #'locust',
-  
-   
+    #'debug_toolbar' ,   # for debugging
+    #'locust',        # testing api
     
 ]
 
@@ -331,17 +329,10 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 
 
 ###  DJANGO DEBUG SETTING FOR DEVELOPMENT
-
 if DEBUG:
-    INTERNAL_IPS = ('127.0.0.1',)
-    MIDDLEWARE += (
-        'debug_toolbar.middleware.DebugToolbarMiddleware',
-    )
-
-    INSTALLED_APPS += (
-        'debug_toolbar',
-    )
-
+    INTERNAL_IPS = ( '*' ) # '127.0.0.1', '192.168.1.95' , 
+    MIDDLEWARE += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+    INSTALLED_APPS += ('debug_toolbar',)
     DEBUG_TOOLBAR_PANELS = [
         'debug_toolbar.panels.versions.VersionsPanel',
         'debug_toolbar.panels.timer.TimerPanel',
@@ -356,15 +347,11 @@ if DEBUG:
         'debug_toolbar.panels.logging.LoggingPanel',
         'debug_toolbar.panels.redirects.RedirectsPanel',
     ]
-
-    DEBUG_TOOLBAR_CONFIG = {
-        'INTERCEPT_REDIRECTS': False,
-    }
-
+    DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS': False,} 
 def show_toolbar(request):
     return True
-DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK" : show_toolbar,
-}
+DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK" : show_toolbar,}
+import mimetypes
+mimetypes.add_type("application/javascript", ".js", True)
 
-#______________________________________________________________________________________________________________________________________________________________________
+#________________ END DEBUG SETTING _________________

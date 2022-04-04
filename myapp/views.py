@@ -1233,28 +1233,33 @@ from django.db import connection
 import time
 class CommentApiView( APIView  , LimitOffsetPagination):
     
-
-    
-
-
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
-            comment_obj = get_object_or_404( Commentss , id = pk )
+            comment_obj =  get_object_or_404(Commentss , id =pk)
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
-        all_comments_obj =  Commentss.objects.select_related('user_id').all()
-        
+        context, all_comments_obj = self.custom_efficient_method(request)
+       
         #_____________________________________________________pagination-condition________________________________________________________
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
-            results = self.paginate_queryset(all_comments_obj, request, view=self)
-            serializer = CommentSerializer( results , many=True )
+            results = self.paginate_queryset(all_comments_obj, request, view=self )
+            serializer = CommentSerializer( results , many=True  , context=context)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
         #_____________________________________________________WITHOUT-Pegination__________________________________________________________
-        serializer = CommentSerializer( all_comments_obj , many=True )
-        # total-time 0.04986929893493652 with only all #  0.002991199493408203 with select_related
+        serializer = CommentSerializer( all_comments_obj , many=True    , context=context)
         return Response({'status':'success','data':serializer.data  },status=status.HTTP_200_OK)
+
+    def custom_efficient_method(self, request):
+        context = {"request": request}
+        all_comments_objs =  Commentss.objects.all()
+        #Commentss.objects.select_related().prefetch_related('likes_on_comment' , 'dis_likes_on_comment').all()  
+        all_comments_obj = CommentSerializer.setup_eager_loading(all_comments_objs)
+        return context,all_comments_obj    
+        '''
+        because of this function Response Time Reduce approx. 55% 
+        '''
         
 
     def post(self,request, pk = None , *args, **kwargs):
@@ -1278,7 +1283,7 @@ class CommentApiView( APIView  , LimitOffsetPagination):
    
     def put(self, request, pk=None , format=None):
         if pk is not None:
-            obj = Commentss.objects.get( id = pk)
+            obj = Commentss.objects.prefetch_related('likes_on_comment' , 'dis_likes_on_comment').get( id = pk)
             if request.data['action'] == "like" :
                 new_ids = request.data.get('likes_on_comment')              
                 sign_obj = sign.objects.get(id=str(new_ids[0]))               
@@ -1370,7 +1375,6 @@ class RefferalView( APIView ):
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
-
     def patch(self,request,pk= None, *args , **kwargs ):
         if pk is not None:
             queryset = get_object_or_404(RefferalLink ,  id = pk )
@@ -1380,8 +1384,6 @@ class RefferalView( APIView ):
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
             return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
         return Response({'status':'fail','data':'please provide id in url '},status=status.HTTP_400_BAD_REQUEST) 
-
-
 
     def delete( self, request, pk= None, *args , **kwargs ):
         if pk is not None:
@@ -1402,6 +1404,7 @@ class DetailAPIview(APIView):
     def get(self,request,videoid=None):
         if videoid:
             alldoc=detail.objects.get(videoid=videoid)
+            print(alldoc.file , 'sssss' , alldoc.file.url)
             serializer=DetailSerializer(alldoc)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         
@@ -1485,7 +1488,7 @@ class WorkApiView(APIView):
                 sign_obj = sign.objects.get(id = str(request.data['userid']))
             except:
                 sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
-            sign_obj.iscreator = True                             #:)''' this is for iscreator true in sign models '''
+            sign_obj.iscreator = True                                             #:)''' this is for iscreator true in sign models '''
             sign_obj.save()                                                     
             if sign_obj.signup_refferal_by != 0:
                 referral_id = int(sign_obj.signup_refferal_by)
@@ -1518,7 +1521,7 @@ class WorkApiView(APIView):
 #_____________________________________________________________________________________________________________________
 class profileRefferalAPIView(APIView):
     def get(self,request,code=None):
-        if code:
+        if code is not None:
             referral_code = str(code)
             referral_obj = RefferalLink.objects.get(refferal_code = referral_code)
             if referral_obj.is_clicked == False:    
@@ -1527,12 +1530,12 @@ class profileRefferalAPIView(APIView):
                 referral_obj.save()
             serializer=RefferalLinkSerializer(referral_obj)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        allbaseinfo=RefferalLink.objects.all()
-        serializer=RefferalLinkSerializer(allbaseinfo,many=True)
+        all_ref = RefferalLink.objects.all()
+        serializer=RefferalLinkSerializer( all_ref ,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
   
 
-    def post(self,request , code=None , *args , **kwargs ):
+    def post( self , request , code = None , *args , **kwargs ):
         if code is not None :
             referral_code = str(code)
             referral_obj = RefferalLink.objects.get(refferal_code = referral_code)
@@ -1544,14 +1547,13 @@ class profileRefferalAPIView(APIView):
                 return Response({'status':403,'error':serializer.errors})
             if profile_mail:
                 return Response({'status':'gmail  already exist'})
-            
             serializer.validated_data['signup_refferal_by'] = int(referral_obj.id)
             serializer.save()
             if request.session.has_key('referral_code'):
                 if referral_obj.is_signup == False:
                     referral_obj.is_signup = True                         # referral step - 2
                     referral_obj.save()
-                    del request.session['referral_code']
+                    del request.session['referral_code']                  # delete the session value
             if phone:
                 user=sign.objects.get(phone=serializer.data['phone'])
                 refresh = RefreshToken.for_user(user)                  #this line important for jwt token
@@ -1586,6 +1588,32 @@ class reportApiview(APIView):
             serializer.save()
             return Response(serializer.data,status=status.HTTP_200_OK)
             
+
+
+
+
+
+
+
+def embed_testing(request):
+    my_video = EmbedVideoModel.objects.all()
+    for i in my_video:
+        print(i.video_url)
+
+    return render(request , 'embed_testing.html'  , {'my_video' : my_video})
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 class ReplyApiView( APIView ):

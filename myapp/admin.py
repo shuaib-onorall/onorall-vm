@@ -52,3 +52,5 @@ class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
     pass
 
 admin.site.register(EmbedVideoModel, EmbedVideoAdmin)
+
+

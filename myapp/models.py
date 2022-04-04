@@ -82,6 +82,8 @@ age_restriction_choice=(
     ('no-restrict','no-restrict'),
     ('restrict','restrict'),
 )
+
+
 class detail(models.Model):
     videoid = models.CharField(max_length=12, unique=True,   default=random_id_field)
     user_id=models.ForeignKey(sign,null=True,blank=True,on_delete=models.CASCADE)
@@ -108,7 +110,10 @@ class detail(models.Model):
 
     def __str__(self) -> str:
         return  f"ID : {str(self.id)} || {str(self.title)}"
-    
+    class Meta:
+        ordering = ['id']
+
+
 
 #_______________________________________________
 class timelineModel(models.Model):
@@ -529,21 +534,6 @@ class sharemon(models.Model):
 
 
 
-# # REPLY FOR COMMENT
-# class Reply(models.Model):
-#     #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
-#     created_time = models.DateTimeField( auto_now_add  = True )
-#     person_name = models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="person_name")
-#     for_reply =   models.ForeignKey( sign  , on_delete = models.CASCADE , related_name="for_reply")
-#     reply_video = models.ForeignKey( detail , on_delete = models.CASCADE )
-#     reply_text = models.CharField( max_length = 2000  , default=" ")
-    
-    
-#     def __str__(self):
-#         return f"ID : {self.id} || Time : {self.created_time} || personName : {self.person_name}"
-
-
-# REPLY FOR COMMENT
 class Reply(models.Model):
     #reply_id = models.AutoField(primary_key=True  , null=False , blank=False , unique=True )
     created_time = models.DateTimeField( auto_now_add  = True )
@@ -576,6 +566,10 @@ class Reply(models.Model):
 #         return f'ID : {str(self.id)} || VIDEO ID : {str(self.id)}'
 
 # Comments Functionality  
+class CommentsManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().select_related().prefetch_related( )
+
 class Commentss(models.Model):
     #created_time = models.DateTimeField( auto_now_add = True )
     comment_text = models.CharField(max_length = 2000 , default=" ")
@@ -590,6 +584,7 @@ class Commentss(models.Model):
     dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
     created_at = models.DateTimeField(auto_now =True)
 
+    objects = CommentsManager()
 
     class Meta:
         ordering = ['id']
@@ -678,13 +673,44 @@ class Notification(models.Model):
 
 
 
-# for embed videos
-from django.db import models
-from embed_video.fields import EmbedVideoField
 
+
+
+    
+# for embed videos
+from embed_video.fields import EmbedVideoField
 class EmbedVideoModel(models.Model):
+    video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
     video_url = EmbedVideoField()  #  just like URLField()
 
     def __str__(self , *args , **kwargs):
         return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
-        
+    
+
+
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+@receiver( post_save, sender = detail)
+def create_profile1(sender, instance, created, **kwargs):
+    if created:
+        print('working signals' , instance)
+        obj  = EmbedVideoModel.objects.create(video_embed =instance)
+        if obj:
+            path = 'http://192.168.1.95:8000' + instance.file.url
+            obj.video_url = path
+            obj.save()
+
+            #http://192.168.1.95:8000/media/upload/yG4GLOwJTy7Y/videos.mp4
+
+# _________________ ANALYTICS ___________________________#
+class WorkbaseAnalytics(models.Model):
+    name_of_action = models.CharField( max_length=255 , blank=False , null = False )
+    active = models.BooleanField( default = False , null = False , blank =False )
+    views =  models.IntegerField( default = 0 , blank = False , null = False )      #   should be ManyToManyField() of views models if needed viewers details
+    visit = models.IntegerField( default = 0 , blank = False  , null = False)       #   should be foreignkey() of visit models if needed visiter  details
+    impressions = models.IntegerField( default = 0 , blank = False  , null = False)  
+    new_visit = models.IntegerField( default = 0 , blank=True  , null = True)
+
+    def __str__(self):
+        return f" ID : {str(self.id)} || NAME : {str(self.name_of_action)}"
