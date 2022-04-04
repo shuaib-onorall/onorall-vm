@@ -1244,7 +1244,7 @@ class CommentApiView( APIView  , LimitOffsetPagination):
         #_____________________________________________________pagination-condition________________________________________________________
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self )
-            serializer = CommentSerializer( results , many=True  , context=context)
+            serializer = CommentSerializer( results , many=True   , context = context)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
         #_____________________________________________________WITHOUT-Pegination__________________________________________________________
@@ -1252,7 +1252,7 @@ class CommentApiView( APIView  , LimitOffsetPagination):
         return Response({'status':'success','data':serializer.data  },status=status.HTTP_200_OK)
 
     def custom_efficient_method(self, request):
-        context = {"request": request}
+        context = { "request": request }  
         all_comments_objs =  Commentss.objects.all()
         #Commentss.objects.select_related().prefetch_related('likes_on_comment' , 'dis_likes_on_comment').all()  
         all_comments_obj = CommentSerializer.setup_eager_loading(all_comments_objs)
@@ -1260,7 +1260,7 @@ class CommentApiView( APIView  , LimitOffsetPagination):
         '''
         because of this function Response Time Reduce approx. 55% 
         '''
-        
+
 
     def post(self,request, pk = None , *args, **kwargs):
         serializer = CommentSerializer( data = request.data )
