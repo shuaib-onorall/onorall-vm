@@ -203,7 +203,7 @@ class addresourceserializer(serializers.ModelSerializer):
         model=Addresources
         fields=['id','user_id','video_id','timeline','resourcesfile','questionnaire'] #here we have used other nested serializer method 
         read_only_fields=('questionnaire',)
-        depth=1   
+        #depth=1   
 #___________________________________________________________________________________________________________________
 
 class ContactSerializerModel(serializers.ModelSerializer):
@@ -330,13 +330,14 @@ class CommentSerializer(EagerLoadingMixin , serializers.ModelSerializer):
     is_creater  =  serializers.SerializerMethodField(source="get_is_creater" ,  read_only=True)
     profile = serializers.SerializerMethodField(source="get_profile" ,  read_only=True)
     
+    
     def get_user_name(self,obj):
         obj=sign.objects.get(id = obj.user_id.id)
         return obj.name
 
     def get_is_creater(self , obj): 
-        creater_obj = sign.objects.select_related().get( id = str(obj.video_id.user_id.id ))
-        comment_user_obj = sign.objects.select_related().get( id = obj.user_id.id )
+        creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ))
+        comment_user_obj = sign.objects.get( id = obj.user_id.id )
         if creater_obj.id == comment_user_obj.id:
             return True
         return False

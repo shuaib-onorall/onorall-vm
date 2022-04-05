@@ -701,6 +701,7 @@ class addresourcesAPIView(APIView):
 
     def post(self,request,*args,**kwargs):
         serializer=addresourceserializer(data=request.data)
+        print(request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,status=status.HTTP_200_OK)
@@ -1231,27 +1232,33 @@ class LikeApiView( APIView ):
 from rest_framework.pagination import LimitOffsetPagination
 from django.db import connection
 import time
+from cached_property import cached_property
+
+
+
 class CommentApiView( APIView  , LimitOffsetPagination):
     
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
-            comment_obj =  get_object_or_404(Commentss , id =pk)
+            comment_obj = Commentss.objects.prefetch_related('likes_on_comment' , 'dis_likes_on_comment').get( id = pk )
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+        #all_comments_obj = Commentss.objects.select_related('user_id','video_id').prefetch_related('likes_on_comment','dis_likes_on_comment').all()
 
         context, all_comments_obj = self.custom_efficient_method(request)
        
         #_____________________________________________________pagination-condition________________________________________________________
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self )
-            serializer = CommentSerializer( results , many=True   , context = context)
+            serializer = CommentSerializer( results , many=True  )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
         #_____________________________________________________WITHOUT-Pegination__________________________________________________________
-        serializer = CommentSerializer( all_comments_obj , many=True    , context=context)
+        serializer = CommentSerializer( all_comments_obj , many=True   )
         return Response({'status':'success','data':serializer.data  },status=status.HTTP_200_OK)
 
-    def custom_efficient_method(self, request):
+    def custom_efficient_method(self, request):   
         context = { "request": request }  
         all_comments_objs =  Commentss.objects.all()
         #Commentss.objects.select_related().prefetch_related('likes_on_comment' , 'dis_likes_on_comment').all()  
@@ -1270,9 +1277,9 @@ class CommentApiView( APIView  , LimitOffsetPagination):
         return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
 
-    def patch(self,request, pk = None, *args , **kwargs ):
+    def patch( self , request, pk = None, *args , **kwargs ):
         if pk is not None:
-            queryset =  Commentss.objects.get(id = pk)
+            queryset =  Commentss.objects.get( id = pk )
             serializer= CommentSerializer( queryset , data=request.data , partial=True)
             if serializer.is_valid():
                 serializer.save()

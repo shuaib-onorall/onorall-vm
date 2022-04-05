@@ -688,20 +688,24 @@ class EmbedVideoModel(models.Model):
     
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+# from django.db.models.signals import post_save
+# from django.dispatch import receiver
+# @receiver( post_save, sender = detail)
+# def create_profile1(sender, instance, created, **kwargs):
+#     if created:
+#         print('working signals' , instance)
+#         obj  = EmbedVideoModel.objects.create(video_embed =instance)
+#         if obj:
+#             path = 'http://192.168.1.95:8000' + instance.file.url
+#             obj.video_url = path
+#             obj.save()
 
-@receiver( post_save, sender = detail)
-def create_profile1(sender, instance, created, **kwargs):
-    if created:
-        print('working signals' , instance)
-        obj  = EmbedVideoModel.objects.create(video_embed =instance)
-        if obj:
-            path = 'http://192.168.1.95:8000' + instance.file.url
-            obj.video_url = path
-            obj.save()
 
-            #http://192.168.1.95:8000/media/upload/yG4GLOwJTy7Y/videos.mp4
+
+
+
+
+
 
 # _________________ ANALYTICS ___________________________#
 class WorkbaseAnalytics(models.Model):
