@@ -245,6 +245,7 @@ class section(models.Model):
 class playlist(models.Model):
     grouplistid = models.CharField(max_length=12, unique=True,   default=random_id_field)
     userid=models.ForeignKey(sign,on_delete=models.CASCADE)
+    group_list_image=models.ImageField(upload_to='grouplist/',verbose_name='group_list_image')
     name=models.CharField(max_length=20)
     files=models.ManyToManyField(detail)
 
@@ -401,9 +402,9 @@ class question3(models.Model):
         return str(self.question)
 
 class Addresources(models.Model):
-    user_id=models.ForeignKey(sign,null=True,blank=True,on_delete=models.CASCADE)
+    user_id=models.ForeignKey(sign,on_delete=models.CASCADE)
     resourcesid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    video_id=models.ForeignKey(detail,blank=True,null=True,on_delete=models.CASCADE)
+    video_id=models.ForeignKey(detail,on_delete=models.CASCADE)
     timeline=models.CharField("hr:min:se",max_length=20)
     resourcesfile=models.FileField(upload_to='resources/',null=True,blank=True)
     questionnaire=models.ForeignKey(questionnaires,related_name='questionnaire',null=True,blank=True,on_delete=models.CASCADE)

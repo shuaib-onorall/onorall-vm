@@ -301,8 +301,8 @@ class profileAPIView(APIView):
     
 
 #api for groupskills
-class grouplistAPIView(APIView):
-    parser_classes= [JSONParser]
+class groupskillAPIView(APIView):
+    parser_classes=(MultiPartParser, FormParser)
     playlist_serializer=groupserializer
 
     def get(self,request,id=None):
@@ -331,7 +331,20 @@ class grouplistAPIView(APIView):
         else:
             return Response({'status':'error','data':serializer.error})
 
-    def delete(self,request,id:None):
+    def put(self,request,id=None):
+        event=group.objects.get(id=id)
+        new_data=request.data.get(list)
+        data=playlist.object.get(id=new_data)
+        if data in new_data.list.all():
+            new_data.list.remove(new_data)
+        else:
+            new_data.list.add(new_data)
+        event.save()
+        serializer=playlist_videoserializer(event)
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+
+    def delete(self,request,id=None):
         event=get_object_or_404(group,id=id)
         event.delete()
         return Response({'status':'deleted'})
@@ -340,7 +353,7 @@ class grouplistAPIView(APIView):
 
 #playlist api
 class playlistAPIView(APIView):
-    parser_classes= (MultiPartParser, FormParser)
+    parser_classes= [JSONParser]#(MultiPartParser, FormParser)
     def get(self,request,id=None,vid=None):
         if id:
             allplaylist=playlist.objects.get(id=id)
@@ -362,6 +375,27 @@ class playlistAPIView(APIView):
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self,request,id=None):
+        event=playlist.objects.get(id=id)
+        serializer=playlist_videoserializer(event,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+    
+    def put(self,request,id=None):
+        playlist_data=playlist.objects.get(id=id)
+        data=request.data.get('files')
+        new_id=detail.objects.get(id=data)
+        if new_id in playlist_data.files.all():
+            playlist_data.files.remove(new_id)
+        else:
+            playlist_data.files.add(new_id)
+        playlist_data.save()
+        serializer=playlist_videoserializer(playlist_data)
+        return Response({'data':serializer.data})
+
 #_______________________________________________________________________________________________________________________
 #workbase api
 class WorkApiView(APIView):
@@ -487,7 +521,6 @@ class verifyotp(APIView):
 #________________________________________________________________________________________________________________________________
 class addresourcesAPIView(APIView):
     parser=(MultiPartParser,FormParser)
-    serializer=addresourceserializer
     def get(self,request,id=None):
         if id:
             reportinfo=Addresources.objects.get(id=id)
@@ -499,10 +532,11 @@ class addresourcesAPIView(APIView):
         return Response(report_serializer.data,status=status.HTTP_200_OK)
 
     def post(self,request,*args,**kwargs):
-        serializer=addresourceserializer(data=request.data)
+        serializer=addresources_post_serializer(data=request.data)
+        print(serializer)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data,status=status.HTTP_200_OK)
+            return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
         else:
             return Response({'data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
@@ -532,7 +566,7 @@ class supporttimelineAPI(APIView):
 
 #___________________________________________________________________________________________________________________
 class questionnaireAPIView(APIView):
-    parser=(MultiPartParser,FormParser)
+    parser=[JSONParser]
     serializer=questionnaireserializer
     def get(self,request,ques_id=None):
         if ques_id:
@@ -545,12 +579,12 @@ class questionnaireAPIView(APIView):
         return Response(serializer.data,status=status.HTTP_200_OK)
     
     def post(self,request,*args,**kwargs):
-        serializer=questionnaireserializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        event=questionnairepostserializer(data=request.data)
+        if event.is_valid():
+            event.save()
+            return Response(event.data,status=status.HTTP_200_OK)
         else:
-            return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
+            return Response({'status':'success','data':event.errors},status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,ques_id=None):
         event=Addresources.objects.get(ques_id=ques_id)
@@ -1046,7 +1080,7 @@ class CommentApiView( APIView,LimitOffsetPagination ):
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
             
-        all_comments_obj =  Commentss.objects.all()
+        all_comments_obj =  Commentss.objects.select_related('user_id','video_id').prefetch_related('likes_on_comment','dis_likes_on_comment').all()
 
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self)
@@ -1124,8 +1158,8 @@ class CommentApiView( APIView,LimitOffsetPagination ):
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
 
 from django.db.models import Count
-ids=[]
-sd=workbaseinfo.objects.select_related('userid').filter(workbasename='sumitkeen')
+
+queryset=workbaseinfo.objects.select_related('userid').all()
 s=workbaseinfo.objects.all().filter(workbasename='sumitkeen').defer('location')
 a=workbaseinfo.objects.distinct()
-print(a)
+print(queryset)

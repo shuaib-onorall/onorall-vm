@@ -1,4 +1,5 @@
 from dataclasses import field
+from importlib.metadata import files
 from re import L
 from urllib import request
 from xml.parsers.expat import model
@@ -32,13 +33,11 @@ class workserializer(serializers.ModelSerializer):
 #____________________________________________________________________________________________________________________
 #serializer for file detailing
 class DetailSerializer(serializers.ModelSerializer):
-   all_timeline=serializers.SerializerMethodField('timeline')
+   all_timeline=serializers.SerializerMethodField('timeline') 
+  
    def timeline(self,obj):
        all_obj=Addresources.objects.filter(video_id=obj.id)
-       l=[]
-       for i in all_obj:
-           l.append(i.id)
-       return l
+       return addresourceserializer(all_obj,many=True).data
 
    class Meta():
         model=detail
@@ -124,32 +123,19 @@ class tag(serializers.ModelSerializer):
 
 #for playlist serializer
 class playlist_videoserializer(serializers.ModelSerializer):
-    files=DetailSerializer(many=True) # whenever we will use Nested Serializer  
+   # files=DetailSerializer(many=True) # whenever we will use Nested Serializer  
     class Meta:                    # so you have to mention same field name that you had used in model for nested serializer
         model=playlist
         fields='__all__'
         filter_fields = ('files__id',)
 
 #for group serializer
-
 class groupserializer(serializers.ModelSerializer):
-    list=playlist_videoserializer(many=True)    #here we have nested serializer.
+    #list=playlist_videoserializer() 
+       #here we have nested serializer.
     class Meta:                                 #It is used when you have to embeded one serializer in other serializer
         model=group
-        fields='__all__'
-
-def create(self,**validated_data):
-    groupdata=validated_data.pop('list')
-    data=playlist.objects.create(**groupdata)
-    groupvideo=group.objects.create(list=data,**validated_data)
-    return groupvideo
-
-def update(self,instance,validated_data):
-    groupdata=validated_data.pop(list)
-    serilaizer=groupserializer()
-    super(self.__class__,self).update(instance,validated_data)
-    super(groupserializer,serilaizer).update(instance.list,groupdata)
-
+        fields=['id','groupskillid','userid','title','list']
 
 #___________________________________________________________________________________________________________________________
 
@@ -199,6 +185,11 @@ class questionnaireserializer(serializers.ModelSerializer):
         model=questionnaires
         fields=['ques_id','questionnaireid','userid','videoid','description','question_text','question_qna','question_mcq']
         depth=1
+
+class questionnairepostserializer(serializers.ModelSerializer):
+    class Meta:
+        model=questionnaires
+        fields=['ques_id','questionnaireid','userid','videoid','description']
     
 
 #_________________________________________________________________________________________________________________
@@ -212,14 +203,21 @@ class addresourceserializer(serializers.ModelSerializer):
     class Meta:    
         model=Addresources
         fields=['id','user_id','video_id','timeline','resourcesfile','questionnaire','support'] #here we have used other serializer method 
-        read_only_fields=('questionnaire',)
+       # read_only_fields=('questionnaire',)
         depth=1
-           
+
+class addresources_post_serializer(serializers.ModelSerializer):
+     class Meta:    
+        model=Addresources
+        fields=('id','user_id','video_id','timeline','resourcesfile','questionnaire')
+
+
 from django.forms.models import model_to_dict
 class supportTimelineserializer(serializers.ModelSerializer):
     class Meta:
         model=supportTimeline
         fields=['id','hours','minutes','seconds','resources','videorefernce']
+        
               
 class supportgetTimelineserializer(serializers.ModelSerializer):
     class Meta:
@@ -253,9 +251,7 @@ class UserSerializer(serializers.ModelSerializer):
          
          
         ]
-      
-    def get_contact_id(self, post):
-        return abc.contact_id.values_list('contact_id', flat=True)
+    
 
     def create(self, validated_data):
         contact_data = validated_data.pop('contact_id')  
@@ -337,7 +333,22 @@ class monitizeserializer(serializers.ModelSerializer):
         
 
 class CommentSerializer(serializers.ModelSerializer):
+    user_id=signserializers()
+    is_creater  =  serializers.SerializerMethodField('is_creater_func')
 
+    def is_creater_func(self , obj):
+        creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
+        comment_user_obj = sign.objects.get( id = str(obj.user_id.id) )
+        if creater_obj.id == comment_user_obj.id:
+            return True
+        return False
+
+   
+    class Meta:
+        model = Commentss
+        fields = ['id' , "parent"  , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment","is_creater" , "comment_text" ,  "created_time" , "user_id"   , 'like_active' , 'dislike_active'  ] #__all__"
+        #depth = 1
+'''
     user_name = serializers.SerializerMethodField('user_name_func')
     is_creater  =  serializers.SerializerMethodField('is_creater_func')
 
@@ -352,12 +363,9 @@ class CommentSerializer(serializers.ModelSerializer):
         if creater_obj.id == comment_user_obj.id:
             return True
         return False
+'''
 
-
-    class Meta:
-        model = Commentss
-        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ] #__all__"
-        #depth = 1
+    
 
 
 class timelineSerializer(serializers.ModelSerializer):

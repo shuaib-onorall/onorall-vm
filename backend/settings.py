@@ -334,3 +334,28 @@ CELERY_RESULT_BACKEND='django-db'
 #CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
 #CLAMD_ENABLED = False # here we can enable the detection
 #_______________________________________________________________________________________________________________________________________ 
+#here we have used tool debugger 
+if DEBUG:
+    INTERNAL_IPS = ( '*' ) # '127.0.0.1', '192.168.1.95' , 
+    MIDDLEWARE += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
+    INSTALLED_APPS += ('debug_toolbar',)
+    DEBUG_TOOLBAR_PANELS = [
+        'debug_toolbar.panels.versions.VersionsPanel',
+        'debug_toolbar.panels.timer.TimerPanel',
+        'debug_toolbar.panels.settings.SettingsPanel',
+        'debug_toolbar.panels.headers.HeadersPanel',
+        'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        'debug_toolbar.panels.templates.TemplatesPanel',
+        'debug_toolbar.panels.cache.CachePanel',
+        'debug_toolbar.panels.signals.SignalsPanel',
+        'debug_toolbar.panels.logging.LoggingPanel',
+        'debug_toolbar.panels.redirects.RedirectsPanel',
+    ]
+    DEBUG_TOOLBAR_CONFIG = {'INTERCEPT_REDIRECTS': False,} 
+def show_toolbar(request):
+    return True
+DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK" : show_toolbar,}
+import mimetypes
+mimetypes.add_type("application/javascript", ".js", True)
