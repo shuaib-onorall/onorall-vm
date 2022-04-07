@@ -245,7 +245,7 @@ class section(models.Model):
 class playlist(models.Model):
     grouplistid = models.CharField(max_length=12, unique=True,   default=random_id_field)
     userid=models.ForeignKey(sign,on_delete=models.CASCADE)
-    group_list_image=models.ImageField(upload_to='grouplist/',verbose_name='group_list_image')
+    group_list_image=models.ImageField(upload_to='grouplist/',null=True,blank=True,verbose_name='group_list_image')
     name=models.CharField(max_length=20)
     files=models.ManyToManyField(detail)
 

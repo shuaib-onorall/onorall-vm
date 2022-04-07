@@ -268,20 +268,23 @@ class profileAPIView(APIView):
 ##this post request is used for the jwt authentication
     def post(self,request):
         serializer=signserializers(data=request.data)
-        gmail=request.data.get('gmail')
-        phone=request.data.get('phone')
+        gmail=request.data.get('gmail','not found')
+        phone=request.data.get('phone','not found')
+        profile_phone=sign.objects.filter(phone=phone).exists()
         profile_mail=sign.objects.filter(gmail=gmail).exists()
         if not serializer.is_valid():
             return Response({'status':403,'error':serializer.errors})
-        serializer.save()
         if profile_mail:
             return Response({'status':'gmail  already exist'})
-        if phone:
+        elif profile_phone:
             user=sign.objects.get(phone=serializer.data['phone'])
             refresh = RefreshToken.for_user(user) #this line important for jwt token
-            return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
-        return Response({'status':200,'payload':serializer.data})
-
+            return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'creator':user.iscreator,'userid':user.id,'phone':user.phone,'refresh':str(refresh),'access':str(refresh.access_token)})
+        serializer.save()
+        user=sign.objects.get(phone=serializer.data['phone'])
+        refresh = RefreshToken.for_user(user) #this line important for jwt token
+        return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
+        
     def patch(self,request,id=None):
         post=sign.objects.get(id=id)
         serializer=signserializers(post,data=request.data,partial=True)
@@ -353,7 +356,7 @@ class groupskillAPIView(APIView):
 
 #playlist api
 class playlistAPIView(APIView):
-    parser_classes= [JSONParser]#(MultiPartParser, FormParser)
+    parser_classes= (MultiPartParser, FormParser)
     def get(self,request,id=None,vid=None):
         if id:
             allplaylist=playlist.objects.get(id=id)
