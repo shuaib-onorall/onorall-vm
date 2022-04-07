@@ -1240,22 +1240,20 @@ class CommentApiView( APIView  , LimitOffsetPagination):
     
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
-            comment_obj = Commentss.objects.prefetch_related('likes_on_comment' , 'dis_likes_on_comment').get( id = pk )
+            comment_obj = Commentss.objects.get(id = pk)
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
         #all_comments_obj = Commentss.objects.select_related('user_id','video_id').prefetch_related('likes_on_comment','dis_likes_on_comment').all()
-
         context, all_comments_obj = self.custom_efficient_method(request)
-       
         #_____________________________________________________pagination-condition________________________________________________________
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self )
-            serializer = CommentSerializer( results , many=True  )
+            serializer = CommentSerializer( results , many=True  , context = context )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
         #_____________________________________________________WITHOUT-Pegination__________________________________________________________
-        serializer = CommentSerializer( all_comments_obj , many=True   )
+        serializer = CommentSerializer( all_comments_obj , many=True  , context=context)
         return Response({'status':'success','data':serializer.data  },status=status.HTTP_200_OK)
 
     def custom_efficient_method(self, request):   
@@ -1382,7 +1380,7 @@ class RefferalView( APIView ):
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self,request,pk= None, *args , **kwargs ):
+    def patch(self,request,pk= None, *args , **kwargs ) :
         if pk is not None:
             queryset = get_object_or_404(RefferalLink ,  id = pk )
             serializer= RefferalLinkSerializer( queryset , data=request.data , partial=True)
@@ -1487,14 +1485,15 @@ class WorkApiView(APIView):
     def post(self,request):
         serializer=workserializer(data=request.data)
         workbasename=request.data.get('workbasename')
-        work=workbaseinfo.objects.filter(workbasename=workbasename).exists()
+        work = workbaseinfo.objects.filter(workbasename=workbasename).exists()  
+
         if work:
             return Response({'status':'workbasename already exist'})
         if serializer.is_valid(raise_exception=True):
-            try: 
-                sign_obj = sign.objects.get(id = str(request.data['userid']))
+            try:    
+                sign_obj = sign.objects.get(id = request.data['user'])
             except:
-                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
+                sign_obj = sign.objects.get(id = request.data['user']['id'])
             sign_obj.iscreator = True                                             #:)''' this is for iscreator true in sign models '''
             sign_obj.save()                                                     
             if sign_obj.signup_refferal_by != 0:
@@ -1516,9 +1515,8 @@ class WorkApiView(APIView):
         serializer=workserializer(post,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response({'status':'success','data':serializer.data})
-        else:
-            return Response({'status':"error",'data':serializer.errors})
+            return Response({'status':'success','data':serializer.data})    
+        return Response({'status':"error",'data':serializer.errors})
 
     def delete(self, request,  id=None):
         event = get_object_or_404(workbaseinfo,id=id)
@@ -1549,11 +1547,17 @@ class profileRefferalAPIView(APIView):
             serializer=signserializers(data=request.data)
             gmail=request.data.get('gmail')
             phone=request.data.get('phone')
+            profile_phone=sign.objects.filter(phone=phone).exists()
             profile_mail=sign.objects.filter(gmail=gmail).exists()
             if not serializer.is_valid():
                 return Response({'status':403,'error':serializer.errors})
             if profile_mail:
                 return Response({'status':'gmail  already exist'})
+            elif profile_phone:
+                user=sign.objects.get(phone=serializer.data['phone'])
+                refresh = RefreshToken.for_user(user) #this line important for jwt token
+                return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'refresh':str(refresh),'access':str(refresh.access_token)})
+        
             serializer.validated_data['signup_refferal_by'] = int(referral_obj.id)
             serializer.save()
             if request.session.has_key('referral_code'):
@@ -1563,9 +1567,36 @@ class profileRefferalAPIView(APIView):
                     del request.session['referral_code']                  # delete the session value
             if phone:
                 user=sign.objects.get(phone=serializer.data['phone'])
-                refresh = RefreshToken.for_user(user)                  #this line important for jwt token
+                refresh = RefreshToken.for_user(user)                     # this line important for jwt token
                 return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
             return Response({'status':200,'payload':serializer.data})
+
+
+
+
+
+
+    def post(self,request):
+        serializer=signserializers(data=request.data)
+        gmail=request.data.get('gmail','not found')
+        phone=request.data.get('phone','not found')
+        profile_phone=sign.objects.filter(phone=phone).exists()
+        profile_mail=sign.objects.filter(gmail=gmail).exists()
+        if not serializer.is_valid():
+            return Response({'status':403,'error':serializer.errors})
+        if profile_mail:
+            return Response({'status':'gmail  already exist'})
+        elif profile_phone:
+            user=sign.objects.get(phone=serializer.data['phone'])
+            refresh = RefreshToken.for_user(user) #this line important for jwt token
+            return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'refresh':str(refresh),'access':str(refresh.access_token)})
+        serializer.save()
+        user=sign.objects.get(phone=serializer.data['phone'])
+        refresh = RefreshToken.for_user(user) #this line important for jwt token
+        return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
+
+
+
 
 
 #___________________--report api
@@ -1683,7 +1714,8 @@ from django.http import Http404
 
 def game(request, room_code):
     async def c():
-        comment= Commentss.object.all()
+        comment = Commentss.object.all()
+        print('asyssssssss')
         return   comment
     choice = request.GET.get("choice")
     if choice not in ['X', 'O']:
@@ -1696,8 +1728,3 @@ def game(request, room_code):
     return render(request, "game.html", context)
 
 
-import time
-def play_time(request):
-    current_time = time.time()
-
-    return render(request , 'video-duration.html')

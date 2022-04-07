@@ -19,7 +19,6 @@ class NewConsumer(AsyncJsonWebsocketConsumer):
 class Notifyconsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         self.group_name = 'gossip'
-        
         await self.channel_layer.group_add(self.group_name ,self.channel_name)
         await self.accept()
         print(f"Added{self.channel_name} channel to gossip")
@@ -34,7 +33,7 @@ class Notifyconsumer(AsyncJsonWebsocketConsumer):
 
 
     async def send_notification(self , event):
-        print('func working           -----------')
+        print('func working-----------')
 
 
 
@@ -44,6 +43,7 @@ import json
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
 class TicTacToeConsumer(AsyncJsonWebsocketConsumer):
+
     async def connect(self):
         self.room_name = self.scope['url_route']['kwargs']['room_code']
         self.room_group_name = 'room_%s' % self.room_name

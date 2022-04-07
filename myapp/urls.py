@@ -111,7 +111,7 @@ urlpatterns = [
     #__________________________web sockets
     path('wb' , views.index_wb , name="index_wb" ) , 
     path('play/<room_code>', views.game , name='game'),
-    path('play' , views.play_time , name='play'),
+    
 
 
    

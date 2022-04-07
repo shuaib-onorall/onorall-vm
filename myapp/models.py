@@ -109,7 +109,7 @@ class detail(models.Model):
         return self.likesvideo.all().count()
 
     def __str__(self) -> str:
-        return  f"ID : {str(self.id)} || {str(self.title)}"
+        return  f"ID : {str(self.id)} || TITLE : {str(self.title)}"
     class Meta:
         ordering = ['id']
 
@@ -625,7 +625,7 @@ class RefferalLink(models.Model):
     refferal_code = models.CharField(max_length=12  , blank=True , default="" , unique = True )
     refferal_by = models.ForeignKey(sign , on_delete=models.CASCADE , related_name='refferal_by')
     email = models.EmailField( blank=True , null = True  , max_length = 122)
-    refferal_for = models.CharField(max_length=12  , blank=True , default="" )
+    refferal_for = models.CharField(max_length=34  , blank=True , default="" )
     refferal_plateform = models.CharField(max_length=100 , blank=True)
     is_clicked = models.BooleanField(default=False)
     is_signup = models.BooleanField(default=False)
@@ -661,7 +661,14 @@ class Notification(models.Model):
 
     def save(self,*args,**kwargs):
         channel_layer=get_channel_layer()
-        notification_objs=Notification.objects.filter(sent=False).count()
+
+
+        print('save-----------------------------' , channel_layer)
+        try:
+            notification_objs=Notification.objects.filter(sent=False).count()
+        except :
+            notification_objs = 'NO OBJETS'
+
         data={'count':notification_objs,'current_notification':self.notice}
         async_to_sync(channel_layer.group_send)(
             'gossip',{
