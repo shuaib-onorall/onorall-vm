@@ -127,8 +127,7 @@ def post_detail(request, videofile):
         context={'post': post,
                    'comments': comments,
                    'comment_form': comment_form}
-    return render(request,
-                  'templatename',context)
+    return render(request , 'templatename',context)
 
 #function for the follow,unfollow,pending request and delete request.
 #function for the follow ,unfollow and pending request and private account
@@ -334,8 +333,7 @@ class communityAPIView(APIView):
         if doc_serializer.is_valid():
             doc_serializer.save()
             return Response(doc_serializer.data, status=status.HTTP_201_CREATED)
-        else:
-          return Response(doc_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(doc_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self,request,id=None):
         post=connect.objects.get(id=id)
@@ -343,8 +341,7 @@ class communityAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data})
-        else:
-            return Response({'status':"error",'data':serializer.errors})
+        return Response({'status':"error",'data':serializer.errors})
 
 
     def delete(self, request,  id=None):
@@ -357,15 +354,12 @@ class communityAPIView(APIView):
 #api for about section
 class AboutAPIView(APIView):
     parser_classes = [JSONParser]
-    #parser_classes = (MultiPartParser, FormParser)
-    serializer_class=tag
 
     def get(self,request,id=None):
         if id:
             allpost=section.objects.get(id=id)
             serializer=tag(allpost)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        
         allposts=section.objects.all()
         serializer=tag(allposts,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -375,8 +369,7 @@ class AboutAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-          return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self,request,id=None):
         about=section.objects.get(id=id)
@@ -384,8 +377,7 @@ class AboutAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data})
-        else:
-            return Response({'status':"error",'data':serializer.errors})
+        return Response({'status':"error",'data':serializer.errors})
 
     def delete(self, request,  id=None):
         event = get_object_or_404(section,id=id)
@@ -436,15 +428,13 @@ class profileAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data})
-        else:
-            return Response({'status':"error",'data':serializer.errors})
+        return Response({'status':"error",'data':serializer.errors})
 
 
     def delete(self, request,  id=None):
         event = get_object_or_404(sign,id=id)
         event.delete()
         return Response({"status":"success","data":"item deleted"} ) 
-
 #____________________________________________________________________________________________________
     
 
@@ -467,23 +457,20 @@ class grouplistAPIView(APIView):
         if playlist_serializer.is_valid():
             playlist_serializer.save()
             return Response(playlist_serializer.data,status=status.HTTP_200_OK)
-        else:
-            return Response(playlist_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(playlist_serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,id=None):
-        list=group.objects.get(id=id)
-        serializer=groupserializer(list,data=request.data,partial=True)
+        obj = group.objects.get(id=id)
+        serializer=groupserializer( obj ,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data})
-        else:
-            return Response({'status':'error','data':serializer.error})
+        return Response({'status':'error','data':serializer.error})
 
     def delete(self,request,id:None):
         event=get_object_or_404(group,id=id)
         event.delete()
         return Response({'status':'deleted'})
-
 
 
 #playlist api
@@ -497,7 +484,6 @@ class playlistAPIView(APIView):
                 file=detail.objects.get(id=vid)
                 fileserializer=DetailSerializer(file)
                 return Response({'data':fileserializer.data})
-           
             return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
         allplaylist=playlist.objects.all()
         serializer=playlist_videoserializer(allplaylist,many=True)
@@ -508,8 +494,7 @@ class playlistAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 #_______________________________________________________________________________________________________________________
 #workbase api
 
@@ -543,7 +528,7 @@ class SearchAPIView(generics.ListCreateAPIView):
 class connectSearchAPIView(generics.ListCreateAPIView):
     search_fields = ['^title','^tags','user__name']
     filter_backends = (filters.SearchFilter,)
-    queryset =connect.objects.all()
+    queryset = connect.objects.all()
     serializer_class = connectSerializer
 
 
@@ -569,13 +554,10 @@ class commentApiView(APIView):
         if serializer.is_valid(post=post):
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'error','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'error','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
     
 
 #api for report 
-
-
 #phone otp
 import ast
 conn = http.client.HTTPConnection("2factor.in")
@@ -646,8 +628,9 @@ def compressing_video():
     cmd=f'ffmpeg -i "{input}" -vcodec libx264 -crf 28 "{output}"'
     print(cmd)
     subprocess.check_output(cmd, shell=True)
-#comprressing_video()
 
+
+#comprressing_video()
 #________________________________________________________________________________________________________________#
 #likes view
 
@@ -657,15 +640,13 @@ class LikeView(APIView):
     def get(self, request,like='', format=None, post_id=None):
         post = connect.objects.get(id=post_id)
         user = self.request.user
-        #like=True
         if request.user.is_authenticated:
             like=True
             if user in post.likes.all():
                 like = False
-                post.likes.remove(user)
-            else:
-                like = True
-                post.likes.add(user)
+                post.likes.remove(user)  
+            like = True
+            post.likes.add(user)
         return Response({'like':like})
 
 #________________________________________________________________________________________________________________________
@@ -678,12 +659,9 @@ class videolikeAPi(APIView):
             if user in video.likesvideo.all():
                 like=False
                 video.likesvideo.remove(user)
-            else:
-                like=True
-                video.likesvideo.add(user)
-        data={
-            'like':like
-        }
+            like=True
+            video.likesvideo.add(user)
+        data = { 'like':like }
         return Response(data)
 #________________________________________________________________________________________________________________________________
 class addresourcesAPIView(APIView):
@@ -694,7 +672,6 @@ class addresourcesAPIView(APIView):
             reportinfo=Addresources.objects.get(id=id)
             serializer_info=addresourceserializer(reportinfo)
             return Response(serializer_info.data,status=status.HTTP_200_OK)
-
         report_info=Addresources.objects.all()
         report_serializer=addresourceserializer(report_info,many=True)
         return Response(report_serializer.data,status=status.HTTP_200_OK)
@@ -705,8 +682,7 @@ class addresourcesAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,status=status.HTTP_200_OK)
-        else:
-            return Response({'data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request,id=None):
         event=get_object_or_404(Addresources,id=id)
@@ -722,7 +698,6 @@ class questionnaireAPIView(APIView):
             info=questionnaires.objects.get(ques_id=ques_id)
             serializer=questionnaireserializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
-        
         info=questionnaires.objects.all()
         serializer=questionnaireserializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -732,8 +707,7 @@ class questionnaireAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
+        return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
     
     def patch(self,request,ques_id=None):
         event=Addresources.objects.get(ques_id=ques_id)
@@ -741,8 +715,7 @@ class questionnaireAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'success','data':serializer.errors})
+        return Response({'status':'success','data':serializer.errors})
     
     def delete(self,request,id=None):
         event=get_object_or_404(questionnaires,id=id)
@@ -768,8 +741,7 @@ class question1APIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,id=None):
         event=question.objects.get(ques1id=id)
@@ -777,8 +749,7 @@ class question1APIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'success','data':serializer.errors})
+        return Response({'status':'success','data':serializer.errors})
 
     def delete(self,rerquest,id=None):
         event=get_object_or_404(question,id=id)
@@ -793,7 +764,6 @@ class question2APIView(APIView):
             info=question2.objects.get(id=id)
             serializer=question2serializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
-        
         info=question2.objects.all()
         serializer=question2serializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -803,8 +773,7 @@ class question2APIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,id=None):
         event=question2.objects.get(id=id)
@@ -812,8 +781,7 @@ class question2APIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'success','data':serializer.errors})
+        return Response({'status':'success','data':serializer.errors})
     
     def delete(self,rerquest,id=None):
         event=get_object_or_404(question2,id=id)
@@ -828,8 +796,7 @@ class question3APIView(APIView):
         if id:
             info=question3.objects.get(id=id)
             serializer=question3serializer(info)
-            return Response(serializer.data,status=status.HTTP_200_OK)
-        
+            return Response(serializer.data,status=status.HTTP_200_OK)  
         info=question3.objects.all()
         serializer=question3serializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -839,8 +806,7 @@ class question3APIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,id=None):
         event=question3.objects.get(id=id)
@@ -848,8 +814,7 @@ class question3APIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'success','data':serializer.errors})
+        return Response({'status':'success','data':serializer.errors})
     
     def delete(self,request,id=None):
         event=get_object_or_404(question3,id=id)
@@ -864,7 +829,6 @@ class exampleAPIView(APIView):
             info=abc.objects.get(id=id)
             serializer=UserSerializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
-        
         info=abc.objects.all()
         serializer=UserSerializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
@@ -874,8 +838,7 @@ class exampleAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,id=None):
         event=abc.objects.get(id=id)
@@ -883,10 +846,10 @@ class exampleAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'success','data':serializer.errors})
-#_______________________________________________________________________________________________________________________
+        return Response({'status':'success','data':serializer.errors})
 
+
+#_______________________________________________________________________________________________________________________:)
 class basic_displayAPiView(APIView):
     parser=[JSONParser] #(MultiPartParser,FormParser)
     def get(self,request,id=None):
@@ -894,7 +857,6 @@ class basic_displayAPiView(APIView):
         if id:
             event=basic_display.objects.get(id=id)
             serializer=basic_display_serializer(event)
-
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         event=basic_display.objects.all()
         serializer=basic_display_serializer(event,many=True)
@@ -927,23 +889,17 @@ class basic_displayAPiView(APIView):
         # request.data['highlight5'] = h5_ser
         # del request.data['highlight5']['all_timeline']
 
-      
-
-
         def get_serializer_class(self, *args, **kwargs):
             if self.request.method == 'POST':
                 self.serializer_class.Meta.depth = 0
                 return basic_display_serializer
             return basic_display_serializer
 
-
-
         serializer=self.get_serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
         
     def patch(self,request,id=None):
         event=basic_display.objects.get(id=id)
@@ -951,8 +907,7 @@ class basic_displayAPiView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
             
 
 class basic_brandingAPIView(APIView):
@@ -971,8 +926,7 @@ class basic_brandingAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self,request,id=None):
         event=basic_branding.objects.get(id=id)
@@ -980,8 +934,7 @@ class basic_brandingAPIView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
 
 #_______________________________________________________________________________________________________________________
 
@@ -1111,8 +1064,7 @@ class ShareMonetize(APIView):
                     fail_silently=False,)
             serializer.save()
             return Response({'data':serializer.data,'response':'you have invited your mates'}, status=status.HTTP_201_CREATED)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 #___________________________________________________________________________________________________________________________
 
 from drf_multiple_model.views import ObjectMultipleModelAPIView  
@@ -1140,29 +1092,12 @@ class supportAPI(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self,request,id=None):
         event=get_object_or_404(Support,id=id)
         event.delete()
         return Response({'item deleted'})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1233,9 +1168,6 @@ from rest_framework.pagination import LimitOffsetPagination
 from django.db import connection
 import time
 from cached_property import cached_property
-
-
-
 class CommentApiView( APIView  , LimitOffsetPagination):
     
     def get( self , request , pk = None  , *args , **kwargs ):
@@ -1243,28 +1175,23 @@ class CommentApiView( APIView  , LimitOffsetPagination):
             comment_obj = Commentss.objects.get(id = pk)
             serializer = CommentSerializer( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-
         #all_comments_obj = Commentss.objects.select_related('user_id','video_id').prefetch_related('likes_on_comment','dis_likes_on_comment').all()
         context, all_comments_obj = self.custom_efficient_method(request)
-        #_____________________________________________________pagination-condition________________________________________________________
+
+        #    _pagination-condition________________________________________________________
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self )
             serializer = CommentSerializer( results , many=True  , context = context )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-
-        #_____________________________________________________WITHOUT-Pegination__________________________________________________________
         serializer = CommentSerializer( all_comments_obj , many=True  , context=context)
         return Response({'status':'success','data':serializer.data  },status=status.HTTP_200_OK)
 
     def custom_efficient_method(self, request):   
         context = { "request": request }  
         all_comments_objs =  Commentss.objects.all()
-        #Commentss.objects.select_related().prefetch_related('likes_on_comment' , 'dis_likes_on_comment').all()  
         all_comments_obj = CommentSerializer.setup_eager_loading(all_comments_objs)
         return context,all_comments_obj    
-        '''
-        because of this function Response Time Reduce approx. 55% 
-        '''
+        '''  because of this function Response Time Reduce approx. 55%  '''
 
 
     def post(self,request, pk = None , *args, **kwargs):
@@ -1310,7 +1237,6 @@ class CommentApiView( APIView  , LimitOffsetPagination):
                     return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
                 serializer = CommentSerializer(obj)
                 return Response({'status':'removelike-success','data':serializer.data},status=status.HTTP_200_OK)
-
             else :
                 new_ids = request.data.get('dis_likes_on_comment')        
                 sign_obj = sign.objects.get(id=str(new_ids[0]))
@@ -1422,19 +1348,18 @@ class DetailAPIview(APIView):
         serializer=DetailSerializer(data=request.data)
         if serializer.is_valid():
             try:
-                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
+                sign_obj = sign.objects.get(id = str(request.data['userid']))  
             except :
-                sign_obj = sign.objects.get(id = str(request.data['userid']))        
+                sign_obj = sign.objects.get(id = str(request.data['userid']['id']))
             sign_ref = sign_obj.signup_refferal_by
-            if sign_ref !=0:
+            if sign_ref != 0:
                 referral_obj = RefferalLink.objects.get(id= int(sign_ref))
                 if referral_obj.is_uploaded == False:
                     referral_obj.is_uploaded = True                 # fourth condtion of referralLink will be executed
                     referral_obj.save()
             serializer.save()
             return Response(serializer.data,status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
     
     def patch(self,request,videoid=None):
         compress=request.data.get('compress')
@@ -1445,8 +1370,7 @@ class DetailAPIview(APIView):
                 compressing_video(videoid)
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response({'status':"error",'data':serializer.errors})
+        return Response({'status':"error",'data':serializer.errors})
 
     def put( self , request , videoid=None , format=None ):
         if videoid is not None :
@@ -1462,13 +1386,10 @@ class DetailAPIview(APIView):
             return Response( { 'status' : 'success','data':serializer.data } , status=status.HTTP_200_OK)
         return Response({'status':'fail','data':' provide  videoid of generaAPI in url '},status=status.HTTP_400_BAD_REQUEST)
 
-
     def delete(self,request,id=None):
         event=get_object_or_404(detail,id=id)   
         event.delete()
         return Response({'status':'success','data':'items deleted'}) 
-
-
 
 import json
 class WorkApiView(APIView):
@@ -1486,7 +1407,6 @@ class WorkApiView(APIView):
         serializer=workserializer(data=request.data)
         workbasename=request.data.get('workbasename')
         work = workbaseinfo.objects.filter(workbasename=workbasename).exists()  
-
         if work:
             return Response({'status':'workbasename already exist'})
         if serializer.is_valid(raise_exception=True):
@@ -1507,8 +1427,7 @@ class WorkApiView(APIView):
             else:
                 serializer.save()
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors,status=status.HTTP_400_BAD_REQUEST)
 
     def patch(self,request,id=None):
         post=workbaseinfo.objects.get(id=id)
@@ -1521,16 +1440,16 @@ class WorkApiView(APIView):
     def delete(self, request,  id=None):
         event = get_object_or_404(workbaseinfo,id=id)
         event.delete()
-        return Response({"status":"success","data":"item deleted"} ) 
+        return Response({"status":"success","data":"item deleted"}) 
 
 #_____________________________________________________________________________________________________________________
 class profileRefferalAPIView(APIView):
-    def get(self,request,code=None):
+    def get( self , request,code=None):
         if code is not None:
             referral_code = str(code)
             referral_obj = RefferalLink.objects.get(refferal_code = referral_code)
             if referral_obj.is_clicked == False:    
-                request.session['referral_code'] = referral_code   # store in session
+                request.session['referral_code'] = referral_code         # store in session
                 referral_obj.is_clicked = True                           # referral step - 1 
                 referral_obj.save()
             serializer=RefferalLinkSerializer(referral_obj)
@@ -1572,10 +1491,6 @@ class profileRefferalAPIView(APIView):
             return Response({'status':200,'payload':serializer.data})
 
 
-
-
-
-
     def post(self,request):
         serializer=signserializers(data=request.data)
         gmail=request.data.get('gmail','not found')
@@ -1596,9 +1511,6 @@ class profileRefferalAPIView(APIView):
         return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
 
 
-
-
-
 #___________________--report api
 class reportApiview(APIView):
     parser=(MultiPartParser,FormParser)
@@ -1614,8 +1526,7 @@ class reportApiview(APIView):
                 count_post = report4.objects.filter( report_post = reportinfo.report_post ).count()             # get the total count of report of this video
                 info['total_report_of_this_post'] = count_post
             serializer_info=reportserializer(reportinfo)
-            return Response({'status' : 'success','data' : serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)
-            
+            return Response({'status' : 'success','data' : serializer_info.data  , 'additional_data' : info} ,status=status.HTTP_200_OK)  
         report_info=report4.objects.all()
         report_serializer=reportserializer(report_info,many=True)
         return Response({'status':'success','data':report_serializer.data} ,status=status.HTTP_200_OK)
@@ -1625,10 +1536,7 @@ class reportApiview(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data,status=status.HTTP_200_OK)
-            
-
-
-
+        return Response({'status':'success','data':serializer.data} ,status=status.HTTP_400_BAD_REQUEST)
 
 
 
@@ -1639,17 +1547,6 @@ def embed_testing(request):
         print(i.video_url)
 
     return render(request , 'embed_testing.html'  , {'my_video' : my_video})
-
-
-
-
-
-
-
-
-
-
-
 
 
 
