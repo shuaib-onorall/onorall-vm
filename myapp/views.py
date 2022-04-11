@@ -251,7 +251,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import MultipleObjectsReturned
 
 class profileAPIView(APIView):
-    parser_classes = [JSONParser]
+    parser_classes = (MultiPartParser, FormParser)#[JSONParser]
 
     serializer_class=signserializers
     def get(self,request,id=None):
@@ -284,9 +284,13 @@ class profileAPIView(APIView):
         user=sign.objects.get(phone=serializer.data['phone'])
         refresh = RefreshToken.for_user(user) #this line important for jwt token
         return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
-        
+   
     def patch(self,request,id=None):
         post=sign.objects.get(id=id)
+        date=request.data.get('date_of_birth')
+        if date is not None:
+           Date_of_birth=datetime.strptime(date, "%Y-%m-%d").date()
+           request.data['date_of_birth']=Date_of_birth
         serializer=signserializers(post,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
@@ -609,7 +613,7 @@ class question1APIView(APIView):
    
     def get(self,request,ques1id=None):
         if ques1id:
-            info=question.objects.get(ques1id=ques1id)
+            info=question.objects.get(id=ques1id)
             serializer=question1serializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
         
@@ -1166,3 +1170,5 @@ queryset=workbaseinfo.objects.select_related('userid').all()
 s=workbaseinfo.objects.all().filter(workbasename='sumitkeen').defer('location')
 a=workbaseinfo.objects.distinct()
 print(queryset)
+
+

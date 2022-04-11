@@ -129,7 +129,7 @@ CHANNEL_LAYERS = {
     'ROUTING': 'ws.routing.application',
 }
 
-
+AUTH_USER_MODEL='myapp.sign'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

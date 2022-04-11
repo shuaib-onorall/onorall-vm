@@ -51,7 +51,7 @@ urlpatterns = [
     path('question',views.questionnaireAPIView.as_view()),
     path('question/<int:ques_id>',views.questionnaireAPIView.as_view()),
     path('question_text',views.question1APIView.as_view()),
-    path('question_text/<int:id>',views.question1APIView.as_view()),
+    path('question_text/<int:ques1id>',views.question1APIView.as_view()),
     path('question_QNA',views.question2APIView.as_view()),
     path('question_QNA/<int:id>',views.question2APIView.as_view()),
     path('question_mcq',views.question3APIView.as_view()),

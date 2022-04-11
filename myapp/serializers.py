@@ -11,7 +11,7 @@ from .models import *
 class signserializers(serializers.ModelSerializer):
     class Meta():
         model=sign
-        fields=['id','name','gmail','phone','iscreator']
+        fields=['id','name','gmail','phone','iscreator','gender','date_of_birth','profilePic']
 #___________________________________________________________________________________________________________________________
 class supportserializers(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +28,7 @@ class workserializer(serializers.ModelSerializer):
     class Meta:
         model=workbaseinfo
         fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location','supporters')
-        depth=2
+        #depth=2
 
 #____________________________________________________________________________________________________________________
 #serializer for file detailing

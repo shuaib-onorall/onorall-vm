@@ -10,6 +10,10 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.auth.models import AbstractBaseUser
+import random, string
+from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.base_user import BaseUserManager
 #from django_clamd.validators import validate_file_infection  #-----------this is used to detect the malware detection
 
 import random, string
@@ -19,9 +23,9 @@ def random_id_field():
   return rnd_id
 
 def random_profile():
-    random_list = ['profilePic\img2.png ' ,
-     'profilePic\img4.jpg' ,
-     'profilePic\img7.jpg' ]
+    random_list = ['profile\img2.png ' ,
+     'profile\img4.jpg' ,
+     'profile\img7.jpg' ]
     random_path = random.choices(random_list)[0]
     return random_path
 
@@ -29,13 +33,60 @@ def random_profile():
 
 #_______________________________________________________________________________________________________________________
 #user model
-class sign(models.Model):
+class UserManager(BaseUserManager):
+    use_in_migrations = True
+
+    def _create_user(self, gmail, name,  password, **extra_fields):
+        values = [gmail, name]
+        field_value_map = dict(zip(self.model.REQUIRED_FIELDS, values))
+        for field_name, value in field_value_map.items():
+            if not value:
+                raise ValueError('The {} value must be set'.format(field_name))
+        gmail = self.normalize_email(gmail)
+        user = self.model( gmail=gmail , name=name, **extra_fields )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, gmail, name  ,  password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(gmail, name, password, **extra_fields)
+
+    def create_superuser(self, gmail, name, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(gmail, name ,  password, **extra_fields)
+
+gender_choices=(
+    ('male','male'),
+    ('female','female'),
+    ('other','other'),
+)
+class sign(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(max_length=12, unique=True, primary_key=True,  default=random_id_field)
     name=models.CharField(max_length=30)
+    profilePic=models.ImageField(upload_to='profile/',default=random_profile)
     phone=models.CharField(max_length=13,null=True,blank=True)
-    gmail=models.EmailField(null=True,blank=True)
+    gender=models.CharField(max_length=25,null=False,choices=gender_choices,default='other')
+    date_of_birth=models.DateField()
+    gmail=models.EmailField(null=True,blank=True,unique=True)
     iscreator=models.BooleanField(default=False)
     signup_referral_by=models.IntegerField(default=0)
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'gmail'
+    REQUIRED_FIELDS = ['name']
    
     def __str__(self):
         return str(self.id)
@@ -55,7 +106,7 @@ class workbaseinfo(models.Model):
     workbasechoices=models.CharField(max_length=30,choices=workbase_choices,default='show my skills')
     wbemail=models.EmailField(null=True,blank=True)
     wbdescription=models.TextField(null=True,blank=True)
-    location=models.CharField(max_length=30)
+    location=models.CharField(max_length=30,null=True,blank=True)
     
     def __str__(self):
         return str(self.workbasename)
@@ -172,7 +223,7 @@ class connect(models.Model):
     title=models.CharField(max_length=50)
     tags=models.CharField(max_length=100)
     published_on=models.CharField(max_length=100,choices=publish_choices,default='public')
-    likes=models.ManyToManyField(User,blank=True,related_name='likes')
+    likes=models.ManyToManyField(sign,blank=True,related_name='connect_likes')
    
    
     def number_of_likes(self):
