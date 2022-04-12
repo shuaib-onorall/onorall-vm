@@ -75,7 +75,7 @@ class sign(AbstractBaseUser, PermissionsMixin):
     profilePic=models.ImageField(upload_to='profile/',default=random_profile)
     phone=models.CharField(max_length=13,null=True,blank=True)
     gender=models.CharField(max_length=25,null=False,choices=gender_choices,default='other')
-    date_of_birth=models.DateField()
+    date_of_birth=models.DateField(null=True,blank=True)
     gmail=models.EmailField(null=True,blank=True,unique=True)
     iscreator=models.BooleanField(default=False)
     signup_referral_by=models.IntegerField(default=0)
@@ -474,16 +474,10 @@ class supportTimeline(models.Model):
     def __str__(self):
         return str(self.resources)
 
-
-
-
-
-    
-
 #________________________________________________________________________________________________________
 class Contact(models.Model):
-
     name = models.CharField(max_length=50, blank=True)
+    gmail=models.EmailField()
     status = models.BooleanField(default=False)
 
 class abc(models.Model):

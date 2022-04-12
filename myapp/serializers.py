@@ -32,6 +32,18 @@ class workserializer(serializers.ModelSerializer):
 
 #____________________________________________________________________________________________________________________
 #serializer for file detailing
+class DetailGetSerializer(serializers.ModelSerializer):
+   all_timeline=serializers.SerializerMethodField('timeline') 
+  
+   def timeline(self,obj):
+       all_obj=Addresources.objects.filter(video_id=obj.id)
+       return addresourceserializer(all_obj,many=True).data
+
+   class Meta():
+        model=detail
+        fields=('videoid','id','title','file','description','compress','customthumbnail','tags','skills','targetaudience','agerestriction',"isCommentsOn","isLikeCountOn","isAudioCommentOn","publish",  "published_on","user_id","likesvideo",'user_id','all_timeline')
+        depth=1
+
 class DetailSerializer(serializers.ModelSerializer):
    all_timeline=serializers.SerializerMethodField('timeline') 
   
@@ -41,8 +53,9 @@ class DetailSerializer(serializers.ModelSerializer):
 
    class Meta():
         model=detail
-        fields=('videoid','id','title','file','description','customthumbnail','tags','skills','targetaudience','agerestriction',"isCommentsOn","isLikeCountOn","isAudioCommentOn","publish",  "published_on","user_id","likesvideo",'user_id','all_timeline')
-        depth=1
+        fields='__all__'#('videoid','id','title','file','description','compress','customthumbnail','tags','skills','targetaudience','agerestriction',"isCommentsOn","isLikeCountOn","isAudioCommentOn","publish",  "published_on","user_id","likesvideo",'user_id','all_timeline')
+      
+
 
 class video_view_serializer(serializers.ModelSerializer):
     class Meta:
@@ -83,7 +96,7 @@ class doc_verificationSerializer(serializers.ModelSerializer):
     class Meta():
         model=doc_verification
         fields=['id','user_id','firstname','lastname','email','qualification','specialized','skill_tags','year_of_experience','user_id']
-        depth=5
+        depth=1
 
     def update(self,instance,validated_data):
         userdata=validated_data.pop('user_id')
@@ -121,8 +134,14 @@ class tag(serializers.ModelSerializer):
         fields='__all__'
 #_________________________________________________________________________________________________________________________
 
-#for playlist serializer
 class playlist_videoserializer(serializers.ModelSerializer):
+    class Meta:                    # so you have to mention same field name that you had used in model for nested serializer
+        model=playlist
+        fields='__all__'
+        depth=1
+
+#for playlist serializer
+class playlist_post_videoserializer(serializers.ModelSerializer):
    # files=DetailSerializer(many=True) # whenever we will use Nested Serializer  
     class Meta:                    # so you have to mention same field name that you had used in model for nested serializer
         model=playlist
@@ -131,6 +150,14 @@ class playlist_videoserializer(serializers.ModelSerializer):
 
 #for group serializer
 class groupserializer(serializers.ModelSerializer):
+    #list=playlist_videoserializer() 
+       #here we have nested serializer.
+    class Meta:                                 #It is used when you have to embeded one serializer in other serializer
+        model=group
+        fields=['id','groupskillid','userid','title','list']
+        depth=1
+
+class group_post_serializer(serializers.ModelSerializer):
     #list=playlist_videoserializer() 
        #here we have nested serializer.
     class Meta:                                 #It is used when you have to embeded one serializer in other serializer
@@ -156,14 +183,14 @@ class question2serializer(serializers.ModelSerializer):
         model=question2
         fields=['id','imgfile','question','answer','isrequired','questionnaire']
         read_only_fields=('questionnaire',)
-        depth=1
+        #depth=1
 
 class question3serializer(serializers.ModelSerializer):
     class Meta:
         model=question3
         fields=['id','questionnaire','question','imgfile','option1','option2','option3','option4','img1_option','img2_option','img3_option','img4_option','answer','isrequired']
         read_only_fields=('isrequired',)
-        depth=1
+        #depth=1
 #____________________________________________________________________________________________________________________________________________
 
 class questionnaireserializer(serializers.ModelSerializer):
@@ -184,7 +211,7 @@ class questionnaireserializer(serializers.ModelSerializer):
     class Meta:
         model=questionnaires
         fields=['ques_id','questionnaireid','userid','videoid','description','question_text','question_qna','question_mcq']
-        depth=1
+        #depth=1
 
 class questionnairepostserializer(serializers.ModelSerializer):
     class Meta:
@@ -203,7 +230,6 @@ class addresourceserializer(serializers.ModelSerializer):
     class Meta:    
         model=Addresources
         fields=['id','user_id','video_id','timeline','resourcesfile','questionnaire','support'] #here we have used other serializer method 
-       # read_only_fields=('questionnaire',)
         depth=1
 
 class addresources_post_serializer(serializers.ModelSerializer):
@@ -234,7 +260,7 @@ class supportgetTimelineserializer(serializers.ModelSerializer):
 class ContactSerializerModel(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = ['name', 'status']
+        fields = ['name','gmail', 'status']
 
 class UserSerializer(serializers.ModelSerializer):
     contact_id = ContactSerializerModel()

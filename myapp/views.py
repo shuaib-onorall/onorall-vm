@@ -1,3 +1,4 @@
+from email.mime import multipart
 import json
 from urllib import response
 from django.shortcuts import render , get_object_or_404
@@ -43,19 +44,19 @@ from rest_framework.pagination import LimitOffsetPagination
 
 #Api for video detailing  
 class DetailAPIview(APIView):
-    pareser_class=[JSONParser]
+    parser_class=[JSONParser]
     #parser_classes = (MultiPartParser, FormParser)
     serializer=DetailSerializer
 
     def get(self,request,videoid=None):
         if videoid:
             alldetail=detail.objects.get(videoid=videoid)
-            serializer=DetailSerializer(alldetail)
+            serializer=DetailGetSerializer(alldetail)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         alldetail=detail.objects.all()
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(alldetail, request, view=self)
-            serializer = CommentSerializer( results , many=True )
+            serializer = DetailGetSerializer( results , many=True )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         serializer=DetailSerializer(alldetail,many=True)
         return Response({'list_of_detail':serializer.data},status=status.HTTP_200_OK)
@@ -251,7 +252,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.exceptions import MultipleObjectsReturned
 
 class profileAPIView(APIView):
-    parser_classes = (MultiPartParser, FormParser)#[JSONParser]
+    parser_classes = [JSONParser] #(MultiPartParser, FormParser)
 
     serializer_class=signserializers
     def get(self,request,id=None):
@@ -272,18 +273,24 @@ class profileAPIView(APIView):
         phone=request.data.get('phone','not found')
         profile_phone=sign.objects.filter(phone=phone).exists()
         profile_mail=sign.objects.filter(gmail=gmail).exists()
+        if profile_mail:
+            user=sign.objects.get(gmail=gmail)
+            return Response({'status':200,'response':'gmail  already exist','userid':user.id,'name':user.name,'gmail':user.gmail,'iscreator':user.iscreator},status=status.HTTP_200_OK)
+        elif profile_phone:
+            user=sign.objects.get(phone=phone)
+            refresh = RefreshToken.for_user(user) #this line important for jwt token
+            return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'iscreator':user.iscreator,'userid':user.id,'phone':user.phone,'refresh':str(refresh),'access':str(refresh.access_token)})
         if not serializer.is_valid():
             return Response({'status':403,'error':serializer.errors})
-        if profile_mail:
-            return Response({'status':'gmail  already exist'})
-        elif profile_phone:
-            user=sign.objects.get(phone=serializer.data['phone'])
-            refresh = RefreshToken.for_user(user) #this line important for jwt token
-            return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'creator':user.iscreator,'userid':user.id,'phone':user.phone,'refresh':str(refresh),'access':str(refresh.access_token)})
         serializer.save()
-        user=sign.objects.get(phone=serializer.data['phone'])
+        if phone!='not found':
+            user=sign.objects.get(phone=serializer.validated_data.get('phone','not found'))
+            refresh = RefreshToken.for_user(user) #this line important for jwt token
+            return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
+        user=sign.objects.get(gmail=serializer.validated_data.get('gmail','not found'))
         refresh = RefreshToken.for_user(user) #this line important for jwt token
         return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
+
    
     def patch(self,request,id=None):
         post=sign.objects.get(id=id)
@@ -322,7 +329,7 @@ class groupskillAPIView(APIView):
         return Response({'status':'success','list_of_playlist':serializer.data,},status=status.HTTP_200_OK)
 
     def post(self,request):
-        playlist_serializer=groupserializer(data=request.data)
+        playlist_serializer=group_post_serializer(data=request.data)
         if playlist_serializer.is_valid():
             playlist_serializer.save()
             return Response(playlist_serializer.data,status=status.HTTP_200_OK)
@@ -331,7 +338,7 @@ class groupskillAPIView(APIView):
     
     def patch(self,request,id=None):
         list=group.objects.get(id=id)
-        serializer=groupserializer(list,data=request.data,partial=True)
+        serializer=group_post_serializer(list,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data})
@@ -347,7 +354,7 @@ class groupskillAPIView(APIView):
         else:
             new_data.list.add(new_data)
         event.save()
-        serializer=playlist_videoserializer(event)
+        serializer=group_post_serializer(event)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
 
@@ -376,7 +383,7 @@ class playlistAPIView(APIView):
         return Response({'status':'success','list_of_playlist':serializer.data,},status=status.HTTP_200_OK)
 
     def post(self,request):
-        serializer=playlist_videoserializer(data=request.data)
+        serializer=playlist_post_videoserializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
@@ -385,12 +392,11 @@ class playlistAPIView(APIView):
 
     def patch(self,request,id=None):
         event=playlist.objects.get(id=id)
-        serializer=playlist_videoserializer(event,data=request.data,partial=True)
+        serializer=playlist_post_videoserializer(event,data=request.data,partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 
-    
     def put(self,request,id=None):
         playlist_data=playlist.objects.get(id=id)
         data=request.data.get('files')
@@ -400,7 +406,7 @@ class playlistAPIView(APIView):
         else:
             playlist_data.files.add(new_id)
         playlist_data.save()
-        serializer=playlist_videoserializer(playlist_data)
+        serializer=playlist_post_videoserializer(playlist_data)
         return Response({'data':serializer.data})
 
 #_______________________________________________________________________________________________________________________
@@ -419,10 +425,20 @@ class WorkApiView(APIView):
     def post(self,request):
         serializer=workserializer(data=request.data)
         workbasename=request.data.get('workbasename')
+        userid=request.data.get('userid')
+        sign_obj=sign.objects.get(id=userid)
         work=workbaseinfo.objects.filter(workbasename=workbasename).exists()
         if work:
             return Response({'status':'workbasename already exist'})
         if serializer.is_valid():
+                sign_obj.iscreator=True
+                sign_obj.save()
+                if sign_obj.signup_refferal_by != 0:
+                    referral_id = int(sign_obj.signup_refferal_by)
+                    referral_obj = RefferalLink.objects.get(id = referral_id)
+                if referral_obj.is_creator == False :
+                    referral_obj.is_creator = True                               # third condition of referral will be execute
+                    referral_obj.save()
                 serializer.save()
                 return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         else:
@@ -817,21 +833,6 @@ class exAPIView(APIView):
         allbaseinfo=workbaseinfo.objects.all()
         serializer=workserializer(allbaseinfo,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-#__________________________________________________________________________________________________________________________
-class APIView(APIView):
-    parser_classes = [JSONParser]
-  
-    serializer_class=fileserializer
-    def get(self,request,id=None,name=None):
-        if id:
-            allinfo=MyModel.objects.get(id=id)
-            if name:
-                allinfo=MyModel.objects.get(name=name)
-                serializer=fileserializer(allinfo) 
-                return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
-        allbaseinfo=MyModel.objects.all()
-        serializer=fileserializer(allbaseinfo,many=True)
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 #_______________________________________________________________________________________________________________________
 def findduration(videoid=None):
     file=detail.objects.get(videoid=videoid)
@@ -1164,11 +1165,47 @@ class CommentApiView( APIView,LimitOffsetPagination ):
                     serializer = CommentSerializer(obj)
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
 
-from django.db.models import Count
+#__________________________________________________________________________________________________________________________
+from django.contrib.sites.shortcuts import get_current_site
+class APIView(APIView):
+    parser_classes = (MultiPartParser,FormParser)
+    def post(self,request,*args,**kwargs):
+        gmail=request.data.get('gmail')
+        serializer=ContactSerializerModel(data=request.data)
+        if not serializer.is_valid(raise_exception=True):
+            return Response({'error'})
+        serializer.save()  
+        if gmail:
+            user=Contact.objects.get(gmail=serializer.validated_data.get('gmail'))
+            token=RefreshToken.for_user(user).access_token
+            current_site=get_current_site(request).domain
+            relativelink=reverse('email-verify')
+            #print('ddddd',relativelink)
+            absoluteurl='http://'+current_site+relativelink+"?token="+str(token)
+            email_body='hi'+user.name+'user link below to verify your email'
+            
+            print('uuuuu',absoluteurl)
+            #data={'email_body':email_body,'subject':'verify your email'}
+            send_mail(email_body,
+                      absoluteurl,
+                      'amitsofficial1998@gmail.com',
+                      [gmail],
+                      fail_silently=False,  )
+            return Response({'payload':serializer.data,'accessstoken':str(token)})
 
-queryset=workbaseinfo.objects.select_related('userid').all()
-s=workbaseinfo.objects.all().filter(workbasename='sumitkeen').defer('location')
-a=workbaseinfo.objects.distinct()
-print(queryset)
-
-
+import jwt
+class VerifyEmail(generics.GenericAPIView):
+    def get(self,request):
+        token=request.Get.get('token')
+        try:
+            payload=jwt.decode(token,settings.SECRET_KEY)
+            user=Contact.objects.get(id=payload['id'])
+            if  user.status==False:
+                user.status=True
+                user.save()
+            return Response({'email':'successfully activated'},status=status.HTTP_200_OK)
+        except jwt.ExpiredSignatureError as identifier:
+            return Response({'error':'Activation Expired'},status=status.HTTP_400_BAD_REQUEST)
+        except jwt.exceptions.DecodeError as identifier:
+            return Response({'error':'Invalid token'},status=status.HTTP_400_BAD_REQUEST)
+        
