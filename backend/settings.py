@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'channels',
+    'drf_yasg',
     'rest_framework_simplejwt',
     'ws4redis',
     #'django_clamd',

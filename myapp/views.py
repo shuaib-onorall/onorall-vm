@@ -1166,46 +1166,46 @@ class CommentApiView( APIView,LimitOffsetPagination ):
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
 
 #__________________________________________________________________________________________________________________________
-from django.contrib.sites.shortcuts import get_current_site
+def random_id_field():
+  rnd_id = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
+  return rnd_id
+
+def send_mail_registration(gmail,auth_token):
+    subject="your accounts needs to be verified"
+    message=f"hi click the link to verify your account http://192.168.1.85:8000/emailverify/{auth_token}"
+    email_from=settings.EMAIL_HOST_USER
+    recepient_list=[gmail]
+    send_mail(subject,message,email_from,recepient_list)
+
 class APIView(APIView):
     parser_classes = (MultiPartParser,FormParser)
     def post(self,request,*args,**kwargs):
+        name=request.data.get('name')
         gmail=request.data.get('gmail')
-        serializer=ContactSerializerModel(data=request.data)
-        if not serializer.is_valid(raise_exception=True):
-            return Response({'error'})
-        serializer.save()  
-        if gmail:
-            user=Contact.objects.get(gmail=serializer.validated_data.get('gmail'))
-            token=RefreshToken.for_user(user).access_token
-            current_site=get_current_site(request).domain
-            relativelink=reverse('email-verify')
-            #print('ddddd',relativelink)
-            absoluteurl='http://'+current_site+relativelink+"?token="+str(token)
-            email_body='hi'+user.name+'user link below to verify your email'
-            
-            print('uuuuu',absoluteurl)
-            #data={'email_body':email_body,'subject':'verify your email'}
-            send_mail(email_body,
-                      absoluteurl,
-                      'amitsofficial1998@gmail.com',
-                      [gmail],
-                      fail_silently=False,  )
-            return Response({'payload':serializer.data,'accessstoken':str(token)})
-
-import jwt
-class VerifyEmail(generics.GenericAPIView):
-    def get(self,request):
-        token=request.Get.get('token')
+       
         try:
-            payload=jwt.decode(token,settings.SECRET_KEY)
-            user=Contact.objects.get(id=payload['id'])
-            if  user.status==False:
-                user.status=True
-                user.save()
-            return Response({'email':'successfully activated'},status=status.HTTP_200_OK)
-        except jwt.ExpiredSignatureError as identifier:
-            return Response({'error':'Activation Expired'},status=status.HTTP_400_BAD_REQUEST)
-        except jwt.exceptions.DecodeError as identifier:
-            return Response({'error':'Invalid token'},status=status.HTTP_400_BAD_REQUEST)
-        
+            if Contact.objects.filter(name=name).exists():
+                return Response({'username is taken'})
+            if Contact.objects.filter(gmail=gmail).exists():
+                return Response({'Email is taken'})
+            auth_token=str(uuid.uuid4())
+            print('ddddd',auth_token)
+            user_obj=Contact.objects.create(name=name,gmail=gmail,auth_token=auth_token)
+            user_obj.save()
+            serializer=ContactSerializerModel(user_obj)
+            send_mail_registration(gmail,auth_token)
+            return Response({'data':serializer.data})
+        except Exception as e:
+            print(e)
+
+class VerifyEmail(APIView):
+    def get(self,request,token=None):
+        if token:
+           user_obj=Contact.objects.get(auth_token=token)
+           print("DASAD",user_obj.name)
+           if user_obj:
+              user_obj.status=True
+              user_obj.save()
+              return Response({'your email has been successfully verified'})
+          
+    

@@ -478,6 +478,7 @@ class supportTimeline(models.Model):
 class Contact(models.Model):
     name = models.CharField(max_length=50, blank=True)
     gmail=models.EmailField()
+    auth_token=models.CharField(max_length=100)
     status = models.BooleanField(default=False)
 
 class abc(models.Model):

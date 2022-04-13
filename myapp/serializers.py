@@ -260,7 +260,14 @@ class supportgetTimelineserializer(serializers.ModelSerializer):
 class ContactSerializerModel(serializers.ModelSerializer):
     class Meta:
         model = Contact
-        fields = ['name','gmail', 'status']
+        fields = ['id','name','gmail', 'status','auth_token']
+
+
+class Emailverificationserializer(serializers.ModelSerializer):
+    token=serializers.CharField(max_length=555)
+    class Meta:
+        model=Contact
+        fields=['token']
 
 class UserSerializer(serializers.ModelSerializer):
     contact_id = ContactSerializerModel()
