@@ -3,7 +3,6 @@ from django.contrib import admin
 from .models import * #, design ,videos,Comment,phoneno,communitypost,doc_verification,About,basicinfo,social_handling,community_comment,Support
 
 # Register your models here.
-admin.site.register(Comment)
 admin.site.register(sign)
 admin.site.register(doc_verification)
 admin.site.register(social_handling)

@@ -4,9 +4,11 @@ services:
     image: mongo
     ports :
       - 27017:27017
-
+      
     volumes:
       - ./data/db:/var/lib/mongodb/data
+
+    restart: always
   
     environment : 
       - MONGO_INITDB_ROOT_USERNAME=amitsingh

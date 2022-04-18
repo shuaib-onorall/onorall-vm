@@ -50,8 +50,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'channels',
+    'drf_yasg',
     'rest_framework_simplejwt',
-
     'ws4redis',
 
     #'embed_video' ,
@@ -66,8 +66,6 @@ SITE_ID=1
 #___________________________________________________________________
 MIDDLEWARE = [
     
-
-
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -77,8 +75,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
-    
+   
 ]
 
 
@@ -112,13 +109,6 @@ ASGI_APPLICATION= 'backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-''''DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}'''
-
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
@@ -136,18 +126,17 @@ CHANNEL_LAYERS = {
     'default': {
      
        
-        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
-    #    'CONFIG': {
-    #          "hosts": [('127.0.0.1', 6379)],
-    #     },
-        ### Method 3: Via In-memory channel layer
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+       'CONFIG': {
+             "hosts": [('127.0.0.1', 6379)],
+        },
+        ## Method 3: Via In-memory channel layer
         ## Using this method.
-       "BACKEND": "channels.layers.InMemoryChannelLayer" , 
-        
     },
+    'ROUTING': 'ws.routing.application',
 }
 
-
+AUTH_USER_MODEL='myapp.sign'
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -168,7 +157,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-
+LOGIN_USERNAME_FIELDS = ['gmail']
 AUTH_USER_MODEL = 'myapp.sign'
 
 
@@ -311,7 +300,7 @@ DEFAULT_FROM_EMAIL ='amitsofficial1998@gmail.com'
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend' #this is used for the backend
 EMAIL_HOST='smtp.gmail.com'
 EMAIL_HOST_USER='amitsofficial1998@gmail.com'
-EMAIL_HOST_PASSWORD='Amit@1998'
+EMAIL_HOST_PASSWORD='Amit12345@singh'
 EMAIL_PORT=587
 EMAIL_USE_TLS=True
 EMAIL_SSL=False
@@ -327,12 +316,35 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 
 #__________________________________________________________________________________________________________________________
 #for heroku purposes
-# import django_on_heroku
-# django_on_heroku.settings(locals())
+import django_on_heroku
+django_on_heroku.settings(locals())
 
 
+#___________________________________________________________________________________________________________________________________
+#celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+CELERY_RESULT_BACKEND='django-db'
 
-###  DJANGO DEBUG SETTING FOR DEVELOPMENT
+#_______________________________________________________________________________________________________________________________________
+
+#celery beat
+#CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
+#______________________________________________________________________________________________________________________________________
+#it is used to detect the malware data
+#CLAMD_SOCKET = '/var/run/clamav/clamd.ctl'
+#CLAMD_USE_TCP = False
+#CLAMD_TCP_SOCKET = 3310
+#CLAMD_TCP_ADDR = '127.0.0.1'
+#CLAMD_SOCKET = '/var/run/clamd.scan/clamd.sock'
+#CLAMD_ENABLED = False # here we can enable the detection
+#_______________________________________________________________________________________________________________________________________ 
+#here we have used tool debugger 
 if DEBUG:
     INTERNAL_IPS = ( '*' ) # '127.0.0.1', '192.168.1.95' , 
     MIDDLEWARE += ('debug_toolbar.middleware.DebugToolbarMiddleware',)
@@ -357,5 +369,3 @@ def show_toolbar(request):
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK" : show_toolbar,}
 import mimetypes
 mimetypes.add_type("application/javascript", ".js", True)
-
-#________________ END DEBUG SETTING _________________
