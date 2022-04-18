@@ -9,8 +9,11 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 import uuid
 from django.contrib.contenttypes.fields import GenericForeignKey
-
+from django.contrib.auth.models import AbstractBaseUser
 import random, string
+from django.contrib.auth.models import PermissionsMixin
+from django.contrib.auth.base_user import BaseUserManager
+
 
 def random_id_field():
   rnd_id = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
@@ -23,19 +26,61 @@ def random_profile():
      'profilePic\img7.jpg' ]
     random_path = random.choices(random_list)[0]
     return random_path
-#_______________________________________________________________________________________________________________________:)
+#__________________________
+
+class UserManager(BaseUserManager):
+    use_in_migrations = True
+
+    def _create_user(self, gmail, name,  password, **extra_fields):
+        values = [gmail, name]
+        field_value_map = dict(zip(self.model.REQUIRED_FIELDS, values))
+        for field_name, value in field_value_map.items():
+            if not value:
+                raise ValueError('The {} value must be set'.format(field_name))
+
+        gmail = self.normalize_email(gmail)
+        user = self.model( gmail=gmail , name=name, **extra_fields )
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, gmail, name  ,  password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', False)
+        extra_fields.setdefault('is_superuser', False)
+        return self._create_user(gmail, name, password, **extra_fields)
+
+    def create_superuser(self, gmail, name, password=None, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self._create_user(gmail, name ,  password, **extra_fields)
+
 #user model
-class sign(models.Model):
+class sign(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(max_length=12, unique=True, primary_key=True,  default=random_id_field)
-    profilePic = models.ImageField(upload_to='profilePic/' , default = random_profile)
+    profilePic = models.ImageField(upload_to='profilePic/' , default = random_profile )
     name=models.CharField(max_length=30)
     phone=models.CharField(max_length=13,null=True,blank=True)
-    gmail=models.EmailField(null=True,blank=True)
-    iscreator=models.BooleanField(default=False)
-    signup_refferal_by = models.IntegerField( default=0)
+    gmail=models.EmailField( null=True,blank=True , unique=True )
+    iscreator=models.BooleanField(default=False) 
+    signup_refferal_by = models.IntegerField( default= 0 )
+
+    is_staff = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'gmail'
+    REQUIRED_FIELDS = ['name']
    
     def __str__(self):
-        return str(self.id)
+        return f"PHONE : {str(self.phone)} || GMAIL : {str(self.gmail)} || ID {str(self.id)}"
 
 #____________________________________________________________________________________________________________________:)
 #models for workbase
@@ -86,7 +131,7 @@ age_restriction_choice=(
 
 class detail(models.Model):
     videoid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    user_id=models.ForeignKey(sign,null=True,blank=True,on_delete=models.CASCADE)
+    user_id=models.ForeignKey(sign,null=False,blank=False,on_delete=models.CASCADE)
     title=models.CharField(max_length=50,null=True,blank=True)
     file=models.FileField(upload_to=get_upload_to)
     description=models.TextField(null=True,blank=True)
@@ -163,7 +208,7 @@ class connect(models.Model):
     title=models.CharField(max_length=50)
     tags=models.CharField(max_length=100)
     published_on=models.CharField(max_length=100,choices=publish_choices,default='public')
-    likes=models.ManyToManyField(User,blank=True,related_name='likes')
+    likes=models.ManyToManyField(sign,blank=True,related_name='likes_connect')
    
    
     def number_of_likes(self):
@@ -173,7 +218,7 @@ class connect(models.Model):
             return 0
 
     def __str__(self):
-        return str(self.connectid)
+        return f"CONNECTID : {str(self.connectid)} id : {str(self.id)}"
 #_________________________________________________________________________________________________________________________
 
 
@@ -185,7 +230,7 @@ class connect_comment(models.Model):
     post_created_on=models.DateTimeField(auto_now=True)
     post=models.ForeignKey(connect,blank=True,on_delete=models.CASCADE)
     parent=models.ForeignKey('connect_comment',null=True,blank=True,related_name='replies',on_delete=models.CASCADE)
-    likes=models.ManyToManyField(User,blank=True ,related_name='Post_comment_likes')
+    likes=models.ManyToManyField(sign,blank=True ,related_name='Post_comment_likes')
     comment_disllikes=models.ManyToManyField(sign,blank=True,related_name='Post_comment_dislkikes')
 
     class Meta:
@@ -214,10 +259,10 @@ class videos(models.Model):
     VideoTitle=models.CharField(max_length=50)
     VideoFile= models.FileField(upload_to='videos/', null=True, verbose_name="video_upload")
     published_date=models.DateTimeField(auto_now=True)
-    likes=models.ManyToManyField(User,related_name='videos')
+    likes=models.ManyToManyField(sign,related_name='videos')
     Description=models.TextField(max_length=5000)
     active_earn=models.PositiveIntegerField(default=0)
-    views=models.ManyToManyField(User,related_name='video_views')
+    views=models.ManyToManyField(sign,related_name='video_views')
     Add_tags=models.CharField(max_length=300,default=0)
     skillcategory=models.CharField(max_length=50,default=0)
     skills=models.CharField(max_length=500,default=0)
@@ -246,13 +291,13 @@ class videos(models.Model):
 class Comment(models.Model):
     #id=models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     vediofile=models.ForeignKey(videos, related_name='comment', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE,null=True)
+    user = models.ForeignKey(sign, on_delete=models.CASCADE,null=True)
     comment=models.TextField()
     parent=models.ForeignKey('self',null=True,blank=True,related_name='replies',on_delete=models.CASCADE)
     audio_comment=models.FileField(upload_to='comment/',null=True,verbose_name='')
     created_on=models.DateTimeField(auto_now=True)
-    comment_likes=models.ManyToManyField(User,blank=True,related_name='comment_likes')
-    comment_disllikes=models.ManyToManyField(User,blank=True,related_name='comment_dislkikes')
+    comment_likes=models.ManyToManyField(sign,blank=True,related_name='comment_likes')
+    comment_disllikes=models.ManyToManyField(sign,blank=True,related_name='comment_dislkikes')
 
 
     class Meta:
@@ -408,7 +453,7 @@ class question(models.Model):
     isrequired=models.BooleanField(default=True)
 
     def __str__(self) -> str:
-        return str(self.question)
+        return str(self.id)
 
 
 
@@ -515,20 +560,9 @@ class sharemon(models.Model):
         return str(self.name)
 
     def save(self,*args,**kwargs):
-        if self.code=="":
+        if self.code == "" :
             pass
         super().save(*args,**kwargs)
-
-#_________________________________________________________________________________________________________________________________
-
-
-
-
-
-
-
-
-
 
 
 
@@ -684,14 +718,14 @@ class Notification(models.Model):
 
 
     
-# for embed videos
-from embed_video.fields import EmbedVideoField
-class EmbedVideoModel(models.Model):
-    video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
-    video_url = EmbedVideoField()  #  just like URLField()
+# # for embed videos
+# from embed_video.fields import EmbedVideoField
+# class EmbedVideoModel(models.Model):
+#     video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
+#     video_url = EmbedVideoField()  #  just like URLField()
 
-    def __str__(self , *args , **kwargs):
-        return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
+#     def __str__(self , *args , **kwargs):
+#         return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
     
 
 

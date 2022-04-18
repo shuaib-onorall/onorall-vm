@@ -41,20 +41,20 @@ urlpatterns = [
     path('thumbnail/<str:videoid>',views.thumbnailapiview.as_view()),
     path('workbase',views.WorkApiView.as_view()),
     path('workbase/<int:id>',views.WorkApiView.as_view()),
-    path('engine/',views.SearchAPIView.as_view()), #this  search for detail 
+    #path('engine/',views.SearchAPIView.as_view()), #this  search for detail 
     path('searchengine/',views.connectSearchAPIView.as_view()), #in the search path we have to use / (slash) this one for connect 
-    path('comment',views.commentApiView.as_view()),
-    path('comment/<int:id>',views.commentApiView.as_view()),
+    #path('comment',views.commentApiView.as_view()),
+    #path('comment/<int:id>',views.commentApiView.as_view()),
     path('otp',views.sendotp.as_view()),
     path('verify',csrf_exempt(views.verifyotp.as_view())),
-    path('like/<int:post_id>', views.LikeView.as_view(),name='like'), #for toggel post like 
-    path('videolike/<int:detid>',views.videolikeAPi.as_view(),name='videolike'), #for the toggel videolike
+    #path('like/<int:post_id>', views.LikeView.as_view(),name='like'), # for toggel post like 
+    #path('videolike/<int:detid>',views.videolikeAPi.as_view(),name='videolike'), #for the toggel videolike
     path('resources',views.addresourcesAPIView.as_view()),
     path('resources/<int:id>',views.addresourcesAPIView.as_view()),
     path('question',views.questionnaireAPIView.as_view()),
     path('question/<int:ques_id>',views.questionnaireAPIView.as_view()),
     path('question_text',views.question1APIView.as_view()),
-    path('question_text/<int:id>',views.question1APIView.as_view()),
+    path('question_text/<int:ques1id>',views.question1APIView.as_view()),
     path('question_QNA',views.question2APIView.as_view()),
     path('question_QNA/<int:id>',views.question2APIView.as_view()),
     path('question_mcq',views.question3APIView.as_view()),
@@ -67,8 +67,9 @@ urlpatterns = [
     path('branding',views.basic_brandingAPIView.as_view()),
     path('branding/<int:id>',views.basic_brandingAPIView.as_view()),
     path('wb/<str:workbasename>',views.exAPIView.as_view()),
-    path('file',views.APIView.as_view()),
-    path('file/<str:id>/<str:name>',views.APIView.as_view()),
+    path('wb/',views.exAPIView.as_view()),
+    path('file',views.APIViews.as_view()),
+    path('file/<str:id>/<str:name>',views.APIViews.as_view()),
     path('monetize',views.ShareMonetize.as_view()),
     path('monetize/<int:id>',views.ShareMonetize.as_view()),
     path('suport',views.supportAPI.as_view()),
@@ -91,7 +92,7 @@ urlpatterns = [
     path('likes/', views.LikeApiView.as_view() , name='all-like-api-view'),
 
 
-    #___________________________REFFERAL API
+    #___________________________REFFERAL APIs_____________________________________________
     path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
     path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),
     path('profileRef/<str:code>/',views.profileRefferalAPIView.as_view()),  # referral signup API
@@ -101,7 +102,7 @@ urlpatterns = [
     path('report/<int:reportid>/',views.reportApiview.as_view()),
 
     # embed 
-    path('embed' , views.embed_testing , name='embed-test'),
+    #path('embed' , views.embed_testing , name='embed-test'),
 
 
     #___________________________comment like-dislike api
@@ -109,7 +110,7 @@ urlpatterns = [
     # path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
     #__________________________web sockets
-    path('wb' , views.index_wb , name="index_wb" ) , 
+    #path('wb' , views.index_wb , name="index_wb" ) , 
     path('play/<room_code>', views.game , name='game'),
     
 

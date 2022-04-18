@@ -34,7 +34,7 @@ ALLOWED_HOSTS = ['192.168.1.95' , '127.0.0.1'] #['https://cretskill-backend.hero
 # Application definition 
 
 INSTALLED_APPS = [
-    'myapp' ,
+    'myapp.apps.MyappConfig' ,
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,11 +54,9 @@ INSTALLED_APPS = [
 
     'ws4redis',
 
-
-
-    'embed_video' ,
+    #'embed_video' ,
     #'analytical' # for analytical
-    #'debug_toolbar' ,   # for debugging
+    #'debug_toolbar'  ,    # for debugging
     #'locust',        # testing api
     
 ]
@@ -168,6 +166,11 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
+
+
+
+AUTH_USER_MODEL = 'myapp.sign'
+
 
 
 # Internationalization

@@ -42,6 +42,99 @@ from django.db.models import Q
     
 #Add the comment likes and comment dislikes for video
 
+#_______________________________________________________________________________________________________________________
+def findduration(videoid=None):
+    file=detail.objects.get(videoid=videoid)
+    filepath=str(file)
+    video=r"C:\ONORALL\media\\" + filepath
+    metadata = subprocess.check_output(f"ffprobe -i {video} -v quiet -print_format json -show_format -hide_banner".split(" "))
+    metadata = json.loads(metadata)
+    data=f" {float(metadata['format']['duration'])}"
+   # print(data)
+    converted_data=int(float(data))
+    result=converted_data//4
+    #frameduration=print(result)
+    #print(type(result))
+    return result
+ 
+#___________________________________________________________________________________________________________________________
+
+def Automatic_generated_thumbnail(videoid=None):
+    file=detail.objects.get(videoid=videoid)
+    print(file)
+    file_path=str(file)
+    print(len(file_path))
+    frame=findduration(videoid)
+    video=r"C:\ONORALL\media\\" + file_path
+    output=r"C:\ONORALL\media\\" + file_path
+    #auto_thumbnail_path=str(output)
+    #data=auto_thumbnail_path[:-4]
+    #print(data)
+    command=f'ffmpeg -i "{video}" -vf fps=1/{frame} {output}img%0d.jpg'  
+    #print(command)
+    subprocess.run(command, shell=True,stderr=subprocess.STDOUT)
+    return Response({'video_thumbnail':video})
+a='1O7oaSB2C86m'
+#Automatic_generated_thumbnail(a)
+#_______________________________________________________________________________________________________________________
+def compressing_video(videoid=None):
+    file=detail.objects.get(videoid=videoid)
+    filepath=str(file)
+    print(filepath)
+    video=r"C:\ONORALL\media\\" + filepath
+    print(video)
+    a='1'
+    output = r"C:\ONORALL\media\upload\\" + videoid + '\\'+ videoid +'compress.mp4'
+    #data=output[:-4]
+    cmd=f'ffmpeg -i "{video}" -vcodec libx264 -crf 28 "{output}"' #crf is the most important thing (constant rate factor)
+    print(cmd)
+    subprocess.check_output(cmd, shell=True)
+#videoid="1O7oaSB2C86m"
+#compressing_video(videoid)
+#_______________________________________________________________________________________________________________________
+import ffmpeg_streaming
+from ffmpeg_streaming import Formats, Bitrate, Representation, Size
+def DASH(id=None): #dynamic adaptive bitrate streaming
+    file=detail.objects.get(id=id)
+    data=str(file)
+    resolution_address=data[5::]
+    print(len(resolution_address),file)
+    video=r"C:\ONORALL\media\file\\" + resolution_address
+    _480p = Representation(Size(854, 480), Bitrate(750 * 1024, 192 * 1024))
+    #_720p = Representation(Size(1280, 720), Bitrate(2048 * 1024, 320 * 1024))
+    #_1080p = Representation(Size(1920, 1080), Bitrate(4096 * 1024, 320 * 1024))
+    a = r"C:\Users\user\Downloads\amit2.mp4"
+    output =  r"C:\ONORALL\media\dash.mpd"
+    video = ffmpeg_streaming.input(a)
+    dash = video.dash(Formats.h264())
+    dash.representations( _480p)
+    dash.output(output)
+
+
+
+import ffmpeg
+import subprocess
+#thumbnail 
+def query_set():
+    video = r"C:\ONORALL\media\file\spider_Dud1tKa.mp4"
+    #file=File.objects.get(id=154)
+    
+    cmd=f'ffmpeg -i "{video}" -vf fps=1/6 img%06d.jpg'  
+    print(cmd)
+    subprocess.run(cmd, shell=True,stderr=subprocess.STDOUT)
+    return Response({'video_thumbnail':video}) 
+#query_set()
+
+#compressing video
+def compressing_video():
+    input = r"C:\Users\user\Downloads\amit2.mp4"
+    output = r"C:\Users\user\Downloads\out.mp4"
+    #cmd=f'ffmpeg -i "{input}" "{output}"'
+    cmd=f'ffmpeg -i "{input}" -vcodec libx264 -crf 28 "{output}"'
+    print(cmd)
+    subprocess.check_output(cmd, shell=True)
+
+#DASH(35)
 class Addcomment_likes(LoginRequiredMixin,View):
     def video_comment(self,request, id,pk,*args,**kwargs): #id is vedio id ,pk is comment id
         comment=Comment.objects.get(pk=pk)
@@ -129,121 +222,6 @@ def post_detail(request, videofile):
                    'comment_form': comment_form}
     return render(request , 'templatename',context)
 
-#function for the follow,unfollow,pending request and delete request.
-#function for the follow ,unfollow and pending request and private account
-'''
-class followUnfollow(APIView):
-    permission_classes=[IsAuthenticated]
-
-    def current_profile(self,pk):
-        try:
-            return Support.objects.get(user=self.request.user)
-        except Support.DoesNotExist:
-            raise Http404
-    
-    def other_profile(self,pk,request):
-        pk=request.data.get('id')  #here pk is opposite user,s profile ID
-        req_type= request.data.get('type')
-        current_profile=self.current_profile()
-        other_profile=self.other_profile(pk)
-
-        if req_type=='follow':
-            if other_profile.private_account:
-                other_profile.pending_request.add(current_profile)
-                return Response({'Requested':'Follow request has been send !!'},status=status.HTTP_200_0k)
-
-            else:
-                if other_profile.blocked_user.filter(id=current_profile).exists():
-                    return Response({'Following Fail':"you cannot follow this profilebecuase your id blocked by this user "},status=status.HTTP_400_BAD_REQUEST)
-                current_profile.following.add(other_profile)
-                other_profile.followers.add(current_profile)
-                return Response({"Following":"Following success"},status=status.HTTP_200_0k)
-
-        elif req_type =='accept':
-            current_profile.followers.add(other_profile)
-            other_profile.following.add(current_profile)
-            current_profile.pending_request.remove(other_profile)
-            return Response({'Accepted':"Follow request accept successfully"},status=status.HTTP_200_0k)
-
-        elif req_type=='decline':
-            current_profile.pending_request.remove(other_profile)
-            return Response({'Decline':'follow request successfully declined !!'},status=status.HTTP_200_0k)
-
-        elif  req_type=='unfollow':
-            current_profile.following.remove(other_profile)
-            other_profile.followers.remove(current_profile)
-            return Response({'unfollow':"unfollow success"},status=status.HTTP_200_0k)
-
-        elif req_type=='remove':
-            current_profile.followers.remove(other_profile)
-            other_profile.following.remove(current_profile)
-            return Response({'Remove Success':'Successfully removed your follower'},status=status.HTTP_200_0k)
-
-#here we fetch the data followers,following detail and blocked user
-def patch(self,request,format=None):
-    req_type=request.data.get('type')
-
-    if req_type=="follow detail":
-        serializer=FollowerSerializer(self.current_profile())
-        return Response({'data':serializer.data},status=status.HTTP_200_0k)
-
-    elif req_type=='block_pending':
-        serializer=BlockPendingSerializer(self.current_profile())
-        pf=list(Support.objects.filter(pending_request=self.current_profile().id).values('id','user_username'))
-        return Response({'data':serializer.data,'sended Request':pf},status=status.HTTP_200_0k)
-
-
-#you can block and unblock
-def put(self,request,format=None):
-    pk=request.data.get('id')
-    req_type=request.data.get('type')
-
-    if req_type =='block':
-        self.current_profile().blocked_user.add(self.other_profile(pk))
-        return Response({'Blocked':'This user blocked successfully '},status=status.HTTP_200_0k)
-
-    elif req_type =='unblock':
-        self.current_profile().blocked_user.remove(self.other_profile(pk))
-        return Response({'unblocked':"this user unblocked successfully"},status=status.HTTP_200_0k)
-
-
-
-
-#this is useful and alternate for vedio  api
-
-class FileView(APIView):
-  parser_classes = (MultiPartParser, FormParser)
-
-  serializer_class=FileSerializer
-  
-  def get(self,request,id=None):
-      if id:
-          file=File.objects.get(id=id)
-          fileserializer=FileSerializer(file)
-          return Response({"status":"success","data":fileserializer.data},status=status.HTTP_200_OK)
-
-      allvideos=File.objects.all()
-      serializer=FileSerializer(allvideos,many=True)       #context request:request create the url>>> context={'request':request}
-      return Response({ "status":"success","data":serializer.data},status=status.HTTP_200_OK)
-
-  def post(self, request, *args, **kwargs):
-    file_serializer = FileSerializer(data=request.data)
-    video=request.data.get('file')
-    if file_serializer.is_valid():
-        cmd=f'ffmpeg -i "{video}" -vf fps=1/6 img%06d.jpg'  
-        subprocess.run(cmd, shell=True,stderr=subprocess.STDOUT)
-        file_serializer.save()
-        return Response({'data':file_serializer.data},status=status.HTTP_201_CREATED)
-    else:
-      return Response(file_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-  def delete(self, request,  id=None):
-        event = get_object_or_404(File,id=id)
-        event.delete()
-        return Response({"status":"success","data":"item deleted"} )     
-
-'''
-#___________________________________________________________________________________________________________________________________________
 
 #Api for video detailing  
 
@@ -315,16 +293,14 @@ class DocView(APIView):
 class communityAPIView(APIView):
 
     parser_classes = (MultiPartParser, FormParser)
-
     serializer_class=connectSerializer
-
     def get(self,request,id=None):
         if id:
-            allpost=connect.objects.get(id=id)
+            allpost=connect.objects.prefetch_related('likes').get(id=id)
             serializer=connectSerializer(allpost)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
         
-        allposts=connect.objects.all()
+        allposts=connect.objects.all().prefetch_related('likes')
         serializer=connectSerializer(allposts,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -357,10 +333,10 @@ class AboutAPIView(APIView):
 
     def get(self,request,id=None):
         if id:
-            allpost=section.objects.get(id=id)
+            allpost=section.objects.select_related('user_profile').get(id=id)
             serializer=tag(allpost)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        allposts=section.objects.all()
+        allposts=section.objects.select_related().all()
         serializer=tag(allposts,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -408,23 +384,33 @@ class profileAPIView(APIView):
 ##this post request is used for the jwt authentication
     def post(self,request):
         serializer=signserializers(data=request.data)
-        gmail=request.data.get('gmail')
-        phone=request.data.get('phone')
+        er = 'not found'
+        gmail=request.data.get('gmail' , er)
+        phone=request.data.get('phone'   , er)
         profile_mail=sign.objects.filter(gmail=gmail).exists()
-        if not serializer.is_valid():
+        profile_phone=sign.objects.filter(phone=phone).exists()
+        if profile_mail:
+            user=sign.objects.get(gmail=gmail)
+            return Response({'status':'gmail  already exist' , 'data':user.id  })
+        elif profile_phone:
+            user = sign.objects.get(phone=phone)
+            refresh = RefreshToken.for_user(user)                                  #this line important for jwt token
+            return Response({'status':200,'payload':"already exists",'name':user.name , 'gmail':user.gmail , 'is_creater':user.iscreator ,  'refresh':str(refresh),'access':str(refresh.access_token)})
+        if not serializer.is_valid(raise_exception=True):
             return Response({'status':403,'error':serializer.errors})
         serializer.save()
-        if profile_mail:
-            return Response({'status':'gmail  already exist'})
-        if phone:
-            user=sign.objects.get(phone=serializer.data['phone'])
-            refresh = RefreshToken.for_user(user) #this line important for jwt token
+        if phone != er :
+            user=sign.objects.get(phone=serializer.validated_data.get('phone' , er))
+            refresh = RefreshToken.for_user(user)                                      #this line important for jwt token
             return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
-        return Response({'status':200,'payload':serializer.data})
+
+        user=sign.objects.get(gmail=serializer.validated_data.get('gmail' , er))
+        refresh = RefreshToken.for_user(user)                                      #this line important for jwt token
+        return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
 
     def patch(self,request,id=None):
         post=sign.objects.get(id=id)
-        serializer=signserializers(post,data=request.data,partial=True)
+        serializer = signserializers( post , data=request.data , partial=True )
         if serializer.is_valid():
             serializer.save()
             return Response({'status':'success','data':serializer.data})
@@ -445,10 +431,11 @@ class grouplistAPIView(APIView):
 
     def get(self,request,id=None):
         if id:
-            allplaylist=group.objects.get(id=id)
+            allplaylist=group.objects.select_related('userid').prefetch_related('list').get(id=id)
             serializer=groupserializer(allplaylist)
             return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
-        allplaylist=group.objects.all()
+
+        allplaylist=group.objects.select_related('userid').prefetch_related('list').all()
         serializer=groupserializer(allplaylist,many=True)
         return Response({'status':'success','list_of_playlist':serializer.data,},status=status.HTTP_200_OK)
 
@@ -478,14 +465,14 @@ class playlistAPIView(APIView):
     parser_classes= (MultiPartParser, FormParser)
     def get(self,request,id=None,vid=None):
         if id:
-            allplaylist=playlist.objects.get(id=id)
+            allplaylist=playlist.objects.select_related('userid').prefetch_related('files').get(id=id)
             serializer=playlist_videoserializer(allplaylist)
             if vid:
                 file=detail.objects.get(id=vid)
                 fileserializer=DetailSerializer(file)
                 return Response({'data':fileserializer.data})
             return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
-        allplaylist=playlist.objects.all()
+        allplaylist=playlist.objects.select_related('userid').prefetch_related('files').all()
         serializer=playlist_videoserializer(allplaylist,many=True)
         return Response({'status':'success','list_of_playlist':serializer.data,},status=status.HTTP_200_OK)
 
@@ -498,33 +485,10 @@ class playlistAPIView(APIView):
 #_______________________________________________________________________________________________________________________
 #workbase api
 
-#wokred on search on functionality'
 from itertools import chain
 from rest_framework import filters
 from rest_framework import generics
-class SearchAPIView(generics.ListCreateAPIView):
-   def get_queryset(self):
-        request = self.request
-        query = request.GET.get('q', None)
-        
-        if query is not None:
-            blog_results        = detail.objects.search(query)
-            lesson_results      = workbaseinfo.objects.search(query)
-           
-            
-            # combine querysets 
-            queryset_chain = chain(
-                    blog_results,
-                    lesson_results,
-                   
-            )        
-            qs = sorted(queryset_chain, 
-                        key=lambda instance: instance.pk, 
-                        reverse=True)
-            self.count = len(qs) # since qs is actually a list
-            return qs
-        return detail.objects.none() 
-#___________________________________________________________________________________________________
+#_________________________________________________________________________________________________
 class connectSearchAPIView(generics.ListCreateAPIView):
     search_fields = ['^title','^tags','user__name']
     filter_backends = (filters.SearchFilter,)
@@ -532,32 +496,6 @@ class connectSearchAPIView(generics.ListCreateAPIView):
     serializer_class = connectSerializer
 
 
-#_________________________________________________________________________________________________________________
-#comment system begin
-from rest_framework import authentication, permissions
-class commentApiView(APIView):
-    parser_classes= [JSONParser]
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-   
-    def get(self,request,post_id=None):
-        if post_id:
-            allinfo=connect_comment.objects.get(id=post_id)
-            serializer=CommentSerializer(allinfo)
-            return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
-        allbaseinfo=connect_comment.objects.all()
-        serializer=CommentSerializer(allbaseinfo,many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-
-    def post(self,request,post_id=None):
-        post=connect.objects.get(pk=post_id)
-        serializer=CommentSerializer(data=request.data)
-        if serializer.is_valid(post=post):
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'error','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
-    
-
-#api for report 
 #phone otp
 import ast
 conn = http.client.HTTPConnection("2factor.in")
@@ -606,73 +544,16 @@ class verifyotp(APIView):
         else:
             return Response({'not otp available'})
 
-#ffmpeg_______________________________________________________________________________________________________#
-import ffmpeg
-import subprocess
-#thumbnail 
-def query_set():
-    video = r"C:\ONORALL\media\file\spider_Dud1tKa.mp4"
-    #file=File.objects.get(id=154)
-    
-    cmd=f'ffmpeg -i "{video}" -vf fps=1/6 img%06d.jpg'  
-    print(cmd)
-    subprocess.run(cmd, shell=True,stderr=subprocess.STDOUT)
-    return Response({'video_thumbnail':video}) 
-#query_set()
-
-#compressing video
-def compressing_video():
-    input = r"C:\Users\user\Downloads\amit2.mp4"
-    output = r"C:\Users\user\Downloads\out.mp4"
-    #cmd=f'ffmpeg -i "{input}" "{output}"'
-    cmd=f'ffmpeg -i "{input}" -vcodec libx264 -crf 28 "{output}"'
-    print(cmd)
-    subprocess.check_output(cmd, shell=True)
-
-
-#comprressing_video()
-#________________________________________________________________________________________________________________#
-#likes view
-
-class LikeView(APIView):
-    """Toggle like"""
-
-    def get(self, request,like='', format=None, post_id=None):
-        post = connect.objects.get(id=post_id)
-        user = self.request.user
-        if request.user.is_authenticated:
-            like=True
-            if user in post.likes.all():
-                like = False
-                post.likes.remove(user)  
-            like = True
-            post.likes.add(user)
-        return Response({'like':like})
-
-#________________________________________________________________________________________________________________________
-#for the video toggel like 
-class videolikeAPi(APIView):
-    def get(self,request,format=None,detid=None):
-        video=detail.objects.get(id=detid)
-        user=self.request.user
-        if request.user.is_authenticated:
-            if user in video.likesvideo.all():
-                like=False
-                video.likesvideo.remove(user)
-            like=True
-            video.likesvideo.add(user)
-        data = { 'like':like }
-        return Response(data)
 #________________________________________________________________________________________________________________________________
 class addresourcesAPIView(APIView):
     parser=(MultiPartParser,FormParser)
     serializer=addresourceserializer
     def get(self,request,id=None):
         if id:
-            reportinfo=Addresources.objects.get(id=id)
+            reportinfo=Addresources.objects.select_related().get(id=id)
             serializer_info=addresourceserializer(reportinfo)
             return Response(serializer_info.data,status=status.HTTP_200_OK)
-        report_info=Addresources.objects.all()
+        report_info=Addresources.objects.select_related().all()
         report_serializer=addresourceserializer(report_info,many=True)
         return Response(report_serializer.data,status=status.HTTP_200_OK)
 
@@ -689,50 +570,16 @@ class addresourcesAPIView(APIView):
         event.delete()
         return Response({'status':'deleted','data':'item deleted'})
 
-#___________________________________________________________________________________________________________________
-class questionnaireAPIView(APIView):
-    parser=(MultiPartParser,FormParser)
-    serializer=questionnaireserializer
-    def get(self,request,ques_id=None):
-        if ques_id:
-            info=questionnaires.objects.get(ques_id=ques_id)
-            serializer=questionnaireserializer(info)
-            return Response(serializer.data,status=status.HTTP_200_OK)
-        info=questionnaires.objects.all()
-        serializer=questionnaireserializer(info,many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-    
-    def post(self,request,*args,**kwargs):
-        serializer=questionnaireserializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
-    
-    def patch(self,request,ques_id=None):
-        event=Addresources.objects.get(ques_id=ques_id)
-        serializer=addresourceserializer(event,data=request.data,partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'success','data':serializer.errors})
-    
-    def delete(self,request,id=None):
-        event=get_object_or_404(questionnaires,id=id)
-        event.delete()
-        return Response({'status':'success','data':'item deleted'})
-
-#________________________________________________________________________________________________________________
 class question1APIView(APIView):
     parser=(MultiPartParser,FormParser)
    
     def get(self,request,ques1id=None):
         if ques1id:
-            info=question.objects.get(ques1id=ques1id)
+            info=question.objects.select_related('ques').get( id = ques1id )
             serializer=question1serializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
         
-        info=question.objects.all()
+        info=question.objects.select_related('ques').all()
         serializer=question1serializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -764,7 +611,7 @@ class question2APIView(APIView):
             info=question2.objects.get(id=id)
             serializer=question2serializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
-        info=question2.objects.all()
+        info=question2.objects.select_related('questionnaire').all()
         serializer=question2serializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -794,10 +641,10 @@ class question3APIView(APIView):
     serializer=questionnaireserializer
     def get(self,request,id=None):
         if id:
-            info=question3.objects.get(id=id)
+            info=question3.objects.select_related('questionnaire').get(id=id)
             serializer=question3serializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)  
-        info=question3.objects.all()
+        info=question3.objects.select_related('questionnaire').all()
         serializer=question3serializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -826,10 +673,10 @@ class exampleAPIView(APIView):
     serializer=questionnaireserializer
     def get(self,request,id=None):
         if id:
-            info=abc.objects.get(id=id)
+            info=abc.objects.select_related('contact_id').get(id=id)
             serializer=UserSerializer(info)
             return Response(serializer.data,status=status.HTTP_200_OK)
-        info=abc.objects.all()
+        info=abc.objects.select_related('contact_id').all()
         serializer=UserSerializer(info,many=True)
         return Response(serializer.data,status=status.HTTP_200_OK)
 
@@ -853,41 +700,16 @@ class exampleAPIView(APIView):
 class basic_displayAPiView(APIView):
     parser=[JSONParser] #(MultiPartParser,FormParser)
     def get(self,request,id=None):
-        
         if id:
-            event=basic_display.objects.get(id=id)
+            event=basic_display.objects.select_related( 'highlight1' , 'highlight2' , 'highlight3' , 'highlight4' , 'highlight5' ).get(id=id)
             serializer=basic_display_serializer(event)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        event=basic_display.objects.all()
+        event=basic_display.objects.select_related( 'highlight1' , 'highlight2' , 'highlight3' , 'highlight4' , 'highlight5' ).prefetch_related().all()
         serializer=basic_display_serializer(event,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
     
     def post(self,request):
-        # h1_data = detail.objects.get(id = int(request.data.get('highlight1')))
-        # h1_ser = DetailSerializer(h1_data).data
-        # request.data['highlight1'] = h1_ser
-        # del request.data['highlight1']['all_timeline']
-
-        # h2_data = detail.objects.get(id = int(request.data.get('highlight2')))
-        # h2_ser = DetailSerializer(h2_data).data
-        # request.data['highlight2'] = h2_ser
-        # del request.data['highlight2']['all_timeline']
-
-
-        # h3_data = detail.objects.get(id = int(request.data.get('highlight3')))
-        # h3_ser = DetailSerializer(h3_data).data
-        # request.data['highlight3'] = h3_ser
-        # del request.data['highlight3']['all_timeline']
-
-        # h4_data = detail.objects.get(id = int(request.data.get('highlight4')))
-        # h4_ser = DetailSerializer(h4_data).data
-        # request.data['highlight4'] = h4_ser
-        # del request.data['highlight4']['all_timeline']
-
-        # h5_data = detail.objects.get(id = int(request.data.get('highlight5')))
-        # h5_ser = DetailSerializer(h5_data).data
-        # request.data['highlight5'] = h5_ser
-        # del request.data['highlight5']['all_timeline']
+        
 
         def get_serializer_class(self, *args, **kwargs):
             if self.request.method == 'POST':
@@ -914,10 +736,10 @@ class basic_brandingAPIView(APIView):
     parser=(MultiPartParser,FormParser)
     def get(self,request,id=None):
         if id:
-            event=basic_branding.objects.get(id=id)
+            event=basic_branding.objects.select_related('userid').get(id=id)
             serializer=basic_branding_serializer(event)
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        event=basic_branding.objects.all()
+        event=basic_branding.objects.select_related('userid').all()
         serializer=basic_branding_serializer(event,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
     
@@ -937,102 +759,38 @@ class basic_brandingAPIView(APIView):
         return Response({'status':'fail','data':serializer.errors},status=status.HTTP_400_BAD_REQUEST) 
 
 #_______________________________________________________________________________________________________________________
-
 class exAPIView(APIView):
     parser_classes = [JSONParser]
   
     serializer_class=workserializer
     def get(self,request,workbasename=None):
         if workbasename:
-            allinfo=workbaseinfo.objects.get(workbasename=workbasename)
+            try:
+                allinfo=workbaseinfo.objects.select_related().get(workbasename=workbasename)
+            except ObjectDoesNotExist:
+                return Response({'status':'fail','data':'data does not exists '},status=status.HTTP_400_BAD_REQUEST)
             serializer=workserializer(allinfo)
             return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
-        allbaseinfo=workbaseinfo.objects.all()
+
+        allbaseinfo=workbaseinfo.objects.select_related('userid').all()
         serializer=workserializer(allbaseinfo,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
 #__________________________________________________________________________________________________________________________
-class APIView(APIView):
+class APIViews(APIView):
     parser_classes = [JSONParser]
   
     serializer_class=fileserializer
     def get(self,request,id=None,name=None):
-        if id:
+        if id is not None:
             allinfo=MyModel.objects.get(id=id)
-            if name:
+            if name  is not None:
                 allinfo=MyModel.objects.get(name=name)
                 serializer=fileserializer(allinfo) 
                 return Response({'status':'success','serializer':serializer.data},status=status.HTTP_200_OK)
         allbaseinfo=MyModel.objects.all()
         serializer=fileserializer(allbaseinfo,many=True)
         return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-#_______________________________________________________________________________________________________________________
-def findduration(videoid=None):
-    file=detail.objects.get(videoid=videoid)
-    filepath=str(file)
-    video=r"C:\ONORALL\media\\" + filepath
-    metadata = subprocess.check_output(f"ffprobe -i {video} -v quiet -print_format json -show_format -hide_banner".split(" "))
-    metadata = json.loads(metadata)
-    data=f" {float(metadata['format']['duration'])}"
-   # print(data)
-    converted_data=int(float(data))
-    result=converted_data//4
-    #frameduration=print(result)
-    #print(type(result))
-    return result
- 
-#___________________________________________________________________________________________________________________________
 
-def Automatic_generated_thumbnail(videoid=None):
-    file=detail.objects.get(videoid=videoid)
-    print(file)
-    file_path=str(file)
-    print(len(file_path))
-    frame=findduration(videoid)
-    video=r"C:\ONORALL\media\\" + file_path
-    output=r"C:\ONORALL\media\\" + file_path
-    #auto_thumbnail_path=str(output)
-    #data=auto_thumbnail_path[:-4]
-    #print(data)
-    command=f'ffmpeg -i "{video}" -vf fps=1/{frame} {output}img%0d.jpg'  
-    #print(command)
-    subprocess.run(command, shell=True,stderr=subprocess.STDOUT)
-    return Response({'video_thumbnail':video})
-a='1O7oaSB2C86m'
-#Automatic_generated_thumbnail(a)
-#_______________________________________________________________________________________________________________________
-def compressing_video(videoid=None):
-    file=detail.objects.get(videoid=videoid)
-    filepath=str(file)
-    print(filepath)
-    video=r"C:\ONORALL\media\\" + filepath
-    print(video)
-    a='1'
-    output = r"C:\ONORALL\media\upload\\" + videoid + '\\'+ videoid +'compress.mp4'
-    #data=output[:-4]
-    cmd=f'ffmpeg -i "{video}" -vcodec libx264 -crf 28 "{output}"' #crf is the most important thing (constant rate factor)
-    print(cmd)
-    subprocess.check_output(cmd, shell=True)
-#videoid="1O7oaSB2C86m"
-#compressing_video(videoid)
-#_______________________________________________________________________________________________________________________
-import ffmpeg_streaming
-from ffmpeg_streaming import Formats, Bitrate, Representation, Size
-def DASH(id=None): #dynamic adaptive bitrate streaming
-    file=detail.objects.get(id=id)
-    data=str(file)
-    resolution_address=data[5::]
-    print(len(resolution_address),file)
-    video=r"C:\ONORALL\media\file\\" + resolution_address
-    _480p = Representation(Size(854, 480), Bitrate(750 * 1024, 192 * 1024))
-    #_720p = Representation(Size(1280, 720), Bitrate(2048 * 1024, 320 * 1024))
-    #_1080p = Representation(Size(1920, 1080), Bitrate(4096 * 1024, 320 * 1024))
-    a = r"C:\Users\user\Downloads\amit2.mp4"
-    output =  r"C:\ONORALL\media\dash.mpd"
-    video = ffmpeg_streaming.input(a)
-    dash = video.dash(Formats.h264())
-    dash.representations( _480p)
-    dash.output(output)
-#DASH(35)
 #_____________________________________________________________________________
 #share to monitize api
 class ShareMonetize(APIView):
@@ -1065,7 +823,8 @@ class ShareMonetize(APIView):
             serializer.save()
             return Response({'data':serializer.data,'response':'you have invited your mates'}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#___________________________________________________________________________________________________________________________
+
+
 
 from drf_multiple_model.views import ObjectMultipleModelAPIView  
 class SearchFilterView(ObjectMultipleModelAPIView):
@@ -1080,11 +839,13 @@ class SearchFilterView(ObjectMultipleModelAPIView):
 class supportAPI(APIView):
     def get(self,request,id=None):
         if id:
-            support=Support.objects.get(id=id)
-            serializer=supportserializers(support)
+            #support=Support.objects.select_related( 'user' , 'wbname' ).get(id=id)
+            support = Support.objects.select_related( 'user' , 'wbname' ).get(id=id)
+            serializer = supportserializers(support)
             return Response({'data':serializer.data,'status':'success'},status=status.HTTP_200_OK)
-        support=Support.objects.all()
-        serializer=supportserializers(support,many=True)
+        #support=Support.objects.select_related( 'user' , 'wbname' ).all()
+        support = Support.objects.all()
+        serializer = supportserializers(support,many=True)
         return Response({'data':serializer.data},status=status.HTTP_200_OK)
 
     def post(self,request):
@@ -1099,12 +860,6 @@ class supportAPI(APIView):
         event.delete()
         return Response({'item deleted'})
 
-
-
-
-
-
-#_________________________________________________
 
 class LikeApiView( APIView ):
 
@@ -1165,10 +920,7 @@ class LikeApiView( APIView ):
 
 # API's for Comments 
 from rest_framework.pagination import LimitOffsetPagination
-from django.db import connection
-import time
-from cached_property import cached_property
-class CommentApiView( APIView  , LimitOffsetPagination):
+class CommentApiView( APIView  , LimitOffsetPagination ):
     
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
@@ -1258,8 +1010,7 @@ class CommentApiView( APIView  , LimitOffsetPagination):
                         return Response({'status':'removedis-like-success','data':serializer.data},status=status.HTTP_200_OK)
                     serializer = CommentSerializer(obj)
                     return Response({'status':'add-dis-like-success','data':serializer.data},status = status.HTTP_200_OK)
-            
-           
+
 
     def delete( self , request , pk= None , *args , **kwargs ):
         if pk is not None:
@@ -1267,6 +1018,47 @@ class CommentApiView( APIView  , LimitOffsetPagination):
             queryset.delete()
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+class questionnaireAPIView(APIView):
+    parser=(MultiPartParser,FormParser)
+    serializer=questionnaireserializer
+    def get(self,request,ques_id=None):
+        if ques_id:
+            info=questionnaires.objects.get(ques_id=ques_id)
+            serializer=questionnaireserializer(info)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+
+        context, all_obj = self.custom_efficient_method(request)
+        serializer=questionnaireserializer(all_obj,many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    def custom_efficient_method(self, request):   
+        context = { "request": request }  
+        all_objs =  questionnaires.objects.all()
+        all_obj = questionnaireserializer.setup_eager_loading(all_objs)
+        return context,all_obj    
+    
+    
+    def post(self,request,*args,**kwargs):
+        serializer=questionnaireserializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
+    
+    def patch(self,request,ques_id=None):
+        event=Addresources.objects.get(ques_id=ques_id)
+        serializer=addresourceserializer(event,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'success','data':serializer.errors})
+    
+    def delete(self,request,id=None):
+        event=get_object_or_404(questionnaires,id=id)
+        event.delete()
+        return Response({'status':'success','data':'item deleted'})
 
 
 
@@ -1407,13 +1199,10 @@ class WorkApiView(APIView):
         serializer=workserializer(data=request.data)
         workbasename=request.data.get('workbasename')
         work = workbaseinfo.objects.filter(workbasename=workbasename).exists()  
+        sign_obj = sign.objects.get(id = request.data['userid'])     
         if work:
             return Response({'status':'workbasename already exist'})
-        if serializer.is_valid(raise_exception=True):
-            try:    
-                sign_obj = sign.objects.get(id = request.data['user'])
-            except:
-                sign_obj = sign.objects.get(id = request.data['user']['id'])
+        if serializer.is_valid():   
             sign_obj.iscreator = True                                             #:)''' this is for iscreator true in sign models '''
             sign_obj.save()                                                     
             if sign_obj.signup_refferal_by != 0:
@@ -1464,19 +1253,20 @@ class profileRefferalAPIView(APIView):
             referral_code = str(code)
             referral_obj = RefferalLink.objects.get(refferal_code = referral_code)
             serializer=signserializers(data=request.data)
-            gmail=request.data.get('gmail')
-            phone=request.data.get('phone')
+            gmail=request.data.get('gmail'  , 'not found')
+            phone=request.data.get('phone'  , 'not found')
             profile_phone=sign.objects.filter(phone=phone).exists()
             profile_mail=sign.objects.filter(gmail=gmail).exists()
-            if not serializer.is_valid():
-                return Response({'status':403,'error':serializer.errors})
             if profile_mail:
-                return Response({'status':'gmail  already exist'})
+                user=sign.objects.get(gmail=gmail)
+                return Response({'status':200,'response':'gmail already exists','name':user.name,'gmail':user.gmail,'refresh':str(refresh),'access':str(refresh.access_token)})
             elif profile_phone:
-                user=sign.objects.get(phone=serializer.data['phone'])
-                refresh = RefreshToken.for_user(user) #this line important for jwt token
+                user=sign.objects.get(phone=phone)
+                refresh = RefreshToken.for_user(user)                       #this line important for jwt token
                 return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'refresh':str(refresh),'access':str(refresh.access_token)})
-        
+            
+            if not serializer.is_valid(raise_exception=True):
+                return Response({'status':403,'error':serializer.errors})
             serializer.validated_data['signup_refferal_by'] = int(referral_obj.id)
             serializer.save()
             if request.session.has_key('referral_code'):
@@ -1485,31 +1275,14 @@ class profileRefferalAPIView(APIView):
                     referral_obj.save()
                     del request.session['referral_code']                  # delete the session value
             if phone:
-                user=sign.objects.get(phone=serializer.data['phone'])
+                user=sign.objects.get(phone=serializer.validated_data.get('phone' , 'not found'))
                 refresh = RefreshToken.for_user(user)                     # this line important for jwt token
-                return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
-            return Response({'status':200,'payload':serializer.data})
+            user=sign.objects.get(gmail=serializer.validated_data.get('gmail' , 'not found'))
+            refresh = RefreshToken.for_user(user)                     # this line important for jwt token
+            return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
+            
 
-
-    def post(self,request):
-        serializer=signserializers(data=request.data)
-        gmail=request.data.get('gmail','not found')
-        phone=request.data.get('phone','not found')
-        profile_phone=sign.objects.filter(phone=phone).exists()
-        profile_mail=sign.objects.filter(gmail=gmail).exists()
-        if not serializer.is_valid():
-            return Response({'status':403,'error':serializer.errors})
-        if profile_mail:
-            return Response({'status':'gmail  already exist'})
-        elif profile_phone:
-            user=sign.objects.get(phone=serializer.data['phone'])
-            refresh = RefreshToken.for_user(user) #this line important for jwt token
-            return Response({'status':200,'response':'phone already exists','name':user.name,'gmail':user.gmail,'refresh':str(refresh),'access':str(refresh.access_token)})
-        serializer.save()
-        user=sign.objects.get(phone=serializer.data['phone'])
-        refresh = RefreshToken.for_user(user) #this line important for jwt token
-        return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
-
+    
 
 #___________________--report api
 class reportApiview(APIView):
@@ -1541,12 +1314,12 @@ class reportApiview(APIView):
 
 
 
-def embed_testing(request):
-    my_video = EmbedVideoModel.objects.all()
-    for i in my_video:
-        print(i.video_url)
+# def embed_testing(request):
+#     my_video = EmbedVideoModel.objects.all()
+#     for i in my_video:
+#         print(i.video_url)
 
-    return render(request , 'embed_testing.html'  , {'my_video' : my_video})
+#     return render(request , 'embed_testing.html'  , {'my_video' : my_video})
 
 
 

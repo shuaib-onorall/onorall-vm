@@ -44,13 +44,13 @@ admin.site.register(RefferalLink)
 
 
 from django.contrib import admin
-from embed_video.admin import AdminVideoMixin
-from .models import EmbedVideoModel
+# from embed_video.admin import AdminVideoMixin
+# from .models import EmbedVideoModel
 
 # for embed videos
-class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
-    pass
+# class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
+#     pass
 
-admin.site.register(EmbedVideoModel, EmbedVideoAdmin)
+# admin.site.register(EmbedVideoModel, EmbedVideoAdmin)
 
 

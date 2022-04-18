@@ -1,0 +1,26 @@
+version: "3"
+services:
+  db:
+    image: mongo
+    ports :
+      - 27017:27017
+
+    volumes:
+      - ./data/db:/var/lib/mongodb/data
+  
+    environment : 
+      - MONGO_INITDB_ROOT_USERNAME=amitsingh
+      - MONGO_INITDB_ROOT_PASSWORD=onorall
+      - MONGO_INITDB_DATABASE=myonorall
+      - MONGO_INITDB_USERNAME=amitsingh
+      - MONGO_INITDB_PASSWORD=onorall
+
+  web:
+      build: .
+      command: python3 manage.py runserver 0.0.0.0:8000
+      volumes:
+        - .:/code
+      ports:
+        - "8000:8000"
+      depends_on:
+        - db

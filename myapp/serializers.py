@@ -10,7 +10,7 @@ from .models import *
 class signserializers(serializers.ModelSerializer):
     class Meta():
         model=sign
-        fields=['id','name','gmail','phone','iscreator']
+        fields=['id','name','gmail','phone','iscreator' , 'signup_refferal_by' , 'profilePic']
 #___________________________________________________________________________________________________________________________
 class supportserializers(serializers.ModelSerializer):
     class Meta:
@@ -18,15 +18,7 @@ class supportserializers(serializers.ModelSerializer):
         fields='__all__'
 # ___________________________________________________________________________________________________________________________
 #workbase serializer
-class workserializer(serializers.ModelSerializer):
-    supporters=serializers.SerializerMethodField('support_function')
-    def support_function(self,obj):
-        all_obj=Support.objects.filter(wbname=obj.id)  
-        return supportserializers(all_obj,many=True).data
 
-    class Meta:
-        model=workbaseinfo
-        fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location','supporters')
         #depth=1
 
 #____________________________________________________________________________________________________________________
@@ -71,10 +63,10 @@ class connectSerializer(serializers.ModelSerializer):
         model=connect
         fields=['id','user','connect','title','tags','published_on','likes','number_of_likes']
     
-    def get_liked_by_req_user(self, obj):
-        user = self.context['request'].user
-        return user in obj.likes.all()
-#______________________________________________________________________________________________________________________________
+#     def get_liked_by_req_user(self, obj):
+#         user = self.context['request'].user
+#         return user in obj.likes.all()
+# #______________________________________________________________________________________________________________________________
     
 
 #about_serializer
@@ -88,7 +80,7 @@ class tag(serializers.ModelSerializer):
 
 #for playlist serializer
 class playlist_videoserializer(serializers.ModelSerializer):
-    files=DetailSerializer(many=True) # whenever we will use Nested Serializer  
+    #files=DetailSerializer(many=True) # whenever we will use Nested Serializer  
     class Meta:                    # so you have to mention same field name that you had used in model for nested serializer
         model=playlist
         fields='__all__'
@@ -175,26 +167,7 @@ class question3serializer(serializers.ModelSerializer):
         depth=1
 #____________________________________________________________________________________________________________________________________________
 
-class questionnaireserializer(serializers.ModelSerializer):
-    question_text=serializers.SerializerMethodField('quest_text_function')
-    question_qna=serializers.SerializerMethodField('question_qna_function')
-    question_mcq=serializers.SerializerMethodField('question_mcq_function')
-    def quest_text_function(self,obj):
-        all_obj=question.objects.filter(ques=obj.ques_id)
-        return question1serializer(all_obj,many=True).data
 
-    def question_qna_function(self,obj):
-        all_obj=question2.objects.filter(questionnaire=obj.ques_id)
-        return question2serializer(all_obj,many=True).data
-
-    def question_mcq_function(self,obj):
-        all_obj=question3.objects.filter(questionnaire=obj.ques_id)
-        return question3serializer(all_obj,many=True).data
-    class Meta:
-        model=questionnaires
-        fields=['ques_id','questionnaireid','userid','videoid','description','question_text','question_qna','question_mcq']
-        depth=1
-    
 
 #_________________________________________________________________________________________________________________
 
@@ -273,6 +246,7 @@ class basic_branding_serializer(serializers.ModelSerializer):
     class Meta:
         model=basic_branding
         fields='__all__'
+        
 #_____________________________________________________________________________________________________________________________
 class fileserializer(serializers.ModelSerializer):
 
@@ -305,15 +279,6 @@ class monitizeserializer(serializers.ModelSerializer):
 
 
 
-
-#__________________________________________________________
-
-
-
-class ReplySerializer(serializers.ModelSerializer):
-    class Meta:
-        model =  Reply
-        fields = "__all__"
         
 class EagerLoadingMixin:
     @classmethod
@@ -324,27 +289,40 @@ class EagerLoadingMixin:
             queryset = queryset.prefetch_related(*cls._PREFETCH_RELATED_FIELDS)
         return queryset 
         
+
+
+# TODO: in this API WE NEED TO Remove method fields
 class CommentSerializer(EagerLoadingMixin , serializers.ModelSerializer):
 
     user_name = serializers.SerializerMethodField(source="get_user_name" ,  read_only=True)
     is_creater  =  serializers.SerializerMethodField(source="get_is_creater" ,  read_only=True)
     profile = serializers.SerializerMethodField(source="get_profile" ,  read_only=True)
-    
-    
+    '''
+    THIS SerializerMethodField FIELD INCREASE 3 QUERY PER OBJECTS--very extensive
+    '''
+
     def get_user_name(self,obj):
-        obj=sign.objects.get(id = obj.user_id.id)
-        return obj.name
+        try:
+            if obj.user_id.id is not None:
+                objs=sign.objects.get(id = obj.user_id.id)
+                return objs.name
+        except:
+            pass
 
     def get_is_creater(self , obj): 
-        creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ))
-        comment_user_obj = sign.objects.get( id = obj.user_id.id )
-        if creater_obj.id == comment_user_obj.id:
-            return True
-        return False
+        if obj.video_id.user_id is not None:
+            creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ))
+            comment_user_obj = sign.objects.get( id = obj.user_id.id )
+            if creater_obj.id == comment_user_obj.id:
+                return True
+            return False
     
     def get_profile(self  , obj):
-        obj = sign.objects.get(id = obj.user_id.id)
-        return str(obj.profilePic)
+        try:
+            obj = sign.objects.get(id = obj.user_id.id)
+            return str(obj.profilePic)
+        except:
+            pass
 
     class Meta:
         model = Commentss
@@ -354,15 +332,52 @@ class CommentSerializer(EagerLoadingMixin , serializers.ModelSerializer):
     _SELECT_RELATED_FIELDS = ['user_id' , 'video_id__user_id']
     _PREFETCH_RELATED_FIELDS = ['likes_on_comment' , 'dis_likes_on_comment']
 
+
+
+# TODO: in this API WE NEED TO Remove method fields
+class questionnaireserializer( EagerLoadingMixin , serializers.ModelSerializer):
+    question_text=serializers.SerializerMethodField('quest_text_function')
+    question_qna=serializers.SerializerMethodField('question_qna_function')
+    question_mcq=serializers.SerializerMethodField('question_mcq_function')
+    '''
+    THIS SerializerMethodField FIELD INCREASE 3 QUERY PER OBJECTS
+    '''
+
+    def quest_text_function(self,obj):
+        all_obj=question.objects.filter(ques=obj.ques_id)
+        return question1serializer(all_obj,many=True).data
+
+    def question_qna_function(self,obj):
+        all_obj=question2.objects.filter(questionnaire=obj.ques_id)
+        return question2serializer(all_obj,many=True).data
+
+    def question_mcq_function(self,obj):
+        all_obj=question3.objects.filter(questionnaire=obj.ques_id)
+        return question3serializer(all_obj,many=True).data
+    class Meta:
+        model=questionnaires
+        fields=['ques_id','questionnaireid','userid','videoid','description','question_text','question_qna','question_mcq']
+        depth=1    # IF REMOVE DEPTH THEN 1 QUERY PER OBJECTS REDUSE
+    
+
+    _SELECT_RELATED_FIELDS = ['userid' , 'videoid']
+    
+
+class workserializer(serializers.ModelSerializer):
+    supporters=serializers.SerializerMethodField('support_function')
+    def support_function(self,obj):
+        all_obj=Support.objects.filter(wbname=obj.id)  
+        return supportserializers(all_obj,many=True).data
+
+    class Meta:
+        model=workbaseinfo
+        fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location','supporters')
+
+
+
 class timelineSerializer(serializers.ModelSerializer):
     class Meta:
         model = timelineModel
-        fields = "__all__"
-
-
-class LikeModelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = LikeModel
         fields = "__all__"
 
 
@@ -373,4 +388,12 @@ class RefferalLinkSerializer(serializers.ModelSerializer):
 
 
 
+class LikeModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LikeModel
+        fields = "__all__"
 
+class ReplySerializer(serializers.ModelSerializer):
+    class Meta:
+        model =  Reply
+        fields = "__all__"
