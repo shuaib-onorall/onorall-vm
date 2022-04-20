@@ -54,10 +54,14 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'ws4redis',
 
+
+
+    'testApp', # only for local developement
+
     #'embed_video' ,
-    #'analytical' # for analytical
-    #'debug_toolbar'  ,    # for debugging
-    #'locust',        # testing api
+    #'analytical'           # for analytical
+    #'debug_toolbar'  ,     # for debugging
+    #'locust',              # testing api
     
 ]
 

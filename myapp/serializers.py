@@ -365,46 +365,42 @@ class EagerLoadingMixin:
 
 
 # TODO: in this API WE NEED TO Remove method fields
-class CommentSerializer(EagerLoadingMixin , serializers.ModelSerializer):
+class CommentSerializer( EagerLoadingMixin , serializers.ModelSerializer ):
+    #user_name = serializers.CharField( source="user_id.name" ,  read_only=True )
+    profile = serializers.CharField( source="user_id.profilePic.url" ,  read_only=True )
+    
 
-    user_name = serializers.SerializerMethodField(source="get_user_name" ,  read_only=True)
-    is_creater  =  serializers.SerializerMethodField(source="get_is_creater" ,  read_only=True)
-    profile = serializers.SerializerMethodField(source="get_profile" ,  read_only=True)
-    '''
-    THIS SerializerMethodField FIELD INCREASE 3 QUERY PER OBJECTS--very expensive
-    '''
-
-    def get_user_name(self,obj):
-        try:
-            if obj.user_id.id is not None:
-                objs=sign.objects.get(id = obj.user_id.id)
-                return objs.name
-        except:
-            pass
-
-    def get_is_creater(self , obj): 
-        
-        creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ) )
-        comment_user_obj = sign.objects.get( id = obj.user_id.id )
-        if creater_obj.id == comment_user_obj.id:
-            return True
-        return False
-        
-    def get_profile(self  , obj):
-        try:
-            obj = sign.objects.get(id = obj.user_id.id)
-            return str(obj.profilePic)
-        except:
-            pass
-
-   
     class Meta:
         model = Commentss
-        fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , 
-        "comment_text" ,   "user_id"  ,"user_name" , 'like_active' , 'dislike_active'  , 'created_at' , 'profile'  ] 
+        fields = ['id' , 'profile' , "parent" ,  "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , 
+        "comment_text" ,   "user_id" , 'like_active' , 'dislike_active'  , 'created_at'  ] 
     
     _SELECT_RELATED_FIELDS = ['user_id' , 'video_id__user_id']
     _PREFETCH_RELATED_FIELDS = ['likes_on_comment' , 'dis_likes_on_comment']
+
+
+class CommentSerializer_single_instance(serializers.ModelSerializer ):
+    
+    is_creater  =  serializers.SerializerMethodField( source="get_is_creater" ,  read_only=True )
+    profile = serializers.CharField( source="user_id.profilePic.url" ,  read_only=True )
+
+
+    def get_is_creater(self , obj , *args  , **kwargs ): 
+        try:
+            creater_obj = sign.objects.get( id = str(obj.video_id.user_id.id ) )
+            comment_user_obj = sign.objects.get( id = obj.user_id.id )
+            if creater_obj.id == comment_user_obj.id:
+                return True 
+            return False
+        except:
+            return None
+            
+   
+    class Meta:
+        model = Commentss
+        fields = ['id' , 'profile' , "parent" ,  "is_creater" ,  "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , 
+        "comment_text" ,   "user_id" , 'like_active' , 'dislike_active'  , 'created_at'  ] 
+
 
 
 
@@ -471,3 +467,9 @@ class ReplySerializer(serializers.ModelSerializer):
     class Meta:
         model =  Reply
         fields = "__all__"
+
+
+class courseserializer(serializers.ModelSerializer):
+    class Meta:
+        model=mycourse
+        fields='__all__'

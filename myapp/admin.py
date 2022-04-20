@@ -39,6 +39,7 @@ admin.site.register(timelineModel)
 admin.site.register(Commentss)
 admin.site.register(LikeModel)
 admin.site.register(RefferalLink)
+admin.site.register(mycourse)
 # admin.site.register(LikeModelForComments)
 
 

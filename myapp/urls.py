@@ -98,10 +98,11 @@ urlpatterns = [
     path('report/',views.reportApiview.as_view()),
     path('report/<int:reportid>/',views.reportApiview.as_view()),
 
+    path('course/' , views.course_list.as_view() ,  name="crs"),
+    path('course/<int:pk>/' , views.course_list.as_view() ,  name="crs-single"),
+
     # embed 
     #path('embed' , views.embed_testing , name='embed-test'),
-
-
     #___________________________comment like-dislike api
     # path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),

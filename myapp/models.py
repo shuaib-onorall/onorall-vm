@@ -114,8 +114,7 @@ gender_choices=(
 class sign(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(max_length=12, unique=True, primary_key=True,  default=random_id_field)
     profilePic = models.ImageField(upload_to='profilePic/' , default = random_profile )
-    name=models.CharField(max_length=30)
-    profilePic=models.ImageField(upload_to='profile/',default=random_profile)
+    name=models.CharField(max_length=255)
     phone=models.CharField(max_length=13,null=True,blank=True)
     gender=models.CharField(max_length=25,null=False,choices=gender_choices,default='other')
     date_of_birth=models.DateField(null=True,blank=True)
@@ -132,7 +131,7 @@ class sign(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name']
    
     def __str__(self):
-        return str(self.id)
+        return f" id : {str(self.id)} || name :{str(self.name)}"
 
 #____________________________________________________________________________________________________________________
 
@@ -654,10 +653,8 @@ class Commentss(models.Model):
 
     objects = CommentsManager()
 
-
-    def __str__(self ):
-        return self.id
-
+    def __str__(self):
+        return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id.gmail}"
 
     class Meta:
         ordering = ['id']
@@ -670,8 +667,26 @@ class Commentss(models.Model):
     def total_dis_likes_on_comment( self ):
         return self.dis_likes_on_comment.all().count()
     
-    def __str__(self):
-        return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id}"
+    
+
+
+
+mycourse_choice=(
+    ('public','public'),
+    ('private','private')
+)
+
+class mycourse(models.Model):
+    mycourse_title=models.CharField(max_length=50)
+    course_playlist=models.ManyToManyField(playlist,blank=True)
+    course_file=models.ManyToManyField(detail,blank=True)
+    mycourse_choice=models.CharField(max_length=40,choices=mycourse_choice,default='private')
+
+    def __str__(self) -> str:
+        return str(self.mycourse_title)
+
+
+
 
 class LikeModel(models.Model):
     id = models.AutoField(primary_key=True , unique=True)

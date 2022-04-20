@@ -1003,6 +1003,60 @@ IPAddr = socket.gethostbyname(hostname)
 print("Your Computer Name is:" + hostname)   
 print("Your Computer IP Address is:" + IPAddr)  
 
+
+
+
+
+
+
+class questionnaireAPIView(APIView):
+    parser=(MultiPartParser,FormParser)
+    serializer=questionnaireserializer
+    def get(self,request,ques_id=None):
+        if ques_id:
+            info=questionnaires.objects.get(ques_id=ques_id)
+            serializer=questionnaireserializer(info)
+            return Response(serializer.data,status=status.HTTP_200_OK)
+
+        context, all_obj = self.custom_efficient_method(request)
+        serializer=questionnaireserializer(all_obj,many=True)
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    def custom_efficient_method(self, request):   
+        context = { "request": request }  
+        all_objs =  questionnaires.objects.all()
+        all_obj = questionnaireserializer.setup_eager_loading(all_objs)
+        return context,all_obj    
+    
+    
+    def post(self,request,*args,**kwargs):
+        serializer=questionnaireserializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
+    
+    def patch(self,request,ques_id=None):
+        event=Addresources.objects.get(ques_id=ques_id)
+        serializer=addresourceserializer(event,data=request.data,partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'success','data':serializer.errors})
+    
+    def delete(self,request,id=None):
+        event=get_object_or_404(questionnaires,id=id)
+        event.delete()
+        return Response({'status':'success','data':'item deleted'})
+
+
+
+
+
+
+
+
+
 #_________________________________________________________________________________________________________________________________________
 # API's for Comments 
 class CommentApiView( APIView,LimitOffsetPagination ):
@@ -1010,18 +1064,27 @@ class CommentApiView( APIView,LimitOffsetPagination ):
     def get( self , request , pk = None  , *args , **kwargs ):
         if  pk is not None:
             comment_obj = get_object_or_404( Commentss , id = pk )
-            serializer = CommentSerializer( comment_obj )
+            serializer = CommentSerializer_single_instance( comment_obj )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
             
-        all_comments_obj =  Commentss.objects.select_related('user_id','video_id').prefetch_related('likes_on_comment','dis_likes_on_comment').all()
+        all_comments_obj =  Commentss.objects.all().prefetch_related('likes_on_comment' , 'dis_likes_on_comment')
 
         if request.GET.get('limit') != None and request.GET.get('offset') != None:
             results = self.paginate_queryset(all_comments_obj, request, view=self)
             serializer = CommentSerializer( results , many=True )
             return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        serializer = CommentSerializer( all_comments_obj, many=True )
-        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-    
+
+        context, all_obj = self.custom_efficient_method(request)
+        serializer = CommentSerializer( all_obj , many=True )
+        return Response(serializer.data,status=status.HTTP_200_OK)
+
+    def custom_efficient_method(self, request):   
+        context = { "request": request }  
+        all_objs =   Commentss.objects.all().prefetch_related('likes_on_comment' , 'dis_likes_on_comment')
+        all_obj = CommentSerializer.setup_eager_loading(all_objs)
+        return context,all_obj    
+        
+        
     
 
     def post(self,request, pk = None , *args, **kwargs):
@@ -1098,65 +1161,31 @@ class CommentApiView( APIView,LimitOffsetPagination ):
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
 
 
-class questionnaireAPIView(APIView):
-    parser=(MultiPartParser,FormParser)
-    serializer=questionnaireserializer
-    def get(self,request,ques_id=None):
-        if ques_id:
-            info=questionnaires.objects.get(ques_id=ques_id)
-            serializer=questionnaireserializer(info)
-            return Response(serializer.data,status=status.HTTP_200_OK)
-
-        context, all_obj = self.custom_efficient_method(request)
-        serializer=questionnaireserializer(all_obj,many=True)
-        return Response(serializer.data,status=status.HTTP_200_OK)
-
-    def custom_efficient_method(self, request):   
-        context = { "request": request }  
-        all_objs =  questionnaires.objects.all()
-        all_obj = questionnaireserializer.setup_eager_loading(all_objs)
-        return context,all_obj    
-    
-    
-    def post(self,request,*args,**kwargs):
-        serializer=questionnaireserializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'success','data':serializer.data},stauts=status.HTTP_200_OK)
-    
-    def patch(self,request,ques_id=None):
-        event=Addresources.objects.get(ques_id=ques_id)
-        serializer=addresourceserializer(event,data=request.data,partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
-        return Response({'status':'success','data':serializer.errors})
-    
-    def delete(self,request,id=None):
-        event=get_object_or_404(questionnaires,id=id)
-        event.delete()
-        return Response({'status':'success','data':'item deleted'})
-
-
 
 class multitablesearch(APIView):
     def get( self , request , title = None  , *args , **kwargs ):
         combine_query = {}
         if title is not None:
             title = title.lower().strip()
-            detail_obj = detail.objects.filter( title__contains = title )
+            detail_obj = detail.objects.filter( title__icontains = title )
             serializer = DetailSerializer( detail_obj  , many=True)
             combine_query[' detail result '] = serializer.data 
 
-            workbase_obj = workbaseinfo.objects.filter( workbasename__contains = title )
+            workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
             serializer1 = workserializer( workbase_obj , many = True)
             combine_query[' workbase result '] = serializer1.data
 
             return Response({'status':'success','data': combine_query },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"provide query in url" },status=status.HTTP_400_BAD_REQUEST) 
 
+# usr = sign.objects.first()
 
+# det = detail.objects.get(videoid="VmGjxoZIT0zK")
+# for i in range(10):
+#     print(i)
+#     sign.objects.create(gmail = f"faker{i+1}@gmail.com" , name = f'faker_name{i}')
+#     if i ==50:
+#         print('50>>>>>>>>>>>>>>>>>')
 
 class RefferalView( APIView ):
 
@@ -1364,6 +1393,58 @@ class profileRefferalAPIView(APIView):
             refresh = RefreshToken.for_user(user)                     # this line important for jwt token
             return Response({'status':200,'payload':serializer.data,'refresh':str(refresh),'access':str(refresh.access_token)})
             
+
+
+
+class course_list(APIView):
+    parser = (MultiPartParser , FormParser)
+    def get(self,request , pk=None ):
+        if pk :
+            event=mycourse.objects.get(id=pk)
+            serializer=courseserializer(event)
+            return Response({'data':serializer.data})
+
+        event=mycourse.objects.all()
+        serializer=courseserializer(event,many=True)
+        return Response({'data':serializer.data})
+
+    def post(self,request , pk=None , *args , **kwargs ):
+        serializer=courseserializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail','error':serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self,request , pk=None , *args , **kwargs ):
+        obj = mycourse.objects.get(id=pk )
+        serializer=courseserializer( obj ,data=request.data,partial=True)
+        if serializer.is_valid():
+            new_id = int(request.data.get('course_playlist'))
+            new_obj_playlist = playlist.objects.filter(id=new_id).exists()
+            new_obj_detail = detail.objects.filter(id=new_id).exists()
+
+            if new_obj_playlist:
+                if new_obj_playlist not in obj.course_playlist.all():
+                    obj.course_playlist.add(new_obj_playlist)
+                    serializer.save()
+                    return Response({'status' : 'added in playlist '  , 'data':serializer.data , },status=status.HTTP_200_OK)
+
+            elif  new_obj_detail :
+                if new_obj_playlist not in obj.course_file.all():
+                    obj.course_file.add(new_obj_playlist)
+                    serializer.save()
+                    return Response({'status' : 'added in detail '  ,  'data':serializer.data},status=status.HTTP_200_OK)
+
+            else:
+                serializer.save()
+                return Response({'status':"not found Details/playlist"},status=status.HTTP_400_BAD_REQUEST)
+
+            return Response({'status':'success','data':serializer.data})    
+        return Response({'status':"error",'data':serializer.errors})
+
+
+
 
     
 
