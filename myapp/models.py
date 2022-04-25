@@ -202,6 +202,7 @@ class detail(models.Model):
     published_on=models.DateField(auto_now=True)
 
     
+    objects = models.Manager()
 
     def __str__(self) -> str:
         return  f"{str(self.videoid)} || {str(self.id)}"
@@ -792,7 +793,7 @@ class Notification(models.Model):
 
 
     
-# # for embed videos
+# for embed videos
 # from embed_video.fields import EmbedVideoField
 # class EmbedVideoModel(models.Model):
 #     video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )

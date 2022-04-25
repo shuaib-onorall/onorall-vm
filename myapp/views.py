@@ -1161,17 +1161,34 @@ class CommentApiView( APIView,LimitOffsetPagination ):
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
 
 
+from django.db.models import Q
 
 class multitablesearch(APIView):
     def get( self , request , title = None  , *args , **kwargs ):
         combine_query = {}
         if title is not None:
-            title = title.lower().strip()
-            detail_obj = detail.objects.filter( title__icontains = title )
+            
+            ''' OUR BACKEND DOES NOT SUPPORT WINDOWS EXPRESSION SO
+                 WE CANT USE THIS FOR RANKING SEARCH RESULTS   
+
+            # = detail.mongo_manager.raw_query( { '$text' : { '$search' :  title } }  ).prefetch_related('likesvideo')
+            #detail_obj = detail.mongo_manager.raw_query( { '$text' : { '$search' :  title } } ).raw_query({'score' : {'$meta':'textScore' } }).prefetch_related('likesvideo')
+
+            dense_rank_by_year = Window( expression=DenseRank(), partition_by=F("title"), order_by=F("published_on").desc())
+            commiters_with_rank = detail.objects.filter( title__icontains = title ).annotate( the_rank=dense_rank_by_year ).order_by("-published_on", "the_rank")
+
+            if want to rank our result and do advance search features then use POSTgres SearchVector , SearchQuery , trigrame_similarity
+            '''
+            
+            # if ' ' in  title :
+            #     all_word_list = title.split(' ')
+            #     detail_obj = detail.objects.filter( Q(title__icontains = all_word_list[1]) | Q(title__icontains = title )  ).prefetch_related('likesvideo').order_by('published_on')
+            title = title.lower().strip().replace('/' , '')    
+            detail_obj = detail.objects.filter( Q(title__icontains = title )).prefetch_related('likesvideo').order_by('published_on')
             serializer = DetailSerializer( detail_obj  , many=True)
             combine_query[' detail result '] = serializer.data 
 
-            workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
+            workbase_obj = workbaseinfo.objects.filter( Q(workbasename__icontains = title) ).select_related('userid')
             serializer1 = workserializer( workbase_obj , many = True)
             combine_query[' workbase result '] = serializer1.data
 
