@@ -44,13 +44,12 @@ admin.site.register(mycourse)
 
 
 from django.contrib import admin
-# from embed_video.admin import AdminVideoMixin
-# from .models import EmbedVideoModel
+from embed_video.admin import AdminVideoMixin
+from .models import Item
 
-# for embed videos
-# class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
-#     pass
+class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
+    pass    
 
-# admin.site.register(EmbedVideoModel, EmbedVideoAdmin)
+admin.site.register(Item, EmbedVideoAdmin)
 
 

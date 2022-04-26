@@ -57,13 +57,22 @@ INSTALLED_APPS = [
 
 
     'testApp', # only for local developement
+    'embed_video' ,
 
-    #'embed_video' ,
+    
     #'analytical'           # for analytical
     #'debug_toolbar'  ,     # for debugging
     #'locust',              # testing api
     
 ]
+
+
+
+
+X_FRAME_OPTIONS = 'ALLOW-FROM https://cretskill.herokuapp.com/'
+
+
+
 
 SITE_ID=1
 
@@ -101,10 +110,6 @@ TEMPLATES = [
     },
 ]
 
-
-# for embed videos !pip install django-embed-video
-TEMPLATE_CONTEXT_PROCESSORS = (
-    'django.core.context_processors.request',)
 
 #WSGI_APPLICATION = 'backend.wsgi.application'
 ASGI_APPLICATION= 'backend.asgi.application'

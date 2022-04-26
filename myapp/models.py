@@ -201,11 +201,13 @@ class detail(models.Model):
     publish=models.CharField(max_length=100,choices=publish_choices,default='public')
     published_on=models.DateField(auto_now=True)
 
+
+
     
     objects = models.Manager()
 
     def __str__(self) -> str:
-        return  f"{str(self.videoid)} || {str(self.id)}"
+        return  f"{str(self.title)} || {str(self.id)}"
 
     @property
     def total_likes(self):
@@ -248,8 +250,6 @@ class doc_verification(models.Model):
     year_of_experience=models.PositiveIntegerField()
     #document_upload=models.FileField(upload_to='document/',null=True,blank=True,verbose_name='document_upload')
     #upload_photo=models.ImageField(upload_to='photo/',null=True,blank=True,verbose_name='upload_photo')
-
-
     def __str__(self):
         return str(self.firstname) +''+str(self.lastname)
 
@@ -793,28 +793,28 @@ class Notification(models.Model):
 
 
     
-# for embed videos
-# from embed_video.fields import EmbedVideoField
-# class EmbedVideoModel(models.Model):
-#     video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
-#     video_url = EmbedVideoField()  #  just like URLField()
 
-#     def __str__(self , *args , **kwargs):
-#         return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
+from embed_video.fields import EmbedVideoField
+class Item(models.Model):
+    video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
+    video_url = EmbedVideoField()  #  just like URLField()
+
+    def __str__(self , *args , **kwargs):
+        return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
     
 
 
-# from django.db.models.signals import post_save
-# from django.dispatch import receiver
-# @receiver( post_save, sender = detail)
-# def create_profile1(sender, instance, created, **kwargs):
-#     if created:
-#         print('working signals' , instance)
-#         obj  = EmbedVideoModel.objects.create(video_embed =instance)
-#         if obj:
-#             path = 'http://192.168.1.95:8000' + instance.file.url
-#             obj.video_url = path
-#             obj.save()
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+@receiver( post_save, sender = detail)
+def create_profile1(sender, instance, created, **kwargs):
+    if created:
+        print('working signals' , instance)
+        obj  = Item.objects.create(video_embed =instance)
+        if obj:
+            path = 'http://192.168.1.95:8000' + instance.file.url
+            obj.video_url = path
+            obj.save()
 
 
 

@@ -919,22 +919,11 @@ class supportAPI(APIView):
         event.delete()
         return Response({'item deleted'})
 
-#_______________________________________________________________________________________________________________________________________
-class multitablesearch(APIView):
-    def get( self , request , title = None  , *args , **kwargs ):
-        combine_query = {}
-        if title is not None:
-            title=title.lower().strip()
-            detail_obj = detail.objects.filter( title__icontains = title )
-            serializer = DetailSerializer( detail_obj  , many=True)
-            combine_query[' detail result '] = serializer.data 
 
-            workbase_obj = workbaseinfo.objects.filter( workbasename__icontains = title )
-            serializer1 = workserializer( workbase_obj , many = True)
-            combine_query[' workbase result '] = serializer1.data
 
-            return Response({'status':'success','data':combine_query },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"provide query in url"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+
 
 #______________________________________________________________________________________________________________________________________
 class connect_comment_Api(APIView,LimitOffsetPagination):
@@ -1161,16 +1150,56 @@ class CommentApiView( APIView,LimitOffsetPagination ):
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
 
 
+
 from django.db.models import Q
+def querys_for_workbase(  title  ):
+    title = title.lower().strip().replace('/' , '') 
+    query , count  ,  n , temp = str() , 0 ,  len(title) ,  len(title)
+    if n > 10 :
+        while temp-3 > 0:
+            count = 0
+            query = query + f"Q(workbasename__icontains = title[:{n - count}] ) | "  
+            count += 1
+            n = n-3                                                        
+            temp = temp - 1
+        return query 
+    return None
+
+def querys_for_detail(  title  ):
+    title = title.lower().strip().replace('/' , '') 
+    query , count  ,  n , temp = str() , 0 ,  len(title) ,  len(title)
+    count= 0
+    if n > 10 :
+        while temp-3 > 0:
+            count = 0
+            query = query + f"Q(title__icontains = title[:{n - count}] ) | "  
+            count += 1
+            n = n-3
+            temp = temp - 1
+        return query 
+    return None
+
 
 class multitablesearch(APIView):
     def get( self , request , title = None  , *args , **kwargs ):
         combine_query = {}
-        if title is not None:
-            
-            ''' OUR BACKEND DOES NOT SUPPORT WINDOWS EXPRESSION SO
-                 WE CANT USE THIS FOR RANKING SEARCH RESULTS   
+        if title is not None:   
 
+            querys_1 = querys_for_detail(title)
+            detail_obj =  detail.objects.filter( Q(title__icontains = title ) ).prefetch_related('likesvideo').order_by('published_on') if querys_1  is None else  detail.objects.filter(eval(querys_1[:(len(querys_1)-2)]) ).prefetch_related('likesvideo').order_by('published_on')
+            serializer = DetailSerializer( detail_obj  , many=True )
+            combine_query[' detail result '] = serializer.data 
+
+            querys_2 = querys_for_workbase(title)
+            workbase_obj =  workbaseinfo.objects.filter( Q(workbasename__icontains = title) ).select_related('userid') if querys_2  is None else  workbaseinfo.objects.filter(eval(querys_2[:(len(querys_2)-2)]) ).select_related('userid')
+            serializer1 = workserializer( workbase_obj , many = True )
+            combine_query[' workbase result '] = serializer1.data
+            return Response({'status':'success','data': combine_query },status=status.HTTP_200_OK)
+        return Response({'status':'fail','data':"provide query in url" },status=status.HTTP_400_BAD_REQUEST) 
+
+
+        
+        '''
             # = detail.mongo_manager.raw_query( { '$text' : { '$search' :  title } }  ).prefetch_related('likesvideo')
             #detail_obj = detail.mongo_manager.raw_query( { '$text' : { '$search' :  title } } ).raw_query({'score' : {'$meta':'textScore' } }).prefetch_related('likesvideo')
 
@@ -1178,23 +1207,7 @@ class multitablesearch(APIView):
             commiters_with_rank = detail.objects.filter( title__icontains = title ).annotate( the_rank=dense_rank_by_year ).order_by("-published_on", "the_rank")
 
             if want to rank our result and do advance search features then use POSTgres SearchVector , SearchQuery , trigrame_similarity
-            '''
-            
-            # if ' ' in  title :
-            #     all_word_list = title.split(' ')
-            #     detail_obj = detail.objects.filter( Q(title__icontains = all_word_list[1]) | Q(title__icontains = title )  ).prefetch_related('likesvideo').order_by('published_on')
-            title = title.lower().strip().replace('/' , '')    
-            detail_obj = detail.objects.filter( Q(title__icontains = title )).prefetch_related('likesvideo').order_by('published_on')
-            serializer = DetailSerializer( detail_obj  , many=True)
-            combine_query[' detail result '] = serializer.data 
-
-            workbase_obj = workbaseinfo.objects.filter( Q(workbasename__icontains = title) ).select_related('userid')
-            serializer1 = workserializer( workbase_obj , many = True)
-            combine_query[' workbase result '] = serializer1.data
-
-            return Response({'status':'success','data': combine_query },status=status.HTTP_200_OK)
-        return Response({'status':'fail','data':"provide query in url" },status=status.HTTP_400_BAD_REQUEST) 
-
+        '''
 # usr = sign.objects.first()
 
 # det = detail.objects.get(videoid="VmGjxoZIT0zK")
@@ -1495,12 +1508,23 @@ class reportApiview(APIView):
 
 
 
-# def embed_testing(request):
-#     my_video = EmbedVideoModel.objects.all()
-#     for i in my_video:
-#         print(i.video_url)
+def embed_testing(request):
+    obj = Item.objects.all()
+    
+    return render(request , 'embed_testing.html'  , {'obj' : obj })
 
-#     return render(request , 'embed_testing.html'  , {'my_video' : my_video})
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
