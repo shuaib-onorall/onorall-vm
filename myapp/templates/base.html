@@ -11,8 +11,21 @@
 <body>
 {% block content %}
 {% endblock content %}
+<h1>wob soket etsting</h1>
+<script>
 
+    
 
+    var socket = new WebSocket('ws://192.168.1.95:8000/ws/new/');
+
+    socket.onopen = function open() {
+      console.log('WebSockets connection created.');
+    };
+
+    if (socket.readyState == WebSocket.OPEN) {
+      socket.onopen();
+    }
+  </script>
 
 {% block javascript %}
 {% endblock javascript %}

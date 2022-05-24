@@ -3,6 +3,7 @@ from importlib.metadata import files
 from re import L
 from urllib import request
 from xml.parsers.expat import model
+from numpy import in1d
 from rest_framework import serializers
 from .models import * 
 
@@ -11,7 +12,10 @@ from .models import *
 class signserializers(serializers.ModelSerializer):
     class Meta():
         model=sign
-        fields=['id','name','gmail','phone','iscreator','gender','date_of_birth','profilePic']
+        fields='__all__'
+        interest = serializers.MultipleChoiceField(choices=INTERESTS)
+        
+        
 #___________________________________________________________________________________________________________________________
 class supportserializers(serializers.ModelSerializer):
     class Meta:
@@ -58,29 +62,6 @@ class video_view_serializer(serializers.ModelSerializer):
         fields='__all__'
         depth=1
 
-class CommentSerializer(serializers.ModelSerializer):
-
-    # user_name = serializers.SerializerMethodField('user_name_func')
-    # is_creater  =  serializers.SerializerMethodField('is_creater_func')
-
-    # def user_name_func(self,obj):
-    #     obj=sign.objects.get(id = obj.user_id.id)
-    #     return obj.name
-
-    # def is_creater_func(self , obj):
-    #     creater_obj = sign.objects.get( id = obj.video_id.user_id.id )
-    #     comment_user_obj = sign.objects.get( id = obj.user_id )
-    #     if creater_obj.id == comment_user_obj.id:
-    #         return True
-    #     return False
-
-
-    # class Meta:
-    #     model = Commentss
-    #     fields = ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
-    class Meta:
-        model = Commentss
-        fields = '__all__' # ['id' , "parent" ,  'is_creater' , "video_id" ,  "likes_on_comment" , "dis_likes_on_comment" , "comment_text" ,  "created_time" , "user_id"  ,  "user_name" , 'like_active' , 'dislike_active'  ]
 
 #________________________________________________________________________________________________________________
 #model for videos 
@@ -90,15 +71,15 @@ class doc_verificationSerializer(serializers.ModelSerializer):
     user_id=signserializers()
     class Meta():
         model=doc_verification
-        fields=['id','user_id','firstname','lastname','email','qualification','specialized','skill_tags','year_of_experience','user_id']
-        depth=1
+        fields=[ 'id','user_id','firstname','lastname','email','qualification','specialized','skill_tags','year_of_experience' ]
+        #depth=1
 
-    def update(self,instance,validated_data):
-        userdata=validated_data.pop('user_id')
-        userserializer=signserializers()
-        super(self.__class__,self).update(instance,validated_data)
-        super(signserializers,userserializer).update(instance.user_id,userdata)
-        return instance
+    # def update(self,instance,validated_data):
+    #     userdata=validated_data.pop('user_id')
+    #     userserializer=signserializers()
+    #     super(self.__class__,self).update(instance,validated_data)
+    #     super(signserializers,userserializer).update(instance.user_id,userdata)
+    #     return instance
 #_____________________________________________________________________________________________________________________________
 #connect serializer
 class connectSerializer(serializers.ModelSerializer):
@@ -106,9 +87,9 @@ class connectSerializer(serializers.ModelSerializer):
         model=connect
         fields=['id','user','connect','title','tags','published_on','likes','number_of_likes']
     
-    def get_liked_by_req_user(self, obj):
-        user = self.context['request'].user
-        return user in obj.likes.all()
+    # def get_liked_by_req_user(self, obj):
+    #     user = self.context['request'].user
+    #     return user in obj.likes.all()
 
 class connect_comment_serializer(serializers.ModelSerializer):
     reply=serializers.SerializerMethodField('child_comment')
@@ -144,13 +125,23 @@ class playlist_post_videoserializer(serializers.ModelSerializer):
         filter_fields = ('files__id',)
 
 #for group serializer
+
+from django.http import JsonResponse
+from django.shortcuts import HttpResponse
+from django.forms.models import model_to_dict
+class ListsFieldForGroupSerializer(serializers.RelatedField):
+    def to_representation(self, value):
+        data = {"id" : value.id , "grouplistid": value.grouplistid , "name" : value.name  , "group_list_image": value.group_list_image.url  } 
+        return data   # f"{value.files.all().values('id' , 'videoid' )}" 
+
 class groupserializer(serializers.ModelSerializer):
-    #list=playlist_videoserializer() 
-       #here we have nested serializer.
+    #lists=playlist_videoserializer(read_only=True) 
+    #lists = serializers.StringRelatedField(many=True)       #This will return Model __str__ functioN
+    lists  =  ListsFieldForGroupSerializer( many = True , read_only=True )
     class Meta:                                 #It is used when you have to embeded one serializer in other serializer
         model=group
-        fields=['id','groupskillid','userid','title','list']
-        depth=1
+        fields=[ 'id','groupskillid','userid','title','lists' ]
+        #depth = 1
 
 class group_post_serializer(serializers.ModelSerializer):
     #list=playlist_videoserializer() 
@@ -214,12 +205,14 @@ class addresourceserializer(serializers.ModelSerializer):
     support=serializers.SerializerMethodField('supporttimeline')
 
     def supporttimeline(self,obj):
-        all_obj=supportTimeline.objects.filter(resources=obj.id)
-        return supportTimelineserializer(all_obj,many=True).data
+        all_obj=supportTimeline.objects.select_related( 'resources' , 'videorefernce' ).filter(resources=obj.id)
+        if all_obj :
+             return supportTimelineserializer(all_obj,many=True).data
+        return None
     class Meta:    
         model=Addresources
         fields=['id','user_id','video_id','timeline','resourcesfile','questionnaire','support'] #here we have used other serializer method 
-        depth=1
+        #depth=1
 
 class addresources_post_serializer(serializers.ModelSerializer):
      class Meta:    
@@ -472,4 +465,13 @@ class ReplySerializer(serializers.ModelSerializer):
 class courseserializer(serializers.ModelSerializer):
     class Meta:
         model=mycourse
+        fields='__all__'
+
+
+
+
+
+class User_Historyserializer(serializers.ModelSerializer):
+    class Meta:
+        model=User_History
         fields='__all__'

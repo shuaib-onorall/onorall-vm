@@ -21,28 +21,35 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+
     path('doc',views.DocView.as_view()),
     path('doc/<int:id>',views.DocView.as_view()), #it is used for the find the videos with id 
     path('accounts/',include('allauth.urls')),
     path('connect',views.communityAPIView.as_view()), #this is used for connect
     path('connect/<int:id>',views.communityAPIView.as_view()),
     path('section',views.AboutAPIView.as_view()), #this is used for aboutsection
+
     path('section/<int:id>',views.AboutAPIView.as_view()),
     path('profile',views.profileAPIView.as_view()),
     path('profile/<str:id>',views.profileAPIView.as_view()),
+
     path('groupskill',views.groupskillAPIView.as_view()),
     path('groupskill/<int:id>',views.groupskillAPIView.as_view()),
+    
     path('grouplist',views.playlistAPIView.as_view()),
     path('grouplist/<int:id>',views.playlistAPIView.as_view()),
     path('grouplist/<int:id>&<int:vid>',views.playlistAPIView.as_view()),
     path('general',views.DetailAPIview.as_view()),
     path('general/<str:videoid>',views.DetailAPIview.as_view()),
+
     path('thumbnail',views.thumbnailapiview.as_view()),
     path('thumbnail/<str:videoid>',views.thumbnailapiview.as_view()),
+
     path('workbase',views.WorkApiView.as_view()),
     path('workbase/<int:id>',views.WorkApiView.as_view()),
     path('searchengine/',views.connectSearchAPIView.as_view()), #in the search path we have to use / (slash) this one for connect 
     path('report',views.reportApiview.as_view()),
+    
     path('otp',views.sendotp.as_view()),
     path('verify',csrf_exempt(views.verifyotp.as_view())),
     path('supporttimeline/',views.supporttimelineAPI.as_view()),
@@ -76,40 +83,63 @@ urlpatterns = [
 
 
 
+    path('course/' , views.course_list.as_view() ,  name="crs"),
+    path('course/<int:pk>/' , views.course_list.as_view() ,  name="crs-single"),
 
 
 
-     #__________________________________________________________________________________:)
-    path('search/<str:title>',views.multitablesearch.as_view()),
-    path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
-    path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
+
+    #_________________________ NOT IN USE COMMENTS FUNCTIONALITY __________________________________
     path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),
     path('reply/<int:pk>/', views.ReplyApiView.as_view() , name='all-reply-api-view'),
-    path('likes/<int:pk>/', views.LikeApiView.as_view() , name='all-like-api-view-single'),
+
+
+     #_________________SEARCH FUNCTIONALITY ____________________________________________
+    path('search/<str:title>',views.multitablesearch.as_view()),
+   
+    #_________________________ COMMENTS FUNCTIONALITY ____________________________________________
+    path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
+    path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
+
+
+    #__________________________LIKES APIs__________________________________
+    path('likes/<str:pk>/', views.LikeApiView.as_view() , name='all-like-api-view-single'),
     path('likes/', views.LikeApiView.as_view() , name='all-like-api-view'),
 
+    # for user like and video likes 
+    path('likes/<str:pk>/<str:id>/', views.LikeApiForUserView.as_view() , name='all-like-api-for-view'),
+    path('likes/', views.LikeApiForUserView.as_view() , name='all-like-api-for-all-view'),
 
-    #___________________________REFFERAL APIs_____________________________________________
+
+    #___________________________REFFERAL FUNCTIONALITY_____________________________________________
     path('refferal/<int:pk>/', views.RefferalView.as_view() , name='RefferalView-api-view'),
     path('refferal/', views.RefferalView.as_view() , name='AllRefferalView-api-view'),
     path('profileRef/<str:code>/',views.profileRefferalAPIView.as_view()),  # referral signup API
     
-    # REPORT API
+    #____________________________REPORT FUNCTIONALITY______________________________________________
     path('report/',views.reportApiview.as_view()),
     path('report/<int:reportid>/',views.reportApiview.as_view()),
+    
+    # ___________________________HISTORY FUNCTIONALITY______________________________________________
+    path('userhistory/<int:pk>/' , views.UserHistoryView.as_view() ,  name="UserHistoryView"),
+    path('userhistory/' , views.UserHistoryView.as_view() ,  name="UserHistoryView"),
 
-    path('course/' , views.course_list.as_view() ,  name="crs"),
-    path('course/<int:pk>/' , views.course_list.as_view() ,  name="crs-single"),
 
-    # embed 
-    path('embed' , views.embed_testing , name='embed-test'),
-    #___________________________comment like-dislike api
+
+
+
+
+
+
+
+  
+    #path('play/<room_code>', views.game , name='game'),
+      #___________________________comment like-dislike api
     # path('comment_like/', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('comment_like/<int:pk>', views.LikeApiForCommentView.as_view() , name='CommentLikeAPIView-api-view'),
     # path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
     #__________________________web sockets
     #path('wb' , views.index_wb , name="index_wb" ) , 
-    path('play/<room_code>', views.game , name='game'),
     
 
 

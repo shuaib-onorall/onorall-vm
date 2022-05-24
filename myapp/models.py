@@ -1,6 +1,7 @@
 from distutils.command.upload import upload
 from enum import unique
 from ipaddress import ip_address
+from pyexpat import model
 from tabnanny import verbose
 from unittest.mock import DEFAULT
 from django.db import models
@@ -19,6 +20,7 @@ from django.contrib.auth.base_user import BaseUserManager
 import random, string
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
+from caching.base import CachingManager, CachingMixin, cached_method
 
 
 def random_id_field():
@@ -111,6 +113,15 @@ gender_choices=(
     ('female','female'),
     ('other','other'),
 )
+
+INTERESTS = (('item_key1', 'item_key1'),
+              ('item_key2', 'item_key2'),
+              ('item_key3', 'item_key3'),
+              ('item_key4', 'item_key4'),
+              ('item_key5', 'item_key5'))
+
+from multiselectfield import MultiSelectField
+
 class sign(AbstractBaseUser, PermissionsMixin):
     id = models.CharField(max_length=12, unique=True, primary_key=True,  default=random_id_field)
     profilePic = models.ImageField(upload_to='profilePic/' , default = random_profile )
@@ -124,6 +135,11 @@ class sign(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_superuser = models.BooleanField(default=False)
+    interest = MultiSelectField(choices=INTERESTS,
+                                 max_choices=3,
+                                 max_length=59 , blank=True , null=True)
+
+    
 
     objects = UserManager()
 
@@ -131,7 +147,7 @@ class sign(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = ['name']
    
     def __str__(self):
-        return f" id : {str(self.id)} || name :{str(self.name)}"
+        return f"{str(self.id)}"
 
 #____________________________________________________________________________________________________________________
 
@@ -182,7 +198,13 @@ age_restriction_choice=(
 )
 
 
-class detail(models.Model):
+VIDEO_STATUS=(('Latest','Latest'),
+    ('Old','Old'),
+    ('unlist','unlist'),
+            )
+
+class detail( CachingMixin , models.Model):
+    
     videoid = models.CharField(max_length=12, unique=True,   default=random_id_field)
     user_id=models.ForeignKey(sign,null=False,blank=False,on_delete=models.CASCADE)
     title=models.CharField(max_length=50,null=True,blank=True)
@@ -196,18 +218,20 @@ class detail(models.Model):
     agerestriction=models.CharField(max_length=100,choices=age_restriction_choice,default='no-restrict')
     isCommentsOn=models.BooleanField(default=True)
     isLikeCountOn=models.BooleanField(default=True)
-    isAudioCommentOn=models.BooleanField(default=True)
+    isAudioCommentOn=models.BooleanField(default=True )
     likesvideo=models.ManyToManyField(sign,related_name='likes',blank=True,default=None)
     publish=models.CharField(max_length=100,choices=publish_choices,default='public')
     published_on=models.DateField(auto_now=True)
 
+    status = models.CharField( choices=VIDEO_STATUS  , default='Latest' , max_length=33)
+
 
 
     
-    objects = models.Manager()
+    objects = CachingManager()
 
     def __str__(self) -> str:
-        return  f"{str(self.title)} || {str(self.id)}"
+        return  f"{self.videoid} || {str(self.id)}"
 
     @property
     def total_likes(self):
@@ -341,20 +365,22 @@ class section(models.Model):
 #playlist 
 class playlist(models.Model):
     grouplistid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    userid=models.ForeignKey(sign,on_delete=models.CASCADE)
+    userid=models.ForeignKey(sign,on_delete=models.CASCADE  )
     group_list_image=models.ImageField(upload_to='grouplist/',null=True,blank=True,verbose_name='group_list_image')
     name=models.CharField(max_length=20)
     files=models.ManyToManyField(detail)
 
     def __str__(self):
-        return str(self.name)
-    
+        data =  {"id":str(self.id) , "grouplistid" : str(self.grouplistid)  , "group_list_image" :str(self.group_list_image) , "name" : str(self.name) , "files" : str(self.files) }
+    #f"{'id':{str(self.id)} , 'grouplistid' : {str(self.grouplistid)} , 'userid' : {str(self.userid)} , 'group_list_image' : {str(self.group_list_image)} , 'name' : {str(self.name)} , 'files' : {str(self.files)} }"
+
+        return f"{str(data)}"
 #group name
 class group(models.Model):
-    groupskillid = models.CharField(max_length=12, unique=True,   default=random_id_field)
+    groupskillid = models.CharField(max_length=12, unique=True,   default=random_id_field )
     userid=models.ForeignKey(sign,null=True,blank=True,on_delete=models.CASCADE)
     title=models.CharField(max_length=30)
-    list=models.ManyToManyField(playlist)
+    lists = models.ManyToManyField(playlist)
 
     def __str__(self):
         return str(self.title)
@@ -499,7 +525,11 @@ class question3(models.Model):
     def __str__(self) -> str:
         return str(self.question)
 
-class Addresources(models.Model):
+
+
+
+
+class Addresources( models.Model):
     user_id=models.ForeignKey(sign,on_delete=models.CASCADE)
     resourcesid = models.CharField(max_length=12, unique=True,   default=random_id_field)
     video_id=models.ForeignKey(detail,on_delete=models.CASCADE)
@@ -507,16 +537,21 @@ class Addresources(models.Model):
     resourcesfile=models.FileField(upload_to='resources/',null=True,blank=True)
     questionnaire=models.ForeignKey(questionnaires,related_name='questionnaire',null=True,blank=True,on_delete=models.CASCADE)
 
+    
+
     def __str__(self) -> str:
         return str(self.user_id)
 
-class supportTimeline(models.Model):
+class supportTimeline( models.Model):
     resources=models.ForeignKey(Addresources,null=True,blank=True,on_delete=models.CASCADE)
     hours=models.PositiveIntegerField()
     minutes=models.PositiveIntegerField()
     seconds=models.PositiveIntegerField()
     #toend=models.CharField(max_length=40)
     videorefernce=models.ForeignKey(detail,null=True,blank=True,on_delete=models.CASCADE)
+    
+    # our cacheing manager
+    
 
     def __str__(self):
         return str(self.resources)
@@ -691,16 +726,16 @@ class mycourse(models.Model):
 
 class LikeModel(models.Model):
     id = models.AutoField(primary_key=True , unique=True)
-    video = models.OneToOneField( detail , on_delete=models.CASCADE )
-    all_likes = models.ManyToManyField( sign  , blank=False)
+    user = models.OneToOneField( sign , on_delete=models.CASCADE )
+    videos = models.ManyToManyField( detail  , blank=False )
 
     @property
     def total_likes(self):
-        return self.all_likes.all().count()
+        return self.videos.all().count()
 
 
     def __str__(self):
-        return f'ID : {str(self.id)} || VIDEO ID : {str(self.video)}'
+        return f'ID : {str(self.id)} '
 
 # REFERRAL MODEL
 import uuid
@@ -794,30 +829,54 @@ class Notification(models.Model):
 
     
 
-from embed_video.fields import EmbedVideoField
-class Item(models.Model):
-    video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
-    video_url = EmbedVideoField()  #  just like URLField()
+# from embed_video.fields import EmbedVideoField
+# class Item(models.Model):
+#     video_embed = models.OneToOneField( detail , on_delete = models.CASCADE  , blank = False  , null = False )
+#     video_url = EmbedVideoField()  #  just like URLField()
 
-    def __str__(self , *args , **kwargs):
-        return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
+#     def __str__(self , *args , **kwargs):
+#         return f"ID : {str(self.id)} || VIDEO : {str(self.video_url)}"
     
 
 
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-@receiver( post_save, sender = detail)
-def create_profile1(sender, instance, created, **kwargs):
-    if created:
-        print('working signals' , instance)
-        obj  = Item.objects.create(video_embed =instance)
-        if obj:
-            path = 'http://192.168.1.95:8000' + instance.file.url
-            obj.video_url = path
-            obj.save()
+# from django.db.models.signals import post_save
+# from django.dispatch import receiver
+# @receiver( post_save, sender = detail)
+# def create_profile1(sender, instance, created, **kwargs):
+#     if created:
+#         print('working signals' , instance)
+#         obj  = Item.objects.create(video_embed =instance)
+#         if obj:
+#             path = 'http://192.168.1.95:8000' + instance.file.url
+#             obj.video_url = path
+#             obj.save()
 
 
 
 
 
+import jsonfield
 
+from picklefield.fields import PickledObjectField
+
+class MyPickledObjectField(PickledObjectField):
+
+    def value_from_object(self, obj):
+        """Return the value of this field in the given model instance."""
+        return getattr(obj, self.attname)
+
+
+    def value_to_string(self, obj):
+        value = self.value_from_object(obj)
+        return value
+
+
+
+class User_History(models.Model):
+    user = models.OneToOneField( sign , on_delete=models.CASCADE)
+    
+    #history_old = jsonfield.JSONField( )
+    history = MyPickledObjectField(default=list)
+    
+    def __str__(self):
+        return str(self.id)

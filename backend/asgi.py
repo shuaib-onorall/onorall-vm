@@ -15,26 +15,23 @@ from django.urls import path
 from myapp.consumers import *
 import django
 from channels.auth import AuthMiddlewareStack
+from django.urls import re_path
 from django.conf.urls import url
-from myapp.consumers import TicTacToeConsumer
+from myapp.consumers import  NewConsumer
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
-django.setup()
 application = get_asgi_application()
 
 websocket_urlpatterns = [
     path('ws/new/',NewConsumer.as_asgi()),
-    path('ws/notice/',Notifyconsumer.as_asgi()),
-    url(r'^ws/play/(?P<room_code>\w+)/$', TicTacToeConsumer.as_asgi()),
+    path('ws/notice/',Notifyconsumer.as_asgi())
 ]
 
-application = ProtocolTypeRouter({   
-    "websocket": AuthMiddlewareStack(
-        URLRouter(
-            websocket_urlpatterns
-        )
-    ),
-})
+application = ProtocolTypeRouter({ 
+
+    "websocket": AuthMiddlewareStack(URLRouter(websocket_urlpatterns))
+        } )
+    
 
 
 

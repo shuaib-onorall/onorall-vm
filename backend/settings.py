@@ -28,12 +28,14 @@ SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.1.95' , '127.0.0.1'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+ALLOWED_HOSTS = ['192.168.1.95' , 'localhost'] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
 
 INSTALLED_APPS = [
+
+
     'myapp.apps.MyappConfig' ,
     'django.contrib.admin',
     'django.contrib.auth',
@@ -55,10 +57,12 @@ INSTALLED_APPS = [
     'ws4redis',
 
 
+    'django_celery_beat' , 
 
+    
     'testApp', # only for local developement
-    'embed_video' ,
-
+    # 'embed_video' ,
+    #'celery'
     
     #'analytical'           # for analytical
     #'debug_toolbar'  ,     # for debugging
@@ -128,16 +132,21 @@ DATABASES = {
         }
     }
 }
-
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
 
 #configuration redis implementation for the channels .it is used for the notifications
 CHANNEL_LAYERS = {
     'default': {
      
        
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        "BACKEND": "channels_redis.core.RedisChannelLayer" ,
        'CONFIG': {
-             "hosts": [('127.0.0.1', 6379)],
+             "hosts": [('localhost', 6379)],
         },
         ## Method 3: Via In-memory channel layer
         ## Using this method.
@@ -304,7 +313,7 @@ SIMPLE_JWT = {
 
 
 #send emails for document verification
-SITE_HOST = '192.168.1.85:8000'
+SITE_HOST = 'localhost'
 DEFAULT_FROM_EMAIL ='amitsofficial1998@gmail.com'
 EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend' #this is used for the backend
 EMAIL_HOST='smtp.gmail.com'
@@ -336,8 +345,62 @@ CELERY_RESULT_BACKEND = 'redis://localhost:6379'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
-CELERY_RESULT_BACKEND='django-db'
+# CELERY_TIMEZONE = 'UTC'
+
+# WE CAN USE THIS FOR SENDING THE EMAIL EVERY ONE IN 24 HOURS
+CELERY_BEAT_SCHEDULE={
+    "schedule_task" :{
+        "task":"send_review_email_task" ,
+        "schedule":1 , 
+        "args":("shuaib",'shuaib.onorall2k2@gmail.com' , 'its a abody') , 
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+#MEMECACHED CACHING
+# CACHE = {
+#     'default' : {
+#         'BACKEND' :'caching.backends.memecached.MemecachedCache'  , 
+#         'LOCATION' :['127.0.0.1:6379' , ] ,
+#         'PREFIX': 'report:',
+#     } , 
+# }
+
+# CACHED_COUNT_TIMEOUT = 60 * 24 # ONE DAY
+# CACHED_EMPTY_QUERYSETS = True
+
+
+
+#Redis caching
+# CACHES = {
+#     'default':{
+#         'BACKEND': 'django_redis.cache.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         },
+#         'KEY_PREFIX': 'example'
+#     }
+# }
+
+
+
+
+
+
+
 
 #_______________________________________________________________________________________________________________________________________
 

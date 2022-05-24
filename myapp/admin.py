@@ -40,16 +40,11 @@ admin.site.register(Commentss)
 admin.site.register(LikeModel)
 admin.site.register(RefferalLink)
 admin.site.register(mycourse)
+admin.site.register(User_History)
 # admin.site.register(LikeModelForComments)
 
 
 from django.contrib import admin
-from embed_video.admin import AdminVideoMixin
-from .models import Item
 
-class EmbedVideoAdmin(AdminVideoMixin, admin.ModelAdmin):
-    pass    
-
-admin.site.register(Item, EmbedVideoAdmin)
 
 
