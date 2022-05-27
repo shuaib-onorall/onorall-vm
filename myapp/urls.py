@@ -121,8 +121,11 @@ urlpatterns = [
     path('report/<int:reportid>/',views.reportApiview.as_view()),
     
     # ___________________________HISTORY FUNCTIONALITY______________________________________________
-    path('userhistory/<int:pk>/' , views.UserHistoryView.as_view() ,  name="UserHistoryView"),
+    path('userhistory/<int:pk>/' , views.UserHistoryView.as_view() ,  name="UserHistoryViewSingle"),
     path('userhistory/' , views.UserHistoryView.as_view() ,  name="UserHistoryView"),
+
+    #____________________________Search History__________________________________________________________
+    path('userhistory/search/<str:pkUser>' , views.UserHistorySearchView.as_view() ,  name="UserHistoryView"),
 
 
 

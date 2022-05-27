@@ -122,22 +122,22 @@ ASGI_APPLICATION= 'backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'myonorall',
-        'CLIENT': {
-           'host': 'mongodb+srv://amitsingh:onorall@cluster0.ypmmy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
-            
-        }
-    }
-}
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         'ENGINE': 'djongo',
+#         'NAME': 'myonorall',
+#         'CLIENT': {
+#            'host': 'mongodb+srv://amitsingh:onorall@cluster0.ypmmy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+            
+#         }
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 
 #configuration redis implementation for the channels .it is used for the notifications
 CHANNEL_LAYERS = {
@@ -369,7 +369,7 @@ CELERY_BEAT_SCHEDULE={
 
 
 
-#MEMECACHED CACHING
+# #MEMECACHED CACHING
 # CACHE = {
 #     'default' : {
 #         'BACKEND' :'caching.backends.memecached.MemecachedCache'  , 
@@ -378,7 +378,7 @@ CELERY_BEAT_SCHEDULE={
 #     } , 
 # }
 
-# CACHED_COUNT_TIMEOUT = 60 * 24 # ONE DAY
+# CACHED_COUNT_TIMEOUT = 60 * 2 # ONE DAY
 # CACHED_EMPTY_QUERYSETS = True
 
 

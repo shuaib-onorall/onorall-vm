@@ -1328,7 +1328,7 @@ class DetailAPIview(APIView):
     #parser_classes = (MultiPartParser, FormParser)
     serializer=DetailSerializer
 
-    @method_decorator(cache_page(60 * 60))
+    @method_decorator(cache_page(60 * 2))
     def get(self,request,videoid=None):
         if videoid:
             alldoc=detail.objects.get(videoid=videoid)
@@ -1811,17 +1811,93 @@ class   UserHistoryView( APIView ):
 
 
 
-'''
- "history": {
-            "data": [
-                {
-                    "videoid": 144,
-                    "watchtime": 134
-                },
-                {
-                    "videoid": 144,
-                    "watchtime": 134
-                }
-            ]
-        }
-'''
+
+def word_splitter(query):
+    query_list  , length_of_query , count , min_word_limit , word_interval = [] , len(query) , 0 , 5 , 2
+    while min_word_limit < length_of_query :
+        query_list.append(query[:min_word_limit])
+        min_word_limit+=word_interval
+    return query_list
+
+def words_finder_in_history(userid , query_list):
+    a , results = User_History.objects.get(user = userid) ,  []
+    for i in a.history:   
+        for words in query_list:
+
+            if i['tags'] and i['skills'] is None:
+                if words.replace(' ' , '') in i['title'].replace(' ' , ''):
+                    if i not in results:
+                        results.append(i)
+            if i['tags'] is None:
+                if words.replace(' ' , '') in i['skills']  or words.replace(' ' , '') in i['title'].replace(' ' , ''):
+                    if i not in results:
+                        results.append(i)
+            if i['skills'] is None:
+                if words.replace(' ' , '') in i['tags']  or words.replace(' ' , '') in i['title'].replace(' ' , ''):
+                    if i not in results:
+                        results.append(i)
+            if words.replace(' ' , '') in i['tags']  or words.replace(' ' , '') in i['title'].replace(' ' , '') or words.replace(' ' , '') in i['skills'].replace(' ' , ''):
+                    if i not in results:
+                        results.append(i)
+    return results
+
+import json
+
+class   UserHistorySearchView( APIView ):
+    parser_classes = (JSONParser,)
+    def get( self , request , pkUser = None  ,*args , **kwargs ):
+        if pkUser  is not None:
+            query = request.GET.get('searchquery').strip()
+            if len(query) > 9:
+                all_split_query_words = word_splitter(query)
+                final_result = words_finder_in_history(pkUser , all_split_query_words)
+                print(all_split_query_words)
+                return Response({'status':'success','data':final_result },status=status.HTTP_200_OK)
+            
+
+           
+
+    
+# a = User_History.objects.filter(user = "EtO1hv9N8gMq" )[0]
+# query_list = []
+# query = "skill377sbwswsbwsuwsw"
+# length_of_query = len(query)
+# count = 0
+# min_word_limit = 3
+# word_interval = 2
+
+# if length_of_query > 15 :
+#     while min_word_limit < length_of_query :
+#         query_list.append(query[:min_word_limit])
+#         min_word_limit+=word_interval
+
+# results = []
+# for i in a.history:
+   
+#     for words in query_list:
+#         if words in i['skills']  :
+#             if i not in results:
+#                 results.append(i)
+            
+# print(results , 'sssssssssssssssssssssssssss')
+
+
+
+
+# # query_list = []
+# # query = "skill377sbwswsbwsuwsw"
+# # length_of_query = len(query)
+# # count = 0
+# # min_word_limit = 5
+# # word_interval = 2
+# # if length_of_query > 15 :
+# #     while min_word_limit < length_of_query :
+# #         print(query)
+# #         query_list.append(query[:min_word_limit])
+# #         min_word_limit+=word_interval
+# # print(query_list)
+
+# if 'amazing' in 'amazing,wow,alert':
+#     print('888888888888888888888888')import splitter
+import splitter
+print(splitter.split('mindyourlanguage'))
