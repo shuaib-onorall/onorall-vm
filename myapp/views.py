@@ -17,7 +17,7 @@ from django.shortcuts import HttpResponse
 from django.http import Http404
 from django import http
 from django.views.generic.base import View
-from datetime import datetime
+from datetime import date, datetime
 from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 import random
@@ -1823,7 +1823,6 @@ def words_finder_in_history(userid , query_list):
     a , results = User_History.objects.get(user = userid) ,  []
     for i in a.history:   
         for words in query_list:
-
             if i['tags'] and i['skills'] is None:
                 if words.replace(' ' , '') in i['title'].replace(' ' , ''):
                     if i not in results:
@@ -1899,5 +1898,24 @@ class   UserHistorySearchView( APIView ):
 
 # if 'amazing' in 'amazing,wow,alert':
 #     print('888888888888888888888888')import splitter
-import splitter
-print(splitter.split('mindyourlanguage'))
+
+
+data = [{'userid' :sign.objects.first().id , 'ipaddress':"123" , 'date' :date.today()} , {'userid' :sign.objects.first().id ,  'ipaddress':"123" ,  'date' :date.today()} , {'userid' :sign.objects.first().id ,  'ipaddress':"123" ,  'date' :date.today()}   ]
+new_data= {'userid' :sign.objects.first().id , 'ipaddress':"123" , 'date' :date.today()}
+
+if new_data  not in data:
+        data.append(new_data)
+else:
+    if data.count(new_data) >= 3:
+        print('MAXIMUM LIMIT EXIDED----------------')
+    else:
+        data.append(new_data)
+
+print(data)
+
+    
+
+
+
+
+

@@ -122,22 +122,35 @@ ASGI_APPLICATION= 'backend.asgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'djongo',
-#         'NAME': 'myonorall',
-#         'CLIENT': {
-#            'host': 'mongodb+srv://amitsingh:onorall@cluster0.ypmmy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
-            
-#         }
-#     }
-# }
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'djongo',
+        'NAME': 'myonorall',
+        'CLIENT': {
+           'host': 'mongodb+srv://amitsingh:onorall@cluster0.ypmmy.mongodb.net/myFirstDatabase?retryWrites=true&w=majority',
+            
+        }
     }
 }
+# DATABASES = {
+#    'default': {
+
+#         'ENGINE': 'django.db.backends.postgresql',
+
+#         'NAME': 'mydatabase',
+
+#         'USER': 'mypostgres',
+
+#         'PASSWORD': '12345678',
+
+#         'HOST': '<db_host>',
+
+#         'PORT': '<db_port>',
+
+#     }
+# }
+
+#gcr.io/myfirstproject-351806/shuaib-onorall
 
 #configuration redis implementation for the channels .it is used for the notifications
 CHANNEL_LAYERS = {
