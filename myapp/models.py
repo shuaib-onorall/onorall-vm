@@ -20,7 +20,7 @@ from django.contrib.auth.base_user import BaseUserManager
 import random, string
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
-from caching.base import CachingManager, CachingMixin, cached_method
+#from caching.base import CachingManager, CachingMixin, cached_method
 
 
 def random_id_field():
@@ -203,7 +203,7 @@ VIDEO_STATUS=(('Latest','Latest'),
     ('unlist','unlist'),
             )
 
-class detail( CachingMixin , models.Model):
+class detail(  models.Model):
     
     videoid = models.CharField(max_length=12, unique=True,   default=random_id_field)
     user_id=models.ForeignKey(sign,null=False,blank=False,on_delete=models.CASCADE)
@@ -228,7 +228,7 @@ class detail( CachingMixin , models.Model):
 
 
     
-    objects = CachingManager()
+    # objects = CachingManager()
 
     def __str__(self) -> str:
         return  f"{self.videoid} || {str(self.id)}"
