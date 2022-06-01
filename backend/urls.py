@@ -50,7 +50,7 @@ urlpatterns = [
 
     # only for testing
     #path('review/',ReviewEmailView.as_view()  , name="reviews"),
-    path('testApp/' , include('testApp.urls')), 
+    
 
 
 
