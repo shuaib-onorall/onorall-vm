@@ -222,11 +222,10 @@ class detail(  models.Model):
     likesvideo=models.ManyToManyField(sign,related_name='likes',blank=True,default=None)
     publish=models.CharField(max_length=100,choices=publish_choices,default='public')
     published_on=models.DateField(auto_now=True)
-
     status = models.CharField( choices=VIDEO_STATUS  , default='Latest' , max_length=33)
 
-
-
+    ready_to_publish =  models.BooleanField( default= False)
+    publish_time = models.CharField(max_length=100 ,blank=True , null=True)
     
     # objects = CachingManager()
 

@@ -15,13 +15,14 @@ from django.http import HttpRequest
 from django.utils.cache import get_cache_key
 
 
-from .tasks import latest_to_old
+from .tasks import publish_time_celery_task
  
 # for automatic change status latest to old
 @receiver(post_save, sender=detail)
 def create_profile(sender, instance, created, **kwargs):
-    if created:
-        latest_to_old.apply_async(args=[instance.videoid] , countdown=20)
+    
+    if instance.publish_time is not None:
+        publish_time_celery_task.apply_async(args=[instance.videoid], countdown = int(instance.publish_time))
 
 
 

@@ -52,17 +52,19 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'channels',
-    'drf_yasg',
+    #'drf_yasg',
     'rest_framework_simplejwt',
     'ws4redis',
 
 
     'django_celery_beat' , 
+    'celery' , 
+    #'storages'
 
     
     #'testApp', # only for local developement
     # 'embed_video' ,
-    #'celery'
+   
     
     #'analytical'           # for analytical
     #'debug_toolbar'  ,     # for debugging
@@ -361,14 +363,14 @@ CELERY_RESULT_SERIALIZER = 'json'
 # CELERY_TIMEZONE = 'UTC'
 
 # WE CAN USE THIS FOR SENDING THE EMAIL EVERY ONE IN 24 HOURS
-CELERY_BEAT_SCHEDULE={
-    "schedule_task" :{
-        "task":"send_review_email_task" ,
-        "schedule":1 , 
-        "args":("shuaib",'shuaib.onorall2k2@gmail.com' , 'its a abody') , 
+# CELERY_BEAT_SCHEDULE={
+#     "schedule_task" :{
+#         "task":"send_review_email_task" ,
+#         "schedule":1 , 
+#         "args":("shuaib",'shuaib.onorall2k2@gmail.com' , 'its a abody') , 
 
-    }
-}
+#     }
+# }
 
 
 
@@ -454,3 +456,12 @@ def show_toolbar(request):
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK" : show_toolbar,}
 import mimetypes
 mimetypes.add_type("application/javascript", ".js", True)
+
+
+
+
+
+
+
+
+
