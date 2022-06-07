@@ -28,10 +28,10 @@ services:
         - .:/code
 
       ports:
-        - "8000:8000"
+        - "8080:8080"
       
-      env_file:
-        - ./venv
+      # env_file:
+      #   - ./venv
 
       depends_on:
         - db

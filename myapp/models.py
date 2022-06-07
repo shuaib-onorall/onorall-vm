@@ -205,7 +205,7 @@ VIDEO_STATUS=(('Latest','Latest'),
 
 class detail(  models.Model):
     
-    videoid = models.CharField(max_length=12, unique=True,   default=random_id_field)
+    videoid = models.CharField(max_length=12, unique=True,   default=random_id_field )
     user_id=models.ForeignKey(sign,null=False,blank=False,on_delete=models.CASCADE)
     title=models.CharField(max_length=50,null=True,blank=True)
     file=models.FileField(upload_to=get_upload_to)
@@ -686,7 +686,7 @@ class Commentss(models.Model):
     dislike_active = models.CharField(max_length = 2000 , blank=True  , default = 'null' )
     created_at = models.DateTimeField(auto_now =True)
 
-    objects = CommentsManager()
+    # objects = CommentsManager()
 
     def __str__(self):
         return f"ID : {self.id} || ime : {self.comment_text} || personName : {self.user_id.gmail}"

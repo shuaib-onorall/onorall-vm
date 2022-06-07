@@ -13,4 +13,4 @@ def publish_time_celery_task(videoid):
         obj.ready_to_publish=True
         obj.save()
     
-    return F'VideoId : {obj.videoid} has gone to ready_to_pulish=true '
+    return F'VideoId : {obj.videoid} has gone to ready_to_pulish=True '

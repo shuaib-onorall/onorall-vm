@@ -346,6 +346,18 @@ class monitizeserializer(serializers.ModelSerializer):
 #         model =  Reply
 #         fields = "__all__"
         
+
+
+
+# class CommentDetailSerializer ( serializers.ModelSerializer ):
+#     #user_name = serializers.CharField( source="user_id.name" ,  read_only=True )
+#      class Meta:
+#         model=detail
+#         fields= ['videoid']
+
+
+
+
 class EagerLoadingMixin:
     @classmethod
     def setup_eager_loading(cls, queryset):
@@ -361,6 +373,7 @@ class EagerLoadingMixin:
 class CommentSerializer( EagerLoadingMixin , serializers.ModelSerializer ):
     #user_name = serializers.CharField( source="user_id.name" ,  read_only=True )
     profile = serializers.CharField( source="user_id.profilePic.url" ,  read_only=True )
+    # video_id = CommentDetailSerializer(read_only=True)
     
 
     class Meta:
@@ -370,6 +383,8 @@ class CommentSerializer( EagerLoadingMixin , serializers.ModelSerializer ):
     
     _SELECT_RELATED_FIELDS = ['user_id' , 'video_id__user_id']
     _PREFETCH_RELATED_FIELDS = ['likes_on_comment' , 'dis_likes_on_comment']
+
+
 
 
 class CommentSerializer_single_instance(serializers.ModelSerializer ):

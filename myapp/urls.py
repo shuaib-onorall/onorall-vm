@@ -92,6 +92,7 @@ urlpatterns = [
     #_________________________ NOT IN USE COMMENTS FUNCTIONALITY __________________________________
     path('reply/', views.ReplyApiView.as_view() , name='all-reply-api-single'),
     path('reply/<int:pk>/', views.ReplyApiView.as_view() , name='all-reply-api-view'),
+    
 
 
      #_________________SEARCH FUNCTIONALITY ____________________________________________
@@ -100,6 +101,7 @@ urlpatterns = [
     #_________________________ COMMENTS FUNCTIONALITY ____________________________________________
     path('comments/<int:pk>/', views.CommentApiView.as_view() , name='all-comment-api-single'),
     path('comments/', views.CommentApiView.as_view() , name='all-comment-api-view'),
+    path('comments/video/<str:pk>', views.CommentApiForVideoView.as_view() , name='all-comment-api-view-for-video'),
 
 
     #__________________________LIKES APIs__________________________________

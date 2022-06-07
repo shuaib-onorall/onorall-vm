@@ -1096,6 +1096,27 @@ class questionnaireAPIView(APIView):
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #_________________________________________________________________________________________________________________________________________
 # API's for Comments 
 class CommentApiView( APIView,LimitOffsetPagination ):
@@ -1198,6 +1219,17 @@ class CommentApiView( APIView,LimitOffsetPagination ):
             queryset.delete()
             return Response({'status':'deleted' },status=status.HTTP_200_OK)
         return Response({'status':'fail','data':"DoesNotExist"},status=status.HTTP_400_BAD_REQUEST) 
+
+
+class CommentApiForVideoView(APIView):
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if pk is not None:
+            myvideoId = detail.objects.get(videoid=pk)
+            comment_obj = Commentss.objects.filter(  video_id = myvideoId ) 
+            serializer = CommentSerializer( comment_obj , many=True)
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail provide videoid ',},status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
@@ -1622,7 +1654,6 @@ class APIView(APIView):
             auth_token=str(uuid.uuid4())
             print('ddddd',auth_token)
             user_obj=Contact.objects.create(name=name,gmail=gmail,auth_token=auth_token)
-            user_obj.save()
             serializer=ContactSerializerModel(user_obj)
             send_mail_registration(gmail,auth_token)
             return Response({'data':serializer.data})
@@ -1643,37 +1674,6 @@ class VerifyEmail(APIView):
 
 
 
-
-
-
-
-# def likes_for_user( request  ):
-
-#      user = sign.objects.first()
-#     #  data = detail.objects.filter(likesvideo = user).value('likesvideo')
-#     # #  all_data = sign.likes_set()
-#     #  print(data , len(data))
-
-# obj = likes_for_user( request )
-# print(obj)
-
-
-# class LikeApiForUserView(APIView ):
-#     def get( self , request , pk = None  ,id = None  , *args , **kwargs ):
-#         if pk == 'user' :
-            
-         
-#             user = get_object_or_404(sign ,  id = str(id) )
-            
-#             data = LikeModel.objects.select_related('user' ).prefetch_related('videos').get( Q(user = user) )
-#             serializer = LikeModelSerializer( data )
-#             return Response({'status':'success','data':serializer.data },status=status.HTTP_200_OK)
-#         elif pk == 'video' :
-#             video_obj = get_object_or_404( detail ,  videoid = str(id) )
-#             data = LikeModel.objects.prefetch_related('videos').filter( Q( videos = video_obj ) )
-#             serializer = LikeModelSerializer( data  , many=True)
-#             return Response({'status':'success','data':serializer.data },status=status.HTTP_200_OK)
-#         return Response({'status':'success','data': "add 'user' or 'video' in your url " },status=status.HTTP_200_OK)
 
 
 
@@ -1754,6 +1754,8 @@ def video_id_checker(history  , videoId , time ):
         else:
             result = True
     return result , history
+
+#_____________________________________UserHistory ___________________________
 
 class   UserHistoryView( APIView ):
     parser_classes = (JSONParser,)
@@ -1842,6 +1844,8 @@ def words_finder_in_history(userid , query_list):
 
 import json
 
+
+#________________________UserHistorySearch 
 class   UserHistorySearchView( APIView ):
     parser_classes = (JSONParser,)
     def get( self , request , pkUser = None  ,*args , **kwargs ):
@@ -1854,64 +1858,20 @@ class   UserHistorySearchView( APIView ):
                 return Response({'status':'success','data':final_result },status=status.HTTP_200_OK)
             
 
-           
-
-    
-# a = User_History.objects.filter(user = "EtO1hv9N8gMq" )[0]
-# query_list = []
-# query = "skill377sbwswsbwsuwsw"
-# length_of_query = len(query)
-# count = 0
-# min_word_limit = 3
-# word_interval = 2
-
-# if length_of_query > 15 :
-#     while min_word_limit < length_of_query :
-#         query_list.append(query[:min_word_limit])
-#         min_word_limit+=word_interval
-
-# results = []
-# for i in a.history:
-   
-#     for words in query_list:
-#         if words in i['skills']  :
-#             if i not in results:
-#                 results.append(i)
-            
-# print(results , 'sssssssssssssssssssssssssss')
 
 
-
-
-# # query_list = []
-# # query = "skill377sbwswsbwsuwsw"
-# # length_of_query = len(query)
-# # count = 0
-# # min_word_limit = 5
-# # word_interval = 2
-# # if length_of_query > 15 :
-# #     while min_word_limit < length_of_query :
-# #         print(query)
-# #         query_list.append(query[:min_word_limit])
-# #         min_word_limit+=word_interval
-# # print(query_list)
-
-# if 'amazing' in 'amazing,wow,alert':
-#     print('888888888888888888888888')import splitter
-
-
+#_________________History to store only 5 same video on Single Day
 data = [{'userid' :sign.objects.first().id , 'ipaddress':"123" , 'date' :date.today()} , {'userid' :sign.objects.first().id ,  'ipaddress':"123" ,  'date' :date.today()} , {'userid' :sign.objects.first().id ,  'ipaddress':"123" ,  'date' :date.today()}   ]
 new_data= {'userid' :sign.objects.first().id , 'ipaddress':"123" , 'date' :date.today()}
-
 if new_data  not in data:
         data.append(new_data)
 else:
     if data.count(new_data) >= 3:
-        print('MAXIMUM LIMIT EXIDED----------------')
+        pass
     else:
         data.append(new_data)
 
-print(data)
+
 
     
 
