@@ -3,7 +3,8 @@ from importlib.metadata import files
 from re import L
 from urllib import request
 from xml.parsers.expat import model
-from numpy import in1d
+
+
 from rest_framework import serializers
 from .models import * 
 
@@ -442,14 +443,14 @@ class questionnaireserializer( EagerLoadingMixin , serializers.ModelSerializer):
     
 
 class workserializer(serializers.ModelSerializer):
-    supporters=serializers.SerializerMethodField('support_function')
-    def support_function(self,obj):
-        all_obj=Support.objects.filter(wbname=obj.id)  
-        return supportserializers(all_obj,many=True).data
+    #supporters=serializers.SerializerMethodField('support_function')
+    # def support_function(self,obj):
+    #     all_obj=Support.objects.filter(wbname=obj.id)  
+    #     return supportserializers(all_obj,many=True).data
 
     class Meta:
         model=workbaseinfo
-        fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location','supporters')
+        fields=('id','workbasename','workbasechoices','userid','wbemail','wbdescription','location')
 
 
 

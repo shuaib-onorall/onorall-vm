@@ -41,6 +41,7 @@ admin.site.register(LikeModel)
 admin.site.register(RefferalLink)
 admin.site.register(mycourse)
 admin.site.register(User_History)
+admin.site.register(PopularVideo)
 # admin.site.register(LikeModelForComments)
 
 

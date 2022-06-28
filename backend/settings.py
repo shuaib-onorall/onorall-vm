@@ -17,18 +17,26 @@ from pickle import APPEND
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj'
 
+
+DEBUG = True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj'
+# SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# # SECURITY WARNING: don't run with debug turned on in production!
+# DEBUG = True
+# import os
+# SECRET_KEY = os.getenv('SECRET_KEY')
 
-ALLOWED_HOSTS = ['192.168.1.95' , 'localhost' , '34.83.146.254' , '34.83.95.190' , "*"] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
+# DEBUG = os.getenv('DEBUG')
+
+
+ALLOWED_HOSTS = ["*"] #['https://cretskill-backend.herokuapp.com/'] #'192.168.1.85'
 
 
 # Application definition 
@@ -57,7 +65,7 @@ INSTALLED_APPS = [
     'ws4redis',
 
 
-    'django_celery_beat' , 
+    #'django_celery_beat' , 
     'celery' , 
     #'storages'
 
@@ -118,6 +126,7 @@ TEMPLATES = [
 
 
 #WSGI_APPLICATION = 'backend.wsgi.application'
+# daphne server run command : daphne -b 0.0.0.0 -p 8000 backend.asgi:application
 ASGI_APPLICATION= 'backend.asgi.application'
 
 
@@ -152,9 +161,18 @@ DATABASES = {
 #     }
 # }
 
-#gcr.io/myfirstproject-351806/shuaib-onorall
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
-#configuration redis implementation for the channels .it is used for the notifications
+
+#============================IMPORTANT FOR CELERY CHANNELS ================================
+# channels==3.0.1
+# channels-redis==2.4.2
+# redis==4.1.4
 CHANNEL_LAYERS = {
     'default': {
      
@@ -168,6 +186,34 @@ CHANNEL_LAYERS = {
     },
     'ROUTING': 'ws.routing.application',
 }
+
+
+
+
+
+
+
+#___________________________________________________________________________________________________________________________________
+#celery settings
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER"  , 'redis://redis:6379/0' )
+CELERY_RESULT_BACKEND =  os.environ.get("CELERY_BROKER",'redis://redis:6379/0' )
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+# CELERY_TIMEZONE = 'UTC'
+
+#WE CAN USE THIS FOR SENDING THE EMAIL EVERY ONE IN 24 HOURS
+# CELERY_BEAT_SCHEDULE={
+#     "schedule_task" :{
+#         "task":"send_review_email_task" ,
+#         "schedule":1 , 
+#         "args":("shuaib",'shuaib.onorall2k2@gmail.com' , 'its a abody') , 
+
+#     }
+# }
+#celery beat
+#CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
+
 
 AUTH_USER_MODEL='myapp.sign'
 
@@ -194,7 +240,6 @@ LOGIN_USERNAME_FIELDS = ['gmail']
 AUTH_USER_MODEL = 'myapp.sign'
 
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.0/topics/i18n/
 TIME_ZONE = 'Asia/Kolkata'  # 'UTC'
@@ -206,19 +251,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 #STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-STATIC_ROOT=os.path.join(BASE_DIR,'static')
-STATIC_URL = 'static/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
-
+STATIC_ROOT='/static/'
+STATIC_URL = '/static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-STATICFILES_DIRS=[
-    os.path.join(BASE_DIR, 'frontend', 'build', 'static'),
-    ]
+
 
 #this is for media configuration
-
 MEDIA_ROOT= os.path.join(BASE_DIR, 'media/')
 MEDIA_URL= "/media/"
 
@@ -352,75 +390,6 @@ API_KEY = 'e3ffa140-7c63-11ec-b9b5-0200cd936042'
 import django_on_heroku
 django_on_heroku.settings(locals())
 
-
-#___________________________________________________________________________________________________________________________________
-#celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
-CELERY_ACCEPT_CONTENT = ['application/json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-# CELERY_TIMEZONE = 'UTC'
-
-#WE CAN USE THIS FOR SENDING THE EMAIL EVERY ONE IN 24 HOURS
-# CELERY_BEAT_SCHEDULE={
-#     "schedule_task" :{
-#         "task":"send_review_email_task" ,
-#         "schedule":1 , 
-#         "args":("shuaib",'shuaib.onorall2k2@gmail.com' , 'its a abody') , 
-
-#     }
-# }
-
-
-
-
-
-
-
-
-
-
-
-
-
-# #MEMECACHED CACHING
-# CACHE = {
-#     'default' : {
-#         'BACKEND' :'caching.backends.memecached.MemecachedCache'  , 
-#         'LOCATION' :['127.0.0.1:6379' , ] ,
-#         'PREFIX': 'report:',
-#     } , 
-# }
-
-# CACHED_COUNT_TIMEOUT = 60 * 2 # ONE DAY
-# CACHED_EMPTY_QUERYSETS = True
-
-
-
-#Redis caching
-# CACHES = {
-#     'default':{
-#         'BACKEND': 'django_redis.cache.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379/1',
-#         'OPTIONS': {
-#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-#         },
-#         'KEY_PREFIX': 'example'
-#     }
-# }
-
-
-
-
-
-
-
-
-#_______________________________________________________________________________________________________________________________________
-
-#celery beat
-#CELERY_BEAT_SCHEDULER='django_celery_beat.schedulers:DatabaseScheduler'
 
 #______________________________________________________________________________________________________________________________________
 #it is used to detect the malware data

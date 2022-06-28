@@ -10,8 +10,8 @@ app= Celery('backend')
 app.conf.enable_utc=False
 
 app.conf.update(timezone ='Asia/Kolkata')
-app.config_from_object(settings,namespace='CELERY')
-
+app.config_from_object("django.conf:settings",namespace='CELERY')
+app.autodiscover_tasks()
 
 #CELERY BEAT 
 
@@ -25,7 +25,7 @@ app.config_from_object(settings,namespace='CELERY')
 #     }
 # }
 
-app.autodiscover_tasks()
+
 
 @app.task(bind=True)
 def debug_task(self):

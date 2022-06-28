@@ -30,6 +30,7 @@ urlpatterns = [
     path('section',views.AboutAPIView.as_view()), #this is used for aboutsection
 
     path('section/<int:id>',views.AboutAPIView.as_view()),
+    
     path('profile',views.profileAPIView.as_view()),
     path('profile/<str:id>',views.profileAPIView.as_view()),
 

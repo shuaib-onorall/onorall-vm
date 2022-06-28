@@ -1,15 +1,7 @@
-if [ "$DATABASE" = "mongo" ]
-then
-    echo "Waiting for mongodb..."
+#!/bin/sh
 
-    while ! nc -z $SQL_HOST $SQL_PORT; do
-      sleep 0.1
-    done
+python manage.py makemigrations --no-input
+python manage.py migrate --no-input
+#python manage.py collectstatic --no-input
 
-    echo "mongodb started"
-fi
-
-python manage.py flush --no-input
-python manage.py migrate
-
-exec "$@"
+daphne -b 0.0.0.0 -p 8000 backend.asgi:application

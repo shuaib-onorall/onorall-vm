@@ -166,6 +166,13 @@ class workbaseinfo(models.Model):
     wbemail=models.EmailField(null=True,blank=True)
     wbdescription=models.TextField(null=True,blank=True)
     location=models.CharField(max_length=30,null=True,blank=True)
+
+
+
+
+    workbase_supporter = models.ManyToManyField(sign,blank=True , related_name="workbase_supporter")  
+
+    
     
     def __str__(self):
         return str(self.workbasename)
@@ -340,11 +347,14 @@ class social_handling(models.Model):
 
 #this model for support section
 class Support(models.Model):
-    user=models.ForeignKey(sign,blank=True,null=True,on_delete=models.CASCADE)
-    wbname=models.ForeignKey(workbaseinfo,null=True,blank=True,on_delete=models.CASCADE)
+    id=models.AutoField(primary_key=True,unique=True)
+    user=models.OneToOneField(sign,blank=True,null=True,on_delete=models.CASCADE)
+    wbid=models.ManyToManyField(workbaseinfo,blank=True)      
     
     def __str__(self):
         return str(self.user)
+
+  
 #_______________________________________________________________________________________________________________________
 
 #models for About section
@@ -877,5 +887,18 @@ class User_History(models.Model):
     #history_old = jsonfield.JSONField( )
     history = MyPickledObjectField(default=list)
     
+    def __str__(self):
+        return str(self.id)
+
+
+
+
+
+class PopularVideo(models.Model):
+
+    workbase = models.OneToOneField( workbaseinfo , on_delete=models.CASCADE )
+    videos = models.ManyToManyField( detail  , blank=True )
+
+
     def __str__(self):
         return str(self.id)
