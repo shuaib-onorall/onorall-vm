@@ -5,6 +5,7 @@ class NewConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
         print('fffffffffffffffffffffff')
         await self.accept()
+        print('fffffffffffffffffffffff')
         await self.send(text_data=json.dumps({'status':'connected from new conswswssumer'}))
 
     async def receive(self,text_data):

@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sumitsir3
+  labels:
+    app: sumitsir3
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sumitsir3
+  template:
+    metadata:
+      labels:
+        app: sumitsir3
+    spec:
+      containers:
+        - image: shuaibansari/sumitsir:v3
+          name: sumitsir3
+          ports:
+            - containerPort: 8000
+              name: sumitsir3
+        
+       
+
+
+
+
+
+
+
+# first seccessfull deployment of simple django project
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: sumitsir
+#   labels:
+#     app: sumitsir
+# spec:
+#   replicas: 3
+#   selector:
+#     matchLabels:
+#       app: sumitsir
+#   template:
+#     metadata:
+#       labels:
+#         app: sumitsir
+#     spec:
+#       containers:
+#         - image: shuaibansari/sumitsir:latest
+#           name: sumitsir
+#           ports:
+#             - containerPort: 8000
+#               name: sumitsir

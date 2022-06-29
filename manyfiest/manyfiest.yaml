@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Pod
+metadata: 
+  name: sumitsir3
+spec:
+  containers:
+  - name: sumitsir3
+    image: shuaibansari/sumitsir:v3
+    imagePullPolicy: Never
+
+    
+    
+    # resources:
+    #   limits:
+    #     memory: "2000Mi"
+
+    # - image: shuaibansari/nginx:v1
+    #   name: nginx
+    #   ports:
+    #     - containerPort: 80
+
+    # - image: shuaibansari/frontend:v1
+    #   name: frontend
+    #   ports:
+    #     - containerPort: 80
+
+
+
+
+# success deployment first
+# apiVersion: v1
+# kind: Pod
+# metadata: 
+#   name: sumitsir3
+# spec:
+#   containers:
+#   - name: sumitsir3
+#     image: shuaibansari/sumitsir:v3
+#     imagePullPolicy: Never
+
+    
+    
+#     # resources:
+#     #   limits:
+#     #     memory: "2000Mi"
