@@ -1,23 +1,22 @@
-import asyncio
-import websockets
+import socket # for socket
+import sys
 
+try:
+   s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+   print ("Socket successfully created")
+except socket.error as err:
+   print ("socket creation failed with error %s" %(err))
+# default port for socket
+port = 80
 
-async def handler(websocket):
-    while True:
-        message = await websocket.recv()
-        print(message , '.......................................')
+try:
+   host_ip = socket.gethostbyname('www.google.com')
+except socket.gaierror:
+   # this means could not resolve the host
+   print ("there was an error resolving the host")
+   sys.exit()
 
+# connecting to the server
+s.connect(('ws://127.0.0.1', 8001))
 
-async def main():
-    url = "ws://localhost:8000/ws/new/"
-    async with websockets.connect(url) as ws:
-        print(';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;')
-        await handler(ws)
-        await asyncio.Future()  # run forever
-    async with websockets.disconnect(url) as ws:
-      print('88888888888888888888888888888')
-
-
-if __name__ == "__main__":
-    print(';;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;===================================')
-    asyncio.run(main())
+print ("the socket has successfully connected to google")

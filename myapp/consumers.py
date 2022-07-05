@@ -3,10 +3,10 @@ from asgiref.sync import async_to_sync                         #it will convert 
 import json
 class NewConsumer(AsyncJsonWebsocketConsumer):
     async def connect(self):
-        print('fffffffffffffffffffffff')
+        print('fffffffffffffffffffffff-before self.accept -----------------')
         await self.accept()
-        print('fffffffffffffffffffffff')
-        await self.send(text_data=json.dumps({'status':'connected from new conswswssumer'}))
+        print('fffffffffffffffffffffff-after self.accept -----------------')
+        await self.send(text_data=json.dumps({'status':'connected from new conswswswswssumer'}))
 
     async def receive(self,text_data):
         print(text_data , 'RECIEVED=================================')

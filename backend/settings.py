@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj'
 
 
-DEBUG = True
+DEBUG = False
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -82,7 +82,6 @@ INSTALLED_APPS = [
 
 
 
-
 X_FRAME_OPTIONS = 'ALLOW-FROM https://cretskill.herokuapp.com/'
 
 
@@ -125,9 +124,9 @@ TEMPLATES = [
 ]
 
 
-#WSGI_APPLICATION = 'backend.wsgi.application'
+WSGI_APPLICATION = 'backend.wsgi.application'
 # daphne server run command : daphne -b 0.0.0.0 -p 8000 backend.asgi:application
-ASGI_APPLICATION= 'backend.asgi.application'
+ASGI_APPLICATION= 'backend.routing.channel_routing'
 
 
 # Database
@@ -177,14 +176,14 @@ CHANNEL_LAYERS = {
     'default': {
      
        
-        "BACKEND": "channels_redis.core.RedisChannelLayer" ,
-       'CONFIG': {
-             "hosts": [('localhost', 6379)],
+        "BACKEND": "channels_redis.core.RedisChannelLayer", # channels_redis.core.RedisChannelLayer
+        'CONFIG': {
+             "hosts": [('redis://redis_websocket:6379/1', 6379)],
         },
         ## Method 3: Via In-memory channel layer
         ## Using this method.
     },
-    'ROUTING': 'ws.routing.application',
+    'ROUTING': 'backend.asgi.application',
 }
 
 
