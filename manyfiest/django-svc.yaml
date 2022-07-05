@@ -9,7 +9,7 @@ spec:
   selector:
     app: sumitsir3
   ports:
-    - port: 80     # we need to change this for real deploy port number
+    - port: 80     # we need to change this for real deployment port number
       targetPort: 8000
 
 

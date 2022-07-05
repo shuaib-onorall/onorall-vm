@@ -4,7 +4,7 @@ async-timeout==4.0.2
 attrs==21.4.0
 autobahn==22.4.2
 Automat==20.2.0
-billiard==3.6.4.0
+
 celery==5.2.6
 celerybeat-mongo==0.2.0
 certifi==2021.10.8
@@ -51,17 +51,14 @@ dnspython==2.2.1
 drf-yasg==1.20.0
 et-xmlfile==1.1.0
 ffmpeg==1.4
-flower==1.0.0
+
 gevent==21.12.0
 greenlet==1.1.2
 gunicorn==20.1.0
-humanize==4.1.0
-hyperlink==21.0.0
-idna==3.3
 incremental==21.3.0
 inflection==0.5.1
 itypes==1.2.0
-Jinja2==3.1.2
+
 kombu==5.2.4
 MarkupSafe==2.1.1
 mongoengine==0.24.1
@@ -73,7 +70,7 @@ packaging==21.3
 Pillow==9.0.1   # 49.5 MB
 prometheus-client==0.14.1
 prompt-toolkit==3.0.28
-psycopg2-binary==2.9.3
+
 pyasn1==0.4.8
 pyasn1-modules==0.2.8
 pycparser==2.21
@@ -81,12 +78,12 @@ pyenchant==3.2.2
 PyJWT==2.3.0
 pymongo==3.12.1
 PyMySQL==1.0.2
-pyOpenSSL==22.0.0
-pyparsing==3.0.7
+
+
 python-crontab==2.6.0
 python-dateutil==2.8.2
 python-ffmpeg-video-streaming==0.1.15
-python3-openid==3.2.0
+
 pytz==2021.3
 redis==4.3.4
 requests==2.27.1
@@ -113,7 +110,7 @@ zope.interface==5.4.0
 channels-redis
 
 Twisted==20.3.0
-firebase_admin
+
 
 
 
