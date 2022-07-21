@@ -6,7 +6,7 @@ from xml.parsers.expat import model
 
 
 from rest_framework import serializers
-from .models import * 
+from .models import *
 
 
 #profile
@@ -153,17 +153,24 @@ class group_post_serializer(serializers.ModelSerializer):
 
 #___________________________________________________________________________________________________________________________
 
+class question1serializer(serializers.ModelSerializer):
+
+
+    class Meta:
+        model= question
+        fields=['id','imgfile','ques','question','answer','isrequired']
+
+
+
 #serializer for report
 class reportserializer(serializers.ModelSerializer):
 
     class Meta:
         model=report4
         fields=('id' , 'reportid' , 'report_user' , 'report_file' , 'report_post' , 'report_descript' , 'choice'  , 'created_at' ) #'__all__'
+
+
 #________________________________________________________________________________________________________________________
-class question1serializer(serializers.ModelSerializer):
-    class Meta:
-        model=question
-        fields=['id','imgfile','ques','question','answer','isrequired']
         #depth=1
 
 class question2serializer(serializers.ModelSerializer):
@@ -415,24 +422,24 @@ class CommentSerializer_single_instance(serializers.ModelSerializer ):
 
 # TODO: in this API WE NEED TO Remove method fields
 class questionnaireserializer( EagerLoadingMixin , serializers.ModelSerializer):
-    question_text=serializers.SerializerMethodField('quest_text_function')
-    question_qna=serializers.SerializerMethodField('question_qna_function')
-    question_mcq=serializers.SerializerMethodField('question_mcq_function')
+    # question_text=serializers.SerializerMethodField('quest_text_function')
+    # question_qna=serializers.SerializerMethodField('question_qna_function')
+    # question_mcq=serializers.SerializerMethodField('question_mcq_function')
     '''
     THIS SerializerMethodField FIELD INCREASE 3 QUERY PER OBJECTS
     '''
 
-    def quest_text_function(self,obj):
-        all_obj=question.objects.filter(ques=obj.ques_id)
-        return question1serializer(all_obj,many=True).data
+    # def quest_text_function(self,obj):
+    #     all_obj=question.objects.filter(ques=obj.ques_id)
+    #     return question1serializer(all_obj,many=True).data
 
-    def question_qna_function(self,obj):
-        all_obj=question2.objects.filter(questionnaire=obj.ques_id)
-        return question2serializer(all_obj,many=True).data
+    # def question_qna_function(self,obj):
+    #     all_obj=question2.objects.filter(questionnaire=obj.ques_id)
+    #     return question2serializer(all_obj,many=True).data
 
-    def question_mcq_function(self,obj):
-        all_obj=question3.objects.filter(questionnaire=obj.ques_id)
-        return question3serializer(all_obj,many=True).data
+    # def question_mcq_function(self,obj):
+    #     all_obj=question3.objects.filter(questionnaire=obj.ques_id)
+    #     return question3serializer(all_obj,many=True).data
     class Meta:
         model=questionnaires
         fields=['ques_id','questionnaireid','userid','videoid','description','question_text','question_qna','question_mcq']
@@ -491,3 +498,106 @@ class User_Historyserializer(serializers.ModelSerializer):
     class Meta:
         model=User_History
         fields='__all__'
+
+
+
+
+
+
+
+
+
+#____________________WORKBASE-ANALITYCS________________________
+class WorkbaseAnalyticserializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = WorkbaseAnalytics
+        fields = ('id' , 'workbasename' , 'username' , 'analytic_type' , 'analytic_action' , 'created_at' , 'unique_visit_search_page' , 'unique_visit_home_page' )
+
+        read_only_fields = ('id' , 'workbasename' , 'username' , 'analytic_type' , 'analytic_action' , 'created_at' )
+
+class WorkbaseAnalyticPatchserializer(serializers.ModelSerializer):
+    class Meta:
+        model = WorkbaseAnalytics
+        fields = '__all__'
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# class basic_branding_serializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = basic_branding
+#         fields = "__all__"
+
+# class support_workbase_serializers(serializers.ModelSerializer):
+#     class Meta:
+#         model = Support
+#         fields = ["user"]
+
+
+# class workbase_project_serializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = workbase_project
+#         fields = "__all__"
+
+# class workbase_get_serializer(serializers.ModelSerializer):
+#     userid = signserializers(read_only=True)
+#     supporters = serializers.SerializerMethodField("support_function")
+#     wb_project = serializers.SerializerMethodField("wb_project_function")
+#     branding = serializers.SerializerMethodField("branding_function")
+
+    
+#     def wb_project_function(self, obj):
+#         all_obj = workbase_project.objects.filter(wbid=obj.id)
+#         return workbase_project_serializer(all_obj, many=True).data
+
+#     def support_function(self, obj):
+#         all_obj = Support.objects.filter(wbid=obj.id)
+#         return support_workbase_serializers(all_obj, many=True).data
+
+#     def branding_function(self, obj):
+#         all_obj = basic_branding.objects.select_related("userid").filter(userid=obj.userid)
+#         return basic_branding_serializer(all_obj, many=True).data
+
+#     class Meta:
+#         model = workbaseinfo
+#         fields = (
+#             "id",
+#             "workbasename",
+#             "workbasechoices",
+#             "userid",
+#             "wbskills",
+#             "wbemail",
+#             "workbase_url",
+#             "wbdescription",
+#             "location",
+#             "supporters",
+#             "wb_project",
+#             "workbase_categories",
+#             "groupskill_privacy",
+#             "support_privacy",
+#             "workbase_deactivated",
+#             "workbase_deleted",
+#             "branding"
+#         )
+#         depth = 1

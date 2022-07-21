@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-dl!6%!y5!6jbqe0&ay8g^jox!w%=&mqf*bzquiy&$mj&w(_2lj'
 
 
-DEBUG = False
+DEBUG = True
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
@@ -126,7 +126,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 # daphne server run command : daphne -b 0.0.0.0 -p 8000 backend.asgi:application
-ASGI_APPLICATION= 'backend.routing.channel_routing'
+ASGI_APPLICATION= 'backend.asgi.application'
 
 
 # Database
@@ -183,7 +183,7 @@ CHANNEL_LAYERS = {
         ## Method 3: Via In-memory channel layer
         ## Using this method.
     },
-    'ROUTING': 'backend.asgi.application',
+    'ROUTING': 'backend.routing.channel_routing',
 }
 
 
@@ -235,7 +235,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LOGIN_USERNAME_FIELDS = ['gmail']
+LOGIN_USERNAME_FIELDS = ['gmail' , 'phone']
 AUTH_USER_MODEL = 'myapp.sign'
 
 

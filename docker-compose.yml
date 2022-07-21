@@ -87,8 +87,8 @@ services:
       - .:/app
     environment:
       - DEBUG=1
-      - CELERY_BROKER=redis://redis:6379/0
-      - CELERY_BACKEND=redis://redis:6379/0
+      - CELERY_BROKER=redis://redis:6379/1
+      - CELERY_BACKEND=redis://redis:6379/1
     depends_on:
       - web
       - redis
@@ -111,50 +111,54 @@ services:
       - redis_websocket
 
 
-
-  nginx:
-    restart: always
-    build: ./nginx
-    image: nginx:latest
-    networks:
-      - nw_frontend
-      - nw_backends
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx/default.conf/:/etc/nginx/conf.d/default.conf/
-      - staticfiles:/home/app/staticfiles
-      - media:/home/app/media
-    depends_on:
-      - web
+#_____________NGINX for DJANGORESTFRAMEWORK___________________________________
+  # nginx:
+  #   restart: always
+  #   build: ./nginx
+  #   image: nginx:latest
+  #   networks:
+  #     - nw_frontend
+  #     - nw_backends
+  #   ports:
+  #     - 80:80
+  #   volumes:
+  #     - ./nginx/default.conf/:/etc/nginx/conf.d/default.conf/
+  #     - staticfiles:/home/app/staticfiles
+  #     - media:/home/app/media
+  #   depends_on:
+  #     - web
 
 
 
 
 #-------for next.js------------------- 4 july ------------------------
-#   frontend:
-#     build: ../onorall-frontend-gcp
-#     ports:
-#       - 3000:3000
-#     volumes:
-#     - react_build:/nextapp/build
-#       #- ../onorall-frontend-gcp/:/nextapp
+  frontend:
+    build: ../onorall-frontend-gcp
+    ports:
+      - 3000:3000
+    volumes:
+    - ../onorall-frontend-gcp/:/nextapp/
+      #- ../onorall-frontend-gcp/:/nextapp
 
 
 
-# #============ nginx for next js ==============
+#============ nginx for next js ==============
 #   reactnginx:
 #     image: nginx:latest
+#     build: .
+
 #     ports:
 #       - 80:8080
 
 #     # i think we need to change volume of react_build
 #     volumes:
 #       - ./nginxReact/nginx-setup.conf:/etc/nginx/conf.d/default.conf:ro
-#       - react_build:/var/www/react
+#       - .:/var/www/react
+# #     - public:/home/nextapp/public
 #     depends_on:
 #       - web
 #       - frontend
+    
 
 
 
@@ -162,7 +166,7 @@ volumes:
   mongodata:
   staticfiles:
   media:
-  #react_build:
+  # react_build:
 
 
 

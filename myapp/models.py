@@ -20,6 +20,8 @@ from django.contrib.auth.base_user import BaseUserManager
 import random, string
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.base_user import BaseUserManager
+from django.utils.functional import cached_property
+# from .serializers import *
 #from caching.base import CachingManager, CachingMixin, cached_method
 
 
@@ -248,7 +250,7 @@ class view(models.Model):
     video=models.OneToOneField(detail,related_name='count',on_delete=models.CASCADE)
     ip_address=models.CharField(max_length=50)
     session=models.CharField(max_length=50)
-    view=models.PositiveIntegerField(default=0)
+    view=models.PositiveIntegerField(default=0)  
 
     def __str__(self):
         return f'ip_address:{str(self.ip_address)} '
@@ -477,21 +479,13 @@ class report4(models.Model):
 
     def __str__(self):
         return str(self.choice)
-   
-#____________________________________________________________________________________________________________________________
-class questionnaires(models.Model):
-    ques_id=models.AutoField(primary_key=True,verbose_name='id')
-    questionnaireid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    userid=models.ForeignKey(sign,on_delete=models.CASCADE)
-    videoid=models.ForeignKey(detail,on_delete=models.CASCADE)
-    description=models.TextField(default='')
 
-    def __str__(self) -> str:
-        return str(self.description)
+
+
 
 class question(models.Model):
     textid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    ques=models.ForeignKey(questionnaires,null=True,blank=True,on_delete=models.CASCADE)
+    ques=models.ForeignKey('myapp.questionnaires',null=True,blank=True,on_delete=models.CASCADE)
     question=models.TextField(default='')
     imgfile=models.FileField(upload_to='question/',null=True,blank=True)
     answer=models.TextField(default='')
@@ -501,10 +495,9 @@ class question(models.Model):
         return str(self.id)
 
 
-
 class question2(models.Model):
     qnaid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    questionnaire=models.ForeignKey(questionnaires,null=True,blank=True,on_delete=models.CASCADE)
+    questionnaire=models.ForeignKey('myapp.questionnaires',null=True,blank=True,on_delete=models.CASCADE)
     question=models.TextField(default='')
     imgfile=models.FileField(upload_to='question2/',null=True,blank=True)
     answer=models.TextField(default='')
@@ -516,7 +509,7 @@ class question2(models.Model):
 
 class question3(models.Model):
     mcqid = models.CharField(max_length=12, unique=True,   default=random_id_field)
-    questionnaire=models.ForeignKey(questionnaires,null=True,blank=True,on_delete=models.CASCADE)
+    questionnaire=models.ForeignKey('myapp.questionnaires',null=True,blank=True,on_delete=models.CASCADE)
     question=models.TextField(default='')
     imgfile=models.FileField(upload_to='question3/',null=True,blank=True)
     option1=models.TextField()
@@ -533,6 +526,35 @@ class question3(models.Model):
 
     def __str__(self) -> str:
         return str(self.question)
+#____________________________________________________________________________________________________________________________
+class questionnaires(models.Model):
+    ques_id=models.AutoField(primary_key=True,verbose_name='id')
+    questionnaireid = models.CharField(max_length=12, unique=True,   default=random_id_field)
+    userid=models.ForeignKey(sign,on_delete=models.CASCADE)
+    videoid=models.ForeignKey(detail,on_delete=models.CASCADE)
+    description=models.TextField(default='')
+
+    @cached_property
+    def quest_text_function(self):
+        all_obj=question.objects.filter(ques=obj.ques_id)
+        return question1serializer(all_obj,many=True).data
+    
+    @cached_property
+    def question_qna_function(self,obj):
+        all_obj=question2.objects.filter(questionnaire=obj.ques_id)
+        return question2serializer(all_obj,many=True).data
+
+    @cached_property
+    def question_mcq_function(self,obj):
+        all_obj=question3.objects.filter(questionnaire=obj.ques_id)
+        return question3serializer(all_obj,many=True).data
+
+
+
+    def __str__(self) -> str:
+        return str(self.description)
+
+
 
 
 
@@ -902,3 +924,67 @@ class PopularVideo(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+
+# class workbase_project(models.Model):
+#     wbid = models.ForeignKey(workbaseinfo, on_delete=models.CASCADE)
+#     title = models.CharField(max_length=50)
+#     link = models.URLField()
+#     description = models.TextField()
+
+#     def __str__(self) -> str:
+#         return str(self.title)
+
+
+
+
+
+
+#________________________ANALYTICS OF WORKBASE________________________________
+
+ANALYTICS_CHOICES_ACTIONS = (
+            ('VIEW', 'VIEW'),
+            ('IMPRESSIONS', 'IMPRESSIONS'),
+            ( 'CPC' , 'CPC' ),
+            ('unknown', 'unknown'),
+            )
+
+ANALYTICS_CHOICES_TYPES = (
+    ('SEARCH' , 'SEARCH' ),
+    ('HOME' , 'HOME'),
+    ('unknown', 'unknown'),
+)
+
+
+class WorkbaseAnalytics(models.Model):
+    workbasename = models.ForeignKey(
+        workbaseinfo  , on_delete=models.CASCADE 
+    )
+    username = models.ForeignKey( 
+        sign , on_delete=models.CASCADE , null=True , blank=True 
+    )
+    analytic_type = models.CharField(
+        max_length=25, null=False, choices=ANALYTICS_CHOICES_TYPES , default='unknown'
+    )
+    analytic_action = models.CharField(
+        max_length=25, null=False, choices=ANALYTICS_CHOICES_ACTIONS , default='unknown'
+    )
+    created_at = models.DateField( auto_now = True )
+
+    @property
+    def unique_visit_search_page(self):
+        return  len(set(list(WorkbaseAnalytics.objects.filter(
+           workbasename = self.workbasename ,analytic_action = 'VIEW', analytic_type = 'SEARCH'
+            ).values_list("username" , flat=True))))
+        
+    @cached_property
+    def unique_visit_home_page(self):
+        return  len(set(list(WorkbaseAnalytics.objects.filter(
+             workbasename = self.workbasename ,analytic_action = 'VIEW', analytic_type = 'HOME'
+            ).values_list("username" , flat=True))))
+    
+    def __str__(self):
+        return f"ID : {str(self.id)} | WORKBASE : {str(self.workbasename)}"
+
+    

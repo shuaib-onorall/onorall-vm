@@ -1931,3 +1931,149 @@ import requests
 # r = requests.post(url, data=data)
 
 # print(r.text)
+class WorkApiView(APIView):
+    parser_classes = [JSONParser]
+
+    def get(self, request, title=None, id=None, userid=None, wbname=None):
+        title = request.query_params.get("wbname")
+        if id:
+            allinfo = workbaseinfo.objects.select_related().get(id=id)
+            serializer = workbase_get_serializer(allinfo)
+            return Response(
+                {"status": "success", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+        elif wbname:
+            allinfo = workbaseinfo.objects.select_related("userid").get(
+                workbasename=wbname
+            )
+            serializer = workbase_get_serializer(allinfo)
+            return Response(
+                {"status": "success", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+        elif title:
+            allinfo = workbaseinfo.objects.select_related("userid").filter(
+                workbasename=title
+            )
+            if allinfo:
+                return Response({"status": "already exists"})
+            else:
+                return Response({"status": "workbasename available"})
+        elif userid:
+            allinfo = workbaseinfo.objects.select_related("userid").get(
+                userid=str(userid)
+            )
+            # banner = basic_branding.objects.select_related("userid").get(
+            #     userid=str(userid)
+            # )
+            serializer = workbase_get_serializer(allinfo)
+            #branding = basic_branding_serializer(banner)
+            return Response(
+                {
+                    "status": "success",
+                    "data": serializer.data,
+                   # "branding": branding.data,
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            allbaseinfo = workbaseinfo.objects.all()
+            serializer = workbase_get_serializer(allbaseinfo, many=True)
+            return Response(
+                {"status": "success", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+
+    def post(self, request):
+        serializer = workserializer(data=request.data)
+        workbasename = request.data.get("workbasename")
+        userid = request.data.get("userid")
+        sign_obj = sign.objects.get(id=userid)
+        work = workbaseinfo.objects.filter(workbasename=workbasename).exists()
+        workbase_user = workbaseinfo.objects.filter(userid=userid).exists()
+        referral_id = int(sign_obj.signup_refferal_by)
+        referral_obj = RefferalLink.objects.filter(id=referral_id)
+        if work:
+            return Response({"status": "workbasename already exist"})
+        if workbase_user:
+            return Response(
+                {
+                    "status": "you already have a workbase from this userid",
+                    "workbase_exist": True,
+                }
+            )
+        if serializer.is_valid():
+            sign_obj.iscreator == True
+            sign_obj.save()
+            serializer.save()
+            if referral_obj:
+                if referral_obj.is_creator == False:
+                    referral_obj.is_creator = (
+                        True  # third condition of referral will be execute
+                    )
+                    referral_obj.save()
+            return Response(
+                {"status": "success", "data": serializer.data},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def patch(self, request, id=None):
+        post = workbaseinfo.objects.get(id=id)
+        serializer = workserializer(post, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"status": "success", "data": serializer.data})
+        return Response({"status": "error", "data": serializer.errors})
+
+    def delete(self, request, id=None):
+        event = get_object_or_404(workbaseinfo, id=id)
+        event.delete()
+        return Response({"status": "success", "data": "item deleted"})
+
+
+
+
+class WorkbaseAnalyticsView(APIView):
+    parser_classes = (JSONParser , )
+    def get( self , request , pk = None  , *args , **kwargs ):
+        if pk is not None:
+            analytics_obj = get_object_or_404(WorkbaseAnalytics.objects.select_related('username' , 'workbasename')  ,  id = pk )
+            serializer = WorkbaseAnalyticserializer( analytics_obj )
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        all_analytic_obj  = WorkbaseAnalytics.objects.all()
+        serializer = WorkbaseAnalyticserializer( all_analytic_obj , many=True )
+        return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+
+
+    def post(self,request, pk = None , *args, **kwargs):
+        serializer = WorkbaseAnalyticPatchserializer( data = request.data )
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'status':'success','data':serializer.data},status=status.HTTP_200_OK)
+        return Response({'status':'fail',"data":serializer.errors},status=status.HTTP_400_BAD_REQUEST)
+
+
+    def patch(self, request, pk=None):
+        if pk is not None:
+            analytics_obj = get_object_or_404(WorkbaseAnalytics.objects.select_related('username' , 'workbasename')  ,  id = pk )
+            serializer = WorkbaseAnalyticPatchserializer(analytics_obj, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"status": "success", "data": serializer.data})
+            return Response({"status": "error", "data": serializer.errors})
+        return Response({"status": "error", "hint":"provide ID in URL"})
+
+    def delete(self, request, id=None):
+        event = get_object_or_404(WorkbaseAnalytics, id=id)
+        event.delete()
+        return Response({"status": "success", "data": "item deleted"})
+
+
+from django.core import serializers
+data = serializers.serialize("json", WorkbaseAnalytics.objects.all())
+print(data)

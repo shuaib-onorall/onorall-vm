@@ -43,9 +43,9 @@ admin.site.register(mycourse)
 admin.site.register(User_History)
 admin.site.register(PopularVideo)
 # admin.site.register(LikeModelForComments)
+admin.site.register(WorkbaseAnalytics)
 
 
-from django.contrib import admin
 
 
 

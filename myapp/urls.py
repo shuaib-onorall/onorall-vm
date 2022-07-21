@@ -135,8 +135,15 @@ urlpatterns = [
 
 
 
-
-
+    # path("workbase", views.WorkApiView.as_view()),
+    # path("workbase/<int:id>", views.WorkApiView.as_view()),
+    # path("workbase/<str:title>", views.WorkApiView.as_view()),
+    # path("workbase_wbname/<str:wbname>", views.WorkApiView.as_view()),
+    # #path("workbasevideo/<str:user_pk>", views.workbasevideoAPI.as_view()),
+    # path("workbase_user/<str:userid>", views.WorkApiView.as_view()),
+    # #path("workbase_project", views.workbase_project_Api.as_view()),
+    # #path("workbase_project/<int:id>", views.workbase_project_Api.as_view()),
+  
 
   
     #path('play/<room_code>', views.game , name='game'),
@@ -146,8 +153,10 @@ urlpatterns = [
     # path('search/<str:title>', views.multitablesearch.as_view() , name='search-all-like-api-view'),
     #__________________________web sockets
     #path('wb' , views.index_wb , name="index_wb" ) , 
+
+#___________________WORKBASE-ANALYTICS___________________________
+  
     
-
-
-   
+    path('workbase-analytics/', views.WorkbaseAnalyticsView.as_view() , name='workbase-analytics-api-view'),
+    path('workbase-analytics/<int:pk>/', views.WorkbaseAnalyticsView.as_view() , name='workbase-analytics-singal-api-view'),
 ]
